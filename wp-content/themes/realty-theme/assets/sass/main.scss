@@ -1,0 +1,13 @@
+body,html {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+// настройки
+@import "_mixins";
+@import "_vars";
+// Стили;
+@import "component/_layout";
+@import "component/_content";
+@import "component/_form";
+

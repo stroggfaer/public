@@ -1,0 +1,88 @@
+$color-black-normal: #2F3034;
+$color-grey: #E4E7ED;
+$color-white: #ffffff;
+$color-dark-grey: #969696;
+$color-light-grey: #B6B8B9;
+$color-readonly-grey: #D8D8DA;
+$color-medium-grey: #F8F8F8;
+$color-medium-grey-2: #D5D5D5;
+$color-medium-grey-3: #fafafa;
+$color-grey-dark-2: #262626;
+$color-black-lite: #4f4f4f;
+$color-black: #292929;
+$color-black-medium: #333333;
+$color-black-line: #595959;
+$color-white: white;
+$color-green: var(--primary-color);
+$color-green-medium: rgba(183, 235, 143, 1); //#F6FFED;
+$color-green-dark: #2A4B15;
+$color-green-lite: #F6FFED;
+$color-green-normal: #74EE54;
+$color-green-light: #E8FBE8;
+$color-red: #f5222d;
+$color-red-btn: #F56C6C;
+$color-red-medium: #FFA39E;
+$color-red-lite: #FFF1F0;
+$color-orange: #FEAF5A;
+$color-orange-medium: #ffcf99;
+$color-orange-lite: #ffe9d8;
+$color-width: #fff;
+$color-blue-light: #F2F6FC;
+$color-blue-normal: #1F1E81;
+$color-blue-line: rgba(31, 30, 129, 0.07);
+$color-blue-dark: #4A4E69;
+$color-blue-dark-net: #1F1E81;
+$color-blue: #1890FF;
+$color-pun: #7f0074;
+$color-blue1: #0674b8;
+$color-blue-grand: linear-gradient(125.83deg, #5567EA 5.9%, #263CDE 94.79%);
+$color-blue-lite: #ECF5FF;
+$color-grey-lite: #F5F5F8;
+$color-yellow: #FEFC62;
+$bg-spinner: rgba(0, 0, 0, 0.7);
+
+$base-font:         "Inter","Montserrat","HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+//$base-font:         "Source Sans Pro", "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+
+$header-font:       $base-font;
+$ms-base:           1em, 0.875em;
+$ms-ratio:          1.618;
+
+// base color schemes
+$body-background:   #fff;
+$color_body:        #43454b;
+$color_links:       #2c2d33;
+$color_border:      rgba(0, 0, 0, 0.05);
+$color_woocommerce: #7f54b3;
+$error:             #e2401c;
+$success:           #0f834d;
+$info: #227caf;
+//
+$color_grey: #B8B8B8;
+$color_header_grey: #EFEFEF;
+$color_white: #fff;
+$color_red: #FF3E17;
+$color_orange:#F78522;
+$color_green_dark: #0A473B;
+$color_grey_normal: #D9D9D9;
+$color_text: #808080;
+// SITE
+$color-site: #F78522;
+$color-footer: #115a4c;
+$color-a: #a0bab5;
+//Theme;
+$menu-shadow: rgba(0, 0, 0, 0.15);
+$background-color: #FFFFFF;
+$input-border: #D5D5D5;
+$background-content: #fff;
+//
+$media-desktop: 1920px;
+$media-book-win10: 1280px;
+$media-book: 1370px;
+
+$media_lg: 1200px;
+$media-md: 992px;
+$media-xs: 720px;
+$media-sm: 520px;
+$media-mobile: 420px;
+$row: 15px;

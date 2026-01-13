@@ -1,0 +1,424 @@
+.breadcrumb__com {
+  padding: 15px 0px 20px;
+  font-size: 14px;
+  a {
+    color: $color-black;
+    border-bottom: 1px solid transparent;
+    @include ease();
+    &:hover {
+      border-bottom: 1px solid $color-black;
+    }
+  }
+  .breadcrumb_name {
+     color: $color-dark-grey;
+  }
+  @media screen and (max-width: $media-mobile) {
+    font-size: 12px;
+  }
+}
+// Content;
+article.post {
+  h1 {
+    &.border {
+      position: relative;
+    }
+  }
+  .post-meta {
+    color: $color-dark-grey;
+    padding: 15px 0px 10px;
+  }
+  h2 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  h3 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+  }
+  h4 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .wp-block-list li {
+     margin-bottom: 5px;
+  }
+}
+
+.post_meta {
+  display: flex;
+  gap: 5px;
+  .label {
+    font-weight: 600;
+  }
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.content-404 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .not-found {
+    text-align: center;
+    .page-header {
+      .desc {
+        margin-top: 15px;
+      }
+    }
+    h1 {
+      font-size: 8em;
+      line-height: 100%;
+      color: $color-site;
+    }
+  }
+}
+
+.rubric_wrap {
+  margin-top: 25px;
+}
+.rubric_list {
+  color: $color-black;
+  padding-bottom: 5px;
+  .el-row {
+    display: flex;
+    flex-direction: column;
+  }
+  .el-col {
+    margin-bottom: 25px;
+    &:last-child {
+      margin-bottom: 0px;
+    }
+  }
+  .post_name {
+    @include font-size(24px,26px,700);
+    a {
+      color: $color-black;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+  .rubric-date {
+    margin-top: 3px;
+    color: $color-grey;
+  }
+  .post_description {
+    padding-bottom: 0px;
+    p {
+      margin-top: 2px;
+    }
+  }
+  .content_item {
+    box-shadow: 0 1px 15px 0 rgba(0,0,0,.15);
+    @include font-size(14px,24px,300);
+    display: flex;
+    gap: 0px;
+    .post_thumbnail {
+      flex: 275px 0 0;
+      width: 275px;
+      height: 200px;
+      img {
+        width: 100% !important;
+        object-fit: cover;
+        height: 100% !important;
+        border-radius: 0px;
+      }
+      border: 1px solid $color-readonly-grey;
+      border-radius: 0px;
+      .no_image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: $color-readonly-grey;
+      }
+    }
+    .block {
+      padding: 10px 5px 0px 15px;
+    }
+  }
+  @media screen and (max-width: $media-md) {
+    .content_item {
+      .post_thumbnail {
+        flex: 200px 0 0;
+        width: 200px;
+        height: 200px;
+      }
+    }
+    .post_description {
+      padding-bottom: 0px;
+    }
+  }
+  @media screen and (max-width: $media-sm) {
+    .content_item {
+     display: block;
+      .post_name {
+        font-size: 16px;
+        line-height: 16px;
+        font-weight: 700;
+      }
+      .post_thumbnail {
+        flex: 100% 0 0;
+        width: 100%;
+        height: 250px;
+        img {
+          object-fit: contain;
+        }
+      }
+      .rubric-date {
+        font-size:12px;
+      }
+    }
+  }
+
+}
+
+.copyright {
+  margin-top: auto;
+}
+.section {
+  color: $color-black-lite;
+  padding: 15px 25px;
+  &.main-section {
+    padding: 20px;
+  }
+  h2.title {
+    &.border {
+      position: relative;
+      padding-left: 1.5rem;
+      line-height: 35px;
+      margin-bottom: 25px;
+      &::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 100%;
+        background: $color-site;
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+    }
+  }
+  &.grey {
+    background: $color-medium-grey-3;
+  }
+  .el-row {
+    margin-left: -$row;
+    margin-right: -$row;
+    .el-col {
+      padding-right: $row;
+      padding-left: $row;
+    }
+  }
+  .desc-large {
+    @include font-size(24px,20px,400);
+    margin-top: 8px;
+    margin-bottom: 15px;
+  }
+  .text {
+    margin-bottom: 25px;
+    @include font-size(16px,28px,400);
+  }
+  .buttons {
+    margin-top: 25px;
+  }
+  .content__com {
+    margin-top: 50px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .block-content {
+    margin-bottom: 25px;
+    .icon {
+      font-size: 36px;
+      &.flex {
+        display: flex;
+        gap: 10px;
+      }
+      margin-bottom: 15px;
+    }
+    h3 {
+      @include font-size(16px,20px,700);
+    }
+    .text-content {
+      margin: 10px 0px;
+      @include font-size(14px,22px,300);
+    }
+  }
+  &.pd {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  @media screen and (max-width: $media-md) {
+    padding: 8px 10px;
+    .block-content {
+      width: 50%;
+    }
+    h2.title.border {
+      margin-bottom: 15px;
+    }
+  }
+  @media screen and (max-width: $media-mobile) {
+    padding: 8px 0px;
+    .block-content {
+      width: 100%;
+    }
+    .text {
+      margin-top: 15px;
+      @include font-size(14px,24px,400);
+    }
+  }
+}
+
+.pagination {
+  text-align: center;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pagination a,
+.pagination span {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  text-decoration: none;
+  color: $color-site;
+  min-width: 15px;
+}
+
+.pagination a:hover {
+  background: $color-site;
+  color: #fff;
+}
+
+.pagination .current {
+  background: $color-site;
+  color: #fff;
+  border-color: $color-site;
+}
+.home-banner-widget {
+  margin-top: 35px;
+  margin-bottom: 35px;
+}
+article.post {
+  border-bottom: 2px solid $color-site;
+  margin-bottom: 30px;
+}
+article.post .the-content {
+  margin-bottom: 30px;
+}
+.post-article {
+  height: auto;
+  .sidebar {
+    margin-top: 0;
+    padding-top: 0;
+  }
+}
+///
+.content-rubric {
+  width: 100%;
+  h2.title, h1.title {
+    margin-bottom: 20px;
+  }
+  .theme-content {
+    height: auto;
+  }
+  .sidebar {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  @media screen and (max-width: $media-sm) {
+    margin: 0px;
+    width: auto;
+  }
+}
+
+.section-pages-list {
+  width: 100%;
+  min-height: 600px;
+  margin-bottom: 60px;
+}
+.main_slider {
+  margin-bottom: 15px;
+}
+
+/////
+//// Товары
+.woocommerce_products {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  h3,h2 {
+    margin-bottom: 30px;
+  }
+}
+.selected-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.selected-products .product {
+  border: 1px solid #ccc;
+  padding: 20px 10px;
+  text-align: center;
+  width: calc(33.333% - 10px);
+  box-sizing: border-box;
+  border-radius: 8px;
+  .thumbnail {
+    width: 100%;
+    height: 240px;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .no_image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    background: #f1f1f1;
+  }
+  @media screen and (max-width: $media-xs) {
+    width: calc(50% - 10px);
+  }
+  @media screen and (max-width: $media-sm) {
+    width: 100%;
+  }
+}
+
+.selected-products .product img {
+  max-width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-products .product h2 {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 150%;
+  margin-bottom: 15px;
+}
+
+.selected-products .product p {
+  font-size: 1em;
+  margin: 10px 0;
+  &.price {
+    font-style: normal;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 150%;
+    color: #000;
+  }
+}
+
+.selected-products .product a {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.selected-products .product a:hover {
+  text-decoration: underline;
+}

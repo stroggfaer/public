@@ -1,0 +1,48 @@
+# WordPress core files
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+*.log
+
+# Environment specific
+.env
+wp-config-local.php
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+
+# Composer
+vendor/
+composer.lock
+
+# Backup files
+*~
+*.bak
+*.tmp
+
+# Pods plugin cache
+wp-content/plugins/pods/ui/
+wp-content/plugins/pods/lib/
+
+# Debug files
+debug.log
+wp-content/debug.log
+
+# Custom theme assets (if compiled)
+wp-content/themes/realty-theme/assets/css/main.css
+wp-content/themes/realty-theme/assets/js/bundle.js
+
+# SASS/SCSS cache
+.sass-cache/
+docs/
+.kilocode/

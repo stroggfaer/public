@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @copyright © Melograno Ventures. All rights reserved.
+ * @licence   See LICENCE.md for license details.
+ */
+
+namespace AmeliaBooking\Infrastructure\WP\GutenbergBlock;
+
+/**
+ * Class AmeliaCatalogGutenbergBlock
+ *
+ * @package AmeliaBooking\Infrastructure\WP\GutenbergBlock
+ */
+class AmeliaCatalogGutenbergBlock extends GutenbergBlock
+{
+    /**
+     * Register Amelia Catalog block for gutenberg
+     */
+    public static function registerBlockType()
+    {
+        // Enqueue shared icon
+        parent::enqueueSharedIcon();
+
+        wp_enqueue_script(
+            'amelia_catalog_gutenberg_block',
+            AMELIA_URL . 'public/js/gutenberg/amelia-catalog/amelia-catalog-gutenberg.js',
+            array('wp-blocks', 'wp-components', 'wp-element', 'wp-editor', 'amelia_block_icon')
+        );
+
+        wp_enqueue_style(
+            'amelia_catalog_gutenberg_styles',
+            AMELIA_URL . 'public/js/gutenberg/amelia-catalog/amelia-catalog-gutenberg.css',
+            [],
+            AMELIA_VERSION
+        );
+
+        register_block_type(
+            'amelia/catalog-gutenberg-block',
+            array('editor_script' => 'amelia_catalog_gutenberg_block')
+        );
+    }
+}

@@ -1,0 +1,49 @@
+# Translation of Plugins - MB FacetWP Integration - Stable (latest release) in Russian
+# This file is distributed under the same license as the Plugins - MB FacetWP Integration - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2025-07-09 08:11:04+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 1 && n % 100 != 11) ? 0 : ((n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 1 : 2);\n"
+"X-Generator: GlotPress/4.0.1\n"
+"Language: ru\n"
+"Project-Id-Version: Plugins - MB FacetWP Integration - Stable (latest release)\n"
+
+#. Plugin Name of the plugin
+#: meta-box-facetwp-integrator.php
+msgid "MB FacetWP Integration"
+msgstr "MB FacetWP Integration"
+
+#: class-mb-relationships-facetwp.php:30 class-mb-relationships-facetwp.php:59
+msgid "MB Relationships"
+msgstr "MB Relationships"
+
+#. Author URI of the plugin
+#: meta-box-facetwp-integrator.php
+msgid "https://metabox.io"
+msgstr "https://metabox.io"
+
+#. Author of the plugin
+#: meta-box-facetwp-integrator.php
+msgid "MetaBox.io"
+msgstr "MetaBox.io"
+
+#. Description of the plugin
+#: meta-box-facetwp-integrator.php
+msgid "Integrates Meta Box custom fields with FacetWP."
+msgstr "Интегрирует пользовательские поля Meta Box с FacetWP."
+
+#. Plugin URI of the plugin
+#: meta-box-facetwp-integrator.php
+msgid "https://metabox.io/plugins/mb-facetwp-integrator/"
+msgstr "https://metabox.io/plugins/mb-facetwp-integrator/"
+
+#: class-mb-facetwp-integrator.php:150
+msgid "No"
+msgstr "Нет"
+
+#: class-mb-facetwp-integrator.php:150
+msgid "Yes"
+msgstr "Да"

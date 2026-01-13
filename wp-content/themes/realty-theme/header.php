@@ -1,0 +1,33 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+$favicon = esc_url( get_template_directory_uri() ).'/favicon.ico';
+?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>" />
+<meta name="viewport" content="width=device-width" />
+
+<title>
+	<?php bloginfo('name'); // show the blog name, from settings ?> |
+	<?php is_front_page() ? bloginfo('description') : wp_title(''); // if we're on the home page, show the description, from the site's settings - otherwise, show the title of the post or page ?>
+</title>
+<link rel="profile" href="http://gmpg.org/xfn/11" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+<?php // Loads HTML5 JavaScript file to add support for HTML5 elements in older IE versions. ?>
+<!--[if lt IE 9]>
+<script src="<?php echo get_template_directory_uri(); ?>/js/html5.js" type="text/javascript"></script>
+<![endif]-->
+<?php wp_head();
+?>
+</head>
+
+<body <?php body_class(); ?> >
+<!--Подключаем интерефейс шапку -->
+<?php  get_template_part( 'template-parts/component/header' ); ?>
+<!--./Подключаем интерефейс шапку -->

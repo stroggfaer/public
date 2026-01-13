@@ -1,0 +1,84 @@
+//form
+form {
+  //$color-black
+  input[type=text], input[type=email], textarea {
+    border-color: $color-black;
+    &:focus,&:focus-visible {
+      border-color: $color-site !important;
+      outline: none !important;
+    }
+  }
+  input[type="submit"] {
+    background-color: $color-site;
+    border-color: $color-site;
+    color: $color-white;
+    font-size: 16px;
+  }
+  .wpcf7-spinner {
+    display: none;
+  }
+  @media screen and (max-width: $media-md) {
+    input {
+      width: 100%;
+    }
+    textarea {
+      padding: 3px;
+      width: 100%;
+    }
+  }
+}
+button,
+html input[type="button"]
+input[type="reset"],
+input[type="submit"] {
+  @include ease();
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 8px;
+  opacity: 1;
+  display: inline-block;
+
+  white-space: nowrap;
+  cursor: pointer;
+  background: #FFF;
+  border: 1px solid #DCDFE6;
+  color: #606266;
+  -webkit-appearance: none;
+  text-align: center;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  outline: 0;
+  margin: 0;
+
+  &:focus,&:hover {
+    opacity: .6;
+  }
+  @media screen and (max-width: $media-md) {
+    width: 100%;
+  }
+}
+.wpcf7 form.invalid .wpcf7-response-output,
+.wpcf7 form.unaccepted .wpcf7-response-output,
+.wpcf7 form.payment-required .wpcf7-response-output {
+  border-color: $color-red !important;
+}
+.el-button {
+  @include font-size(16px,24px,700);
+  padding: 8px 12px;
+  border-radius: 8px;
+  opacity: 1;
+  @include ease();
+  .fa {
+    margin-right: 5px;
+    font-size: 16px;
+  }
+  &.el-button--primary {
+    background-color: $color-site;
+    border-color: $color-site;
+    &:hover,&:focus {
+      opacity: .7;
+    }
+  }
+}
