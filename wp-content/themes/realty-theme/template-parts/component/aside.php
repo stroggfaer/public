@@ -6,7 +6,10 @@
  * Time: 8:23
  */
 $pods = pods('site');
-$site = $pods->fetch();
+$site = [];
+if ($pods && $pods->exists()) {
+    $site = $pods->fetch();
+}
 ?>
 <div class="content_aside">
     <?php get_sidebar(); ?>

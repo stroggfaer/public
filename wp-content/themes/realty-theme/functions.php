@@ -72,7 +72,7 @@ function naked_scripts()  {
     wp_enqueue_script( 'naked-jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js', array( 'jquery' ), NAKED_VERSION, true );
 	// add theme scripts
     wp_enqueue_script( 'naked', get_template_directory_uri() . '/js/site.js', array(), NAKED_VERSION, true );
-    wp_enqueue_script( 'property-filter', get_template_directory_uri() . '/js/property-filter.js', array('jquery'), NAKED_VERSION, true );
+
     /*----End JS----*/
 
 }
@@ -94,5 +94,7 @@ require get_template_directory() . '/inc/admin/admin-function.php';
 require get_template_directory() . '/inc/frontend/template-function.php';
 // Подключаем файл с функциями фильтрации
 require get_template_directory() . '/inc/frontend/filter-functions.php';
+// Подключаем файл с административными функциями фильтрации
+require get_template_directory() . '/inc/admin/admin-filter-function.php';
 // Подключаем файл с регистрацией CPT и таксономий
 require get_template_directory() . '/inc/admin/pods-registration.php';

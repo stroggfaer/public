@@ -1,6 +1,9 @@
 <?php
 $pods = pods('site');
-$settings = $pods->fetch();
+$settings = [];
+if ($pods && $pods->exists()) {
+    $settings = $pods->fetch();
+}
 ?>
 <div class="el-footer">
     <div class="col-full flex-footer">

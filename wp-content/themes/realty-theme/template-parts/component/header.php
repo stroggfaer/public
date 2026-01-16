@@ -1,6 +1,9 @@
 <?php
 $pods = pods('site');
-$settings = $pods->fetch();
+$settings = [];
+if ($pods && $pods->exists()) {
+    $settings = $pods->fetch();
+}
  ?>
 <header id="masthead" class="site-header">
     <?php if(is_active_sidebar( 'top-header-custom-widget' )): ?>
