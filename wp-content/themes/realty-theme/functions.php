@@ -88,6 +88,17 @@ function enqueue_ajax_pagination_scripts() {
     ));
 }
 
+// Подключаем скрипты и стили для фильтра недвижимости
+add_action('wp_enqueue_scripts', 'enqueue_property_filter_scripts');
+
+function enqueue_property_filter_scripts() {
+    wp_enqueue_script('property-filter', get_template_directory_uri() . '/js/property-filter.js', array('jquery'), null, true);
+    wp_localize_script('property-filter', 'propertyFilter', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce'   => wp_create_nonce('property_filter_nonce')
+    ));
+}
+
 // Админка часть;
 require get_template_directory() . '/inc/admin/admin-function.php';
 // Подключаем файл с функциями
