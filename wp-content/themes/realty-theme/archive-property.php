@@ -17,6 +17,12 @@ get_header(); ?>
         <div class="property-archive-filters">
             <?php echo do_shortcode('[property_filter]'); ?>
         </div>
+        
+        <!-- Контейнер для карты -->
+        <div id="property-map-container" class="property-map-container">
+            <h2>Расположение объектов на карте</h2>
+            <div id="property-map" class="property-map"></div>
+        </div>
     </main>
 </div>
 
@@ -154,6 +160,40 @@ get_header(); ?>
     .properties-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.property-map-container {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+}
+
+.property-map-container h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.property-map {
+    width: 100%;
+    height: 500px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .property-map {
+        height: 300px;
+    }
+}
+
+/* Стили для выделенной карточки */
+.property-card.highlighted {
+    border: 2px solid #007cba;
+    box-shadow: 0 4px 8px rgba(0, 124, 186, 0.3);
+    transform: translateY(-2px);
+}
 }
 </style>
 

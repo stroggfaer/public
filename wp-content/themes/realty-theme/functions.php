@@ -92,6 +92,19 @@ function enqueue_ajax_pagination_scripts() {
 add_action('wp_enqueue_scripts', 'enqueue_property_filter_scripts');
 
 function enqueue_property_filter_scripts() {
+    // Подключаем Google Maps API только на странице архива недвижимости
+    if (is_post_type_archive('property')) {
+        // Получаем API-ключ из настроек
+        $api_key = get_option('google_maps_api_key', '');
+        if (!empty($api_key)) {
+            wp_enqueue_script('google-maps-api', 'https://maps.googleapis.com/maps/api/js?key=' . $api_key, array(), null, false);
+        } else {
+            // Если ключ не задан, используем без ключа (ограниченная функциональность)
+            wp_enqueue_script('google-maps-api', 'https://maps.googleapis.com/maps/api/js', array(), null, false);
+        }
+        wp_enqueue_script('google-maps-property', get_template_directory_uri() . '/js/google-maps-property.js', array('jquery'), null, true);
+    }
+    
     wp_enqueue_script('property-filter', get_template_directory_uri() . '/js/property-filter.js', array('jquery'), null, true);
     wp_localize_script('property-filter', 'propertyFilter', array(
         'ajaxurl' => admin_url('admin-ajax.php'),

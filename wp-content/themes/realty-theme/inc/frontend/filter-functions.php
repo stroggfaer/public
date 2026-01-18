@@ -305,11 +305,29 @@ function filter_properties_custom_ajax_handler() {
 
     $pod = pods('property', $params);
 
+    // Подготовка координат для карты
+    $coordinates = array();
     ob_start();
 
     if ($pod->total() > 0) {
         echo '<div class="properties-grid">';
         while ($pod->fetch()) {
+            // Получаем координаты для каждого объекта
+            $property_id = $pod->id();
+            $property_lat = $pod->field('latitude');
+            $property_lng = $pod->field('longitude');
+            $property_title = $pod->display('post_title');
+
+            // Добавляем координаты в массив, если они существуют
+            if (!empty($property_lat) && !empty($property_lng)) {
+                $coordinates[] = array(
+                    'id' => $property_id,
+                    'lat' => $property_lat,
+                    'lng' => $property_lng,
+                    'title' => $property_title
+                );
+            }
+
             get_template_part('template-parts/component/property-card', null, array('pod' => $pod));
         }
         echo '</div>';
@@ -325,7 +343,8 @@ function filter_properties_custom_ajax_handler() {
 
     wp_send_json_success(array(
         'properties_html' => ob_get_clean(),
-        'count'           => $pod->total()
+        'count'           => $pod->total(),
+        'coordinates'     => $coordinates
     ));
 }
 

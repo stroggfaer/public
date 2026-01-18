@@ -1,0 +1,218 @@
+/**
+ * Google Maps для страницы архива недвижимости
+ * 
+ * Реализует отображение меток объектов недвижимости на карте
+ * и синхронизацию с фильтрами и списком объектов
+ */
+
+jQuery(document).ready(function($) {
+    // Проверяем, загружен ли Google Maps API
+    if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+        console.error('Google Maps API не загружен');
+        return;
+    }
+
+    // Глобальные переменные для карты
+    var map = null;
+    var markers = [];
+    var infoWindows = [];
+    var markerMap = {}; // Ассоциативный массив для связи ID объекта и маркера
+
+    // Инициализация карты
+    function initPropertyMap(coordinates) {
+        // Параметры для центра карты (по умолчанию - центр России)
+        var defaultCenter = { lat: 55.7558, lng: 37.6173 }; // Москва
+        
+        // Если есть координаты, устанавливаем центр на основе первого объекта
+        if (coordinates && coordinates.length > 0) {
+            defaultCenter = { lat: parseFloat(coordinates[0].lat), lng: parseFloat(coordinates[0].lng) };
+        }
+
+        // Создаем карту
+        var mapOptions = {
+            zoom: 6,
+            center: defaultCenter,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        // Находим контейнер для карты
+        var mapContainer = document.getElementById('property-map');
+        if (!mapContainer) {
+            console.error('Контейнер для карты не найден');
+            return;
+        }
+
+        map = new google.maps.Map(mapContainer, mapOptions);
+
+        // Добавляем метки на карту
+        if (coordinates) {
+            addMarkersToMap(coordinates);
+        }
+    }
+
+    // Функция для добавления меток на карту
+    function addMarkersToMap(coordinates) {
+        // Очищаем предыдущие метки
+        clearMarkers();
+
+        // Добавляем новые метки
+        coordinates.forEach(function(coord) {
+            var position = { lat: parseFloat(coord.lat), lng: parseFloat(coord.lng) };
+            
+            // Создаем маркер
+            var marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                title: coord.title || 'Объект недвижимости',
+                optimized: true // Используем оптимизацию для большого количества маркеров
+            });
+
+            // Создаем информационное окно
+            var infoWindow = new google.maps.InfoWindow({
+                content: '<div class="property-info-window"><h3>' + (coord.title || '') + '</h3><p>ID: ' + coord.id + '</p></div>'
+            });
+
+            // Сохраняем ссылки на маркер и инфоокно
+            markers.push(marker);
+            infoWindows.push(infoWindow);
+            markerMap[coord.id] = {
+                marker: marker,
+                infoWindow: infoWindow
+            };
+
+            // Добавляем обработчик клика на маркер
+            marker.addListener('click', function() {
+                // Закрываем все другие инфоокна
+                infoWindows.forEach(function(iw) {
+                    iw.close();
+                });
+
+                // Открываем инфоокно для этого маркера
+                infoWindow.open(map, marker);
+
+                // Выделяем соответствующую карточку в списке
+                highlightPropertyCard(coord.id);
+            });
+        });
+
+        // Автоматически масштабируем карту, чтобы показать все маркеры
+        if (markers.length > 1) {
+            var bounds = new google.maps.LatLngBounds();
+            markers.forEach(function(marker) {
+                bounds.extend(marker.getPosition());
+            });
+            map.fitBounds(bounds);
+        } else if (markers.length === 1) {
+            map.setCenter(markers[0].getPosition());
+        }
+    }
+
+    // Функция очистки маркеров
+    function clearMarkers() {
+        markers.forEach(function(marker) {
+            marker.setMap(null);
+        });
+        markers = [];
+        
+        infoWindows.forEach(function(iw) {
+            iw.close();
+        });
+        infoWindows = [];
+        
+        markerMap = {};
+    }
+
+    // Функция для выделения карточки объекта в списке
+    function highlightPropertyCard(propertyId) {
+        // Снимаем выделение со всех карточек
+        $('.property-card').removeClass('highlighted');
+        
+        // Выделяем нужную карточку
+        var $card = $('.property-card[data-id="' + propertyId + '"]');
+        if ($card.length) {
+            $card.addClass('highlighted');
+            
+            // Плавный скролл к карточке
+            $('html, body').animate({
+                scrollTop: $card.offset().top - 100
+            }, 500);
+        }
+    }
+
+    // Обновление карты с новыми данными
+    function updateMapWithData(data) {
+        if (!map) {
+            // Если карта еще не инициализирована, инициализируем с новыми данными
+            initPropertyMap(data.coordinates);
+        } else {
+            // Если карта уже существует, просто добавляем новые метки
+            addMarkersToMap(data.coordinates);
+        }
+    }
+
+    // Обработка клика по карточке объекта - центрирование карты
+    $(document).on('click', '.property-card', function() {
+        if (!map) return;
+
+        var id = $(this).data('id');
+        var lat = parseFloat($(this).data('lat'));
+        var lng = parseFloat($(this).data('lng'));
+
+        if (lat && lng) {
+            // Центрируем карту на этом объекте
+            var position = new google.maps.LatLng(lat, lng);
+            map.panTo(position);
+            map.setZoom(14);
+
+            // Открываем информационное окно, если оно связано с этим объектом
+            if (markerMap[id]) {
+                // Закрываем все другие инфоокна
+                infoWindows.forEach(function(iw) {
+                    iw.close();
+                });
+
+                // Открываем инфоокно для этого маркера
+                markerMap[id].infoWindow.open(map, markerMap[id].marker);
+            }
+        }
+    });
+
+    // Обновление карты при изменении результатов фильтрации
+    $(document).ajaxComplete(function(event, xhr, settings) {
+        // Проверяем, является ли это нашим AJAX-запросом фильтрации
+        if (settings.data && settings.data.indexOf('action=filter_properties_custom') !== -1) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success && response.data && response.data.coordinates) {
+                    updateMapWithData(response.data);
+                }
+            } catch (e) {
+                console.error('Ошибка при обработке ответа AJAX:', e);
+            }
+        }
+    });
+
+    // Инициализация карты при загрузке страницы
+    // Ждем немного, чтобы убедиться, что Google Maps API полностью загружен
+    setTimeout(function() {
+        // Получаем начальные координаты с сервера
+        // Используем уже существующие данные из карточек, если они есть
+        var initialCoordinates = [];
+        $('.property-card[data-lat][data-lng]').each(function() {
+            var $card = $(this);
+            initialCoordinates.push({
+                id: $card.data('id'),
+                lat: $card.data('lat'),
+                lng: $card.data('lng'),
+                title: $card.find('.entry-title a').text() || 'Объект недвижимости'
+            });
+        });
+
+        if (initialCoordinates.length > 0) {
+            initPropertyMap(initialCoordinates);
+        } else {
+            // Инициализируем пустую карту
+            initPropertyMap([]);
+        }
+    }, 1000);
+});
