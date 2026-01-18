@@ -249,15 +249,6 @@ function property_filter_shortcode($atts) {
     ?>
     <div class="property-filter-wrapper">
         <?php echo property_filter_render_form(); ?>
-
-        <div id="filter-results" class="filter-results">
-            <div class="loading-indicator" style="display: none;">
-                <p>Загрузка результатов...</p>
-            </div>
-            <div class="results-content">
-                <?php echo property_filter_render_list(); ?>
-            </div>
-        </div>
     </div>
     <?php
     return ob_get_clean();

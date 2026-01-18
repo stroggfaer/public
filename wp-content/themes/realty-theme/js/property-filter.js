@@ -10,19 +10,19 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: formData + '&action=filter_properties_custom&nonce=' + propertyFilter.nonce,
             beforeSend: function() {
-                $('.results-content').html('<div class="loading-indicator" style="display: block;"><p>Загрузка результатов...</p></div>');
+                $('.property-list').html('<div class="loading-indicator" style="display: block;"><p>Загрузка результатов...</p></div>');
             },
             success: function(data) {
                 if (data.success) {
-                    $('.results-content').html(data.data.properties_html);
+                    $('.property-list').html(data.data.properties_html);
                     // Переинициализируем карту после загрузки новых результатов
                     setTimeout(initMap, 100);
                 } else {
-                    $('.results-content').html('<p>Ошибка при загрузке результатов: ' + data.data + '</p>');
+                    $('.property-list').html('<p>Ошибка при загрузке результатов: ' + data.data + '</p>');
                 }
             },
             error: function() {
-                $('.results-content').html('<p>Произошла ошибка.</p>');
+                $('.property-list').html('<p>Произошла ошибка.</p>');
             }
         });
     });
