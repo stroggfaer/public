@@ -1,4 +1,7 @@
 jQuery(document).ready(function($) {
+    // Отключаем автозаполнение для поля локации
+    $('.location-autocomplete').attr('autocomplete', 'off');
+    
     // Логика фильтрации
     $('#property-filter-form').on('submit', function(e) {
         e.preventDefault();
@@ -125,4 +128,341 @@ jQuery(document).ready(function($) {
             });
         }
     });
+    
+    // Автокомплит для локации
+    $('.location-autocomplete').on('keyup', function() {
+        var input = $(this).val();
+        if (input.length >= 2) {
+            $.ajax({
+                url: propertyFilter.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'get_locations_autocomplete',
+                    term: input,
+                    nonce: propertyFilter.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Показываем результаты автокомплита
+                        var suggestionsHtml = '<div class="location-suggestions">';
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(location) {
+                                suggestionsHtml += '<div class="location-suggestion" data-value="' + location.slug + '">' + location.name + '</div>';
+                            });
+                        } else {
+                            suggestionsHtml += '<div class="location-suggestion no-results">Ничего не найдено</div>';
+                        }
+                        suggestionsHtml += '</div>';
+                        
+                        $('.location-suggestions').remove(); // Удаляем предыдущие результаты
+                        $('.location-group').append(suggestionsHtml);
+                        
+                        // Обработка клика по варианту
+                        $('.location-suggestion').off('click').on('click', function() {
+                            var selectedValue = $(this).data('value');
+                            var selectedText = $(this).text();
+                            if (selectedValue) {
+                               $('.location-autocomplete').val(selectedText);
+                               $('#filter-location-slug').val(selectedValue);
+                            }
+                            $('.location-suggestions').remove();
+                        });
+                    }
+                }
+            });
+        } else {
+            $('.location-suggestions').remove();
+        }
+    });
+    
+    // Обработчик события focus для отображения подсказок при повторном фокусе
+    $('.location-autocomplete').on('focus', function() {
+        var input = $(this).val();
+        if (input.length >= 2) {
+            // Имитируем нажатие клавиши для вызова автозаполнения
+            $(this).trigger('keyup');
+        }
+    });
+    
+    // Скрытие подсказок при потере фокуса
+    $('.location-autocomplete').on('blur', function() {
+        // Добавляем небольшую задержку, чтобы успеть кликнуть по подсказке
+        setTimeout(function() {
+            $('.location-suggestions').remove();
+        }, 200);
+    });
+    
+    // Обработка клавиш стрелок и Enter для выбора из списка
+    var currentFocus = -1;
+    $('.location-autocomplete').on('keydown', function(e) {
+        var suggestions = $('.location-suggestion');
+        if (suggestions.length === 0) return;
+        
+        if (e.which === 40) { // Arrow Down
+            e.preventDefault();
+            currentFocus++;
+            addActive(suggestions);
+        } else if (e.which === 38) { // Arrow Up
+            e.preventDefault();
+            currentFocus--;
+            addActive(suggestions);
+        } else if (e.which === 13) { // Enter
+            e.preventDefault();
+            if (currentFocus > -1) {
+                if (suggestions.eq(currentFocus).hasClass('no-results')) {
+                    return;
+                }
+                var selectedValue = suggestions.eq(currentFocus).data('value');
+                var selectedText = suggestions.eq(currentFocus).text();
+                $('.location-autocomplete').val(selectedText);
+                $('#filter-location-slug').val(selectedValue);
+                $('.location-suggestions').remove();
+                currentFocus = -1;
+            }
+        }
+    });
+    
+    function addActive(suggestions) {
+        if (!suggestions) return false;
+        removeActive(suggestions);
+        if (currentFocus >= suggestions.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (suggestions.length - 1);
+        suggestions.eq(currentFocus).addClass('autocomplete-active');
+    }
+    
+    function removeActive(suggestions) {
+        suggestions.removeClass('autocomplete-active');
+    }
+});
+
+// Добавляем валидацию для формы на главной странице
+jQuery(document).ready(function($) {
+    // Обработка инпута для гостей
+    $('.guest-increase').on('click', function() {
+        var target = $(this).data('target');
+        var input = $('#' + 'filter-' + target);
+        var currentVal = parseInt(input.val());
+        var maxVal = target === 'adults' ? 10 : 8;
+        
+        if (!isNaN(currentVal) && currentVal < maxVal) {
+            input.val(currentVal + 1);
+        } else if (isNaN(currentVal)) {
+            input.val(1);
+        }
+    });
+    
+    $('.guest-decrease').on('click', function() {
+        var target = $(this).data('target');
+        var input = $('#' + 'filter-' + target);
+        var currentVal = parseInt(input.val());
+        var minVal = target === 'adults' ? 1 : 0;
+        
+        if (!isNaN(currentVal) && currentVal > minVal) {
+            input.val(currentVal - 1);
+        } else if (isNaN(currentVal)) {
+            input.val(minVal);
+        }
+    });
+    
+    // Автокомплит для локации
+    $('.location-autocomplete').on('keyup', function() {
+        var input = $(this).val();
+        if (input.length >= 2) { // Изменено с >2 на >=2, чтобы "Ка" уже показывало результаты
+            $.ajax({
+                url: propertyFilter.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'get_locations_autocomplete',
+                    term: input,
+                    nonce: propertyFilter.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Показываем результаты автокомплита
+                        var suggestionsHtml = '<div class="location-suggestions">';
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(location) {
+                                suggestionsHtml += '<div class="location-suggestion" data-value="' + location.slug + '">' + location.name + '</div>';
+                            });
+                        } else {
+                            suggestionsHtml += '<div class="location-suggestion no-results">Ничего не найдено</div>';
+                        }
+                        suggestionsHtml += '</div>';
+                        
+                        $('.location-suggestions').remove(); // Удаляем предыдущие результаты
+                        $('.location-group').append(suggestionsHtml);
+                        
+                        // Обработка клика по варианту
+                        $('.location-suggestion').off('click').on('click', function() {
+                            var selectedValue = $(this).data('value');
+                            var selectedText = $(this).text();
+                            if (selectedValue) {
+                               $('.location-autocomplete').val(selectedText);
+                               $('#filter-location-slug').val(selectedValue);
+                            }
+                            $('.location-suggestions').remove();
+                        });
+                    }
+                }
+            });
+        } else {
+            $('.location-suggestions').remove();
+        }
+    });
+    
+    // Скрытие подсказок при потере фокуса
+    $('.location-autocomplete').on('blur', function() {
+        // Добавляем небольшую задержку, чтобы успеть кликнуть по подсказке
+        setTimeout(function() {
+            $('.location-suggestions').remove();
+        }, 200);
+    });
+    
+    // Обработка клавиш стрелок и Enter для выбора из списка
+    var currentFocus = -1;
+    $('.location-autocomplete').on('keydown', function(e) {
+        var suggestions = $('.location-suggestion');
+        if (suggestions.length === 0) return;
+        
+        if (e.which === 40) { // Arrow Down
+            e.preventDefault();
+            currentFocus++;
+            addActive(suggestions);
+        } else if (e.which === 38) { // Arrow Up
+            e.preventDefault();
+            currentFocus--;
+            addActive(suggestions);
+        } else if (e.which === 13) { // Enter
+            e.preventDefault();
+            if (currentFocus > -1) {
+                if (suggestions.eq(currentFocus).hasClass('no-results')) {
+                    return;
+                }
+                var selectedValue = suggestions.eq(currentFocus).data('value');
+                var selectedText = suggestions.eq(currentFocus).text();
+                $('.location-autocomplete').val(selectedText);
+                $('#filter-location-slug').val(selectedValue);
+                $('.location-suggestions').remove();
+                currentFocus = -1;
+            }
+        }
+    });
+    
+    function addActive(suggestions) {
+        if (!suggestions) return false;
+        removeActive(suggestions);
+        if (currentFocus >= suggestions.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (suggestions.length - 1);
+        suggestions.eq(currentFocus).addClass('autocomplete-active');
+    }
+    
+    function removeActive(suggestions) {
+        suggestions.removeClass('autocomplete-active');
+    }
+    
+    // Обработка отправки формы
+    $('#property-home-filter-form').on('submit', function(e) {
+        var checkinInput = $('#filter-checkin');
+        var checkoutInput = $('#filter-checkout');
+        var adultsInput = $('#filter-adults');
+        var childrenInput = $('#filter-children');
+        var locationInput = $('.location-autocomplete');
+        var locationSlug = $('#filter-location-slug');
+        
+        var checkinDate = checkinInput.val();
+        var checkoutDate = checkoutInput.val();
+        var adults = parseInt(adultsInput.val());
+        var children = parseInt(childrenInput.val());
+        var location = locationSlug.val(); // Используем slug для отправки
+
+        // Проверяем даты
+        if (checkinDate && checkoutDate) {
+            var checkin = new Date(checkinDate);
+            var checkout = new Date(checkoutDate);
+            
+            if (checkin > checkout) {
+                e.preventDefault();
+                alert('Дата заезда не может быть позже даты выезда.');
+                return false;
+            }
+        }
+        
+        // Проверяем текущую дату
+        var currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0); // Устанавливаем время на начало дня
+        
+        if (checkinDate) {
+            var checkin = new Date(checkinDate);
+            if (checkin < currentDate) {
+                e.preventDefault();
+                alert('Дата заезда не может быть в прошлом.');
+                return false;
+            }
+        }
+        
+        // Проверяем количество гостей
+        if (adults && (isNaN(adults) || adults < 1 || adults > 10)) {
+            e.preventDefault();
+            alert('Количество взрослых должно быть от 1 до 10.');
+            return false;
+        }
+        
+        if (children && (isNaN(children) || children < 0 || children > 8)) {
+            e.preventDefault();
+            alert('Количество детей должно быть от 0 до 8.');
+            return false;
+        }
+    });
+});
+
+// Инициализация date range picker
+jQuery(document).ready(function($) {
+    if ($('#daterange').length > 0) {
+        // Загружаем библиотеку date range picker если она доступна
+        if (typeof moment !== 'undefined' && typeof $.fn.daterangepicker !== 'undefined') {
+            $('#daterange').daterangepicker({
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' - ',
+                    applyLabel: "Применить",
+                    cancelLabel: "Отмена",
+                    fromLabel: "С",
+                    toLabel: "По",
+                    customRangeLabel: "Свой диапазон",
+                    weekLabel: "Н",
+                    daysOfWeek: [
+                        "Вс",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб"
+                    ],
+                    monthNames: [
+                        "Январь",
+                        "Февраль",
+                        "Март",
+                        "Апрель",
+                        "Май",
+                        "Июнь",
+                        "Июль",
+                        "Август",
+                        "Сентябрь",
+                        "Октябрь",
+                        "Ноябрь",
+                        "Декабрь"
+                    ],
+                },
+                startDate: moment().add(1, 'day'), // Завтра
+                endDate: moment().add(2, 'day'),   // Послезавтра
+                minDate: moment(), // Минимум сегодня
+                opens: 'center'
+            }, function(start, end, label) {
+                // Обновляем скрытые поля
+                $('#filter-checkin').val(start.format('YYYY-MM-DD'));
+                $('#filter-checkout').val(end.format('YYYY-MM-DD'));
+            });
+        }
+    }
 });

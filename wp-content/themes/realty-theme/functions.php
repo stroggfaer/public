@@ -105,6 +105,13 @@ function enqueue_property_filter_scripts() {
         wp_enqueue_script('google-maps-property', get_template_directory_uri() . '/js/google-maps-property.js', array('jquery'), null, true);
     }
     
+    // Подключаем библиотеку для выбора диапазона дат если находимся на главной странице
+    if (is_front_page()) {
+        wp_enqueue_script('moment-js', 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js', array(), '2.29.4', true);
+        wp_enqueue_script('daterangepicker-js', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', array('jquery', 'moment-js'), '3.1.0', true);
+        wp_enqueue_style('daterangepicker-css', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', array(), '3.1.0');
+    }
+    
     wp_enqueue_script('property-filter', get_template_directory_uri() . '/js/property-filter.js', array('jquery'), null, true);
     wp_localize_script('property-filter', 'propertyFilter', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
@@ -122,3 +129,100 @@ require get_template_directory() . '/inc/frontend/filter-functions.php';
 require get_template_directory() . '/inc/admin/admin-filter-function.php';
 // Подключаем файл с регистрацией CPT и таксономий
 require get_template_directory() . '/inc/admin/pods-registration.php';
+
+// Добавляем проверку валидности параметров фильтрации при загрузке страницы
+add_action('template_redirect', 'validate_property_search_parameters');
+
+function validate_property_search_parameters() {
+    // Проверяем, находимся ли мы на странице архива недвижимости и есть ли GET-параметры
+    if (is_post_type_archive('property') && !empty($_GET)) {
+        $errors = array();
+        
+        // Проверяем даты, если они переданы
+        if (isset($_GET['checkin_date']) && !empty($_GET['checkin_date'])) {
+            $checkin_errors = validate_property_dates(sanitize_text_field($_GET['checkin_date']),
+                                                   isset($_GET['checkout_date']) ? sanitize_text_field($_GET['checkout_date']) : '');
+            $errors = array_merge($errors, $checkin_errors);
+        }
+        
+        // Проверяем количество гостей, если они переданы
+        if ((isset($_GET['adults']) && !empty($_GET['adults'])) || (isset($_GET['children']) && !empty($_GET['children']))) {
+            $guest_errors = validate_guest_numbers(
+                isset($_GET['adults']) ? intval($_GET['adults']) : 0,
+                isset($_GET['children']) ? intval($_GET['children']) : 0
+            );
+            $errors = array_merge($errors, $guest_errors);
+        }
+        
+        // Если есть ошибки валидации, показываем сообщение
+        if (!empty($errors)) {
+            // Сохраняем ошибки во временное хранилище
+            set_transient('property_search_errors', $errors, 30); // Храним 30 секунд
+            
+            // Перенаправляем на ту же страницу без невалидных параметров
+            $redirect_url = remove_query_arg(array_keys($_GET), $_SERVER['REQUEST_URI']);
+            wp_redirect($redirect_url);
+            exit;
+        }
+    }
+}
+
+// Функция для получения ошибок валидации
+function get_property_search_errors() {
+    $errors = get_transient('property_search_errors');
+    if ($errors) {
+        delete_transient('property_search_errors'); // Удаляем после получения
+        return $errors;
+    }
+    return array();
+}
+
+// AJAX обработчик для автозаполнения локаций
+add_action('wp_ajax_get_locations_autocomplete', 'get_locations_autocomplete_callback');
+add_action('wp_ajax_nopriv_get_locations_autocomplete', 'get_locations_autocomplete_callback');
+
+function get_locations_autocomplete_callback() {
+    // Проверяем nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'property_filter_nonce')) {
+        wp_die('Security check failed');
+    }
+    
+    $term = sanitize_text_field($_POST['term']);
+    
+    // Получаем термы из таксономии location
+    $locations = get_terms(array(
+        'taxonomy' => 'location',
+        'hide_empty' => false,
+        'search' => $term, // Ищем по любому совпадению в названии
+        'number' => 15 // Увеличиваем количество результатов для лучшего выбора
+    ));
+    
+    $results = array();
+    if (!is_wp_error($locations)) {
+        foreach ($locations as $location) {
+            $results[] = array(
+                'name' => $location->name,
+                'slug' => $location->slug
+            );
+        }
+        
+        // Сортируем результаты: сначала те, которые начинаются с введенного термина
+        usort($results, function($a, $b) use ($term) {
+            $a_starts_with = stripos($a['name'], $term) === 0;
+            $b_starts_with = stripos($b['name'], $term) === 0;
+            
+            // Если оба начинаются с термина или оба нет - сортируем по алфавиту
+            if ($a_starts_with == $b_starts_with) {
+                return strcasecmp($a['name'], $b['name']);
+            }
+            
+            // Те, что начинаются с термина, идут первыми
+            return $a_starts_with ? -1 : 1;
+        });
+        
+        // Ограничиваем количество результатов до 10 после сортировки
+        $results = array_slice($results, 0, 10);
+    }
+    
+    wp_send_json_success($results);
+}
