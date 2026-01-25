@@ -1,0 +1,11 @@
+name: Figma Context MCP (unofficial)
+version: 1.0.0
+schema: v1
+mcpServers:
+  - name: figma-context
+    command: npx
+    args:
+      - -y
+      - figma-context-mcp@latest 
+    env:
+      FIGMA_ACCESS_TOKEN: ТВОЙ_TOKEN

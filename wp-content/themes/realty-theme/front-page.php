@@ -16,7 +16,7 @@ get_header(); ?>
                 <div class="hero-content">
                     <h1 class="hero-title">Найдите идеальное жилье для вашего отдыха</h1>
                     <p class="hero-subtitle">Более 10,000 вариантов аренды по всему миру</p>
-                    
+                
                     <!-- Форма поиска недвижимости -->
                     <div class="search-form-container">
                         <?php echo property_filter_render_home_form(); ?>

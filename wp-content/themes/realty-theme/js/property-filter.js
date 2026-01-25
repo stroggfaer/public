@@ -7,7 +7,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
 
         var formData = $(this).serialize();
-
+ 
         $.ajax({
             url: propertyFilter.ajaxurl,
             type: 'POST',
