@@ -1,10 +1,10 @@
 /**
- * Google Maps для страницы архива недвижимости
+ * Google Maps для страницы архива недвижимости и страницы одиночного объекта
  * 
  * Реализует отображение меток объектов недвижимости на карте
  * и синхронизацию с фильтрами и списком объектов
  */
-
+ 
 jQuery(document).ready(function($) {
     // Проверяем, загружен ли Google Maps API
     if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
@@ -48,6 +48,44 @@ jQuery(document).ready(function($) {
         if (coordinates) {
             addMarkersToMap(coordinates);
         }
+    }
+
+    // Функция для инициализации карты на странице одиночного объекта
+    function initSinglePropertyMap(latitude, longitude) {
+        // Преобразуем координаты в числа
+        var lat = parseFloat(latitude);
+        var lng = parseFloat(longitude);
+        
+        if (isNaN(lat) || isNaN(lng)) {
+            console.error('Некорректные координаты для карты');
+            return;
+        }
+        
+        // Создаем карту
+        var mapOptions = {
+            zoom: 15,
+            center: { lat: lat, lng: lng },
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        // Находим контейнер для карты
+        var mapContainer = document.getElementById('property-map');
+        if (!mapContainer) {
+            console.error('Контейнер для карты не найден');
+            return;
+        }
+
+        map = new google.maps.Map(mapContainer, mapOptions);
+
+        // Создаем маркер для объекта
+        var marker = new google.maps.Marker({
+            position: { lat: lat, lng: lng },
+            map: map,
+            title: 'Объект недвижимости'
+        });
+        
+        // Сохраняем ссылку на маркер
+        markers.push(marker);
     }
 
     // Функция для добавления меток на карту
@@ -195,24 +233,39 @@ jQuery(document).ready(function($) {
     // Инициализация карты при загрузке страницы
     // Ждем немного, чтобы убедиться, что Google Maps API полностью загружен
     setTimeout(function() {
-        // Получаем начальные координаты с сервера
-        // Используем уже существующие данные из карточек, если они есть
-        var initialCoordinates = [];
-        $('.property-card[data-lat][data-lng]').each(function() {
-            var $card = $(this);
-            initialCoordinates.push({
-                id: $card.data('id'),
-                lat: $card.data('lat'),
-                lng: $card.data('lng'),
-                title: $card.find('.entry-title a').text() || 'Объект недвижимости'
+        // Проверяем, на какой странице мы находимся
+        if ($('body').hasClass('single-property')) {
+            // На странице одиночного объекта
+            var mapContainer = document.getElementById('property-map');
+            if (mapContainer) {
+                var latitude = mapContainer.getAttribute('data-latitude');
+                var longitude = mapContainer.getAttribute('data-longitude');
+                
+                if (latitude && longitude) {
+                    initSinglePropertyMap(latitude, longitude);
+                }
+            }
+        } else if ($('body').hasClass('post-type-archive-property')) {
+            // На странице архива недвижимости
+            // Получаем начальные координаты с сервера
+            // Используем уже существующие данные из карточек, если они есть
+            var initialCoordinates = [];
+            $('.property-card[data-lat][data-lng]').each(function() {
+                var $card = $(this);
+                initialCoordinates.push({
+                    id: $card.data('id'),
+                    lat: $card.data('lat'),
+                    lng: $card.data('lng'),
+                    title: $card.find('.entry-title a').text() || 'Объект недвижимости'
+                });
             });
-        });
 
-        if (initialCoordinates.length > 0) {
-            initPropertyMap(initialCoordinates);
-        } else {
-            // Инициализируем пустую карту
-            initPropertyMap([]);
+            if (initialCoordinates.length > 0) {
+                initPropertyMap(initialCoordinates);
+            } else {
+                // Инициализируем пустую карту
+                initPropertyMap([]);
+            }
         }
     }, 1000);
 });

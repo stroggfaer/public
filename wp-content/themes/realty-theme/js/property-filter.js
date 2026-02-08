@@ -130,7 +130,7 @@ jQuery(document).ready(function($) {
     });
     
     // Автокомплит для локации
-    $('.location-autocomplete').on('keyup', function() {
+    $('.location-autocomplete').on('change', function() {
         var input = $(this).val();
         if (input.length >= 2) {
             $.ajax({
@@ -175,7 +175,7 @@ jQuery(document).ready(function($) {
         }
     });
     
-    // Обработчик события focus для отображения подсказок при повторном фокусе
+   // Обработчик события focus для отображения подсказок при повторном фокусе
     $('.location-autocomplete').on('focus', function() {
         var input = $(this).val();
         if (input.length >= 2) {
@@ -183,7 +183,7 @@ jQuery(document).ready(function($) {
             $(this).trigger('keyup');
         }
     });
-    
+
     // Скрытие подсказок при потере фокуса
     $('.location-autocomplete').on('blur', function() {
         // Добавляем небольшую задержку, чтобы успеть кликнуть по подсказке
@@ -195,9 +195,9 @@ jQuery(document).ready(function($) {
     // Обработка клавиш стрелок и Enter для выбора из списка
     var currentFocus = -1;
     $('.location-autocomplete').on('keydown', function(e) {
+
         var suggestions = $('.location-suggestion');
         if (suggestions.length === 0) return;
-        
         if (e.which === 40) { // Arrow Down
             e.preventDefault();
             currentFocus++;
@@ -237,33 +237,6 @@ jQuery(document).ready(function($) {
 
 // Добавляем валидацию для формы на главной странице
 jQuery(document).ready(function($) {
-    // Обработка инпута для гостей
-    $('.guest-increase').on('click', function() {
-        var target = $(this).data('target');
-        var input = $('#' + 'filter-' + target);
-        var currentVal = parseInt(input.val());
-        var maxVal = target === 'adults' ? 10 : 8;
-        
-        if (!isNaN(currentVal) && currentVal < maxVal) {
-            input.val(currentVal + 1);
-        } else if (isNaN(currentVal)) {
-            input.val(1);
-        }
-    });
-    
-    $('.guest-decrease').on('click', function() {
-        var target = $(this).data('target');
-        var input = $('#' + 'filter-' + target);
-        var currentVal = parseInt(input.val());
-        var minVal = target === 'adults' ? 1 : 0;
-        
-        if (!isNaN(currentVal) && currentVal > minVal) {
-            input.val(currentVal - 1);
-        } else if (isNaN(currentVal)) {
-            input.val(minVal);
-        }
-    });
-    
     // Автокомплит для локации
     $('.location-autocomplete').on('keyup', function() {
         var input = $(this).val();
@@ -279,10 +252,15 @@ jQuery(document).ready(function($) {
                 success: function(response) {
                     if (response.success) {
                         // Показываем результаты автокомплита
+                        var icon = $(".input-group__com").data('name-icon')
                         var suggestionsHtml = '<div class="location-suggestions">';
                         if (response.data.length > 0) {
                             response.data.forEach(function(location) {
-                                suggestionsHtml += '<div class="location-suggestion" data-value="' + location.slug + '">' + location.name + '</div>';
+                                suggestionsHtml += '<div class="location-suggestion" data-value="' + location.slug + '">';
+                                    if (icon) {
+                                        suggestionsHtml += '<span class="icon material-symbols-outlined">' + icon + '</span>';
+                                    }
+                                suggestionsHtml += location.name + '</div>';
                             });
                         } else {
                             suggestionsHtml += '<div class="location-suggestion no-results">Ничего не найдено</div>';

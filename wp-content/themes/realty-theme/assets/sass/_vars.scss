@@ -5,15 +5,15 @@ $color-dark-grey: #969696;
 $color-light-grey: #B6B8B9;
 $color-readonly-grey: #D8D8DA;
 $color-medium-grey: #F8F8F8;
-$color-medium-grey-2: #D5D5D5;
+$color-medium-grey-2: #eeeeee;
 $color-medium-grey-3: #fafafa;
 $color-grey-dark-2: #262626;
 $color-black-lite: #4f4f4f;
-$color-black: #292929;
+$color-black: rgba(19, 22, 22);
 $color-black-medium: #333333;
 $color-black-line: #595959;
 $color-white: white;
-$color-green: var(--primary-color);
+
 $color-green-medium: rgba(183, 235, 143, 1); //#F6FFED;
 $color-green-dark: #2A4B15;
 $color-green-lite: #F6FFED;
@@ -27,6 +27,8 @@ $color-orange: #FEAF5A;
 $color-orange-medium: #ffcf99;
 $color-orange-lite: #ffe9d8;
 $color-width: #fff;
+$color-width-2: #fafaf9;
+
 $color-blue-light: #F2F6FC;
 $color-blue-normal: #1F1E81;
 $color-blue-line: rgba(31, 30, 129, 0.07);
@@ -41,7 +43,7 @@ $color-grey-lite: #F5F5F8;
 $color-yellow: #FEFC62;
 $bg-spinner: rgba(0, 0, 0, 0.7);
 
-$base-font:         "Inter","Montserrat","HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+$base-font:         "Montserrat","HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 //$base-font:         "Source Sans Pro", "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 
 $header-font:       $base-font;
@@ -62,19 +64,25 @@ $color_grey: #B8B8B8;
 $color_header_grey: #EFEFEF;
 $color_white: #fff;
 $color_red: #FF3E17;
+$color_red-2: #f8104b;
 $color_orange:#F78522;
-$color_green_dark: #0A473B;
+$color_green: #307875;
+$color_green_dark: #08544a;
+$color_green-light: rgb(48, 120, 117);
 $color_grey_normal: #D9D9D9;
 $color_text: #808080;
 // SITE
-$color-site: #F78522;
+$color-site: $color_green;
 $color-footer: #115a4c;
-$color-a: #a0bab5;
+$color-a: $color-black;
+$color-a-hover: $color_green-light;
 //Theme;
 $menu-shadow: rgba(0, 0, 0, 0.15);
 $background-color: #FFFFFF;
 $input-border: #D5D5D5;
 $background-content: #fff;
+//input
+$color-input-bg: $color-medium-grey;
 //
 $media-desktop: 1920px;
 $media-book-win10: 1280px;

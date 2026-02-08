@@ -64,6 +64,24 @@ function setup_property_pods() {
                     'type' => 'text',
                     'required' => false,
                 ),
+                'area' => array(
+                    'name' => 'area',
+                    'label' => 'Площадь',
+                    'type' => 'number',
+                    'required' => false,
+                ),
+                'rooms' => array(
+                    'name' => 'rooms',
+                    'label' => 'Количество комнат',
+                    'type' => 'number',
+                    'required' => false,
+                ),
+                'floor' => array(
+                    'name' => 'floor',
+                    'label' => 'Этаж',
+                    'type' => 'number',
+                    'required' => false,
+                ),
                 'latitude' => array(
                     'name' => 'latitude',
                     'label' => 'Широта (геолокация)',
@@ -80,6 +98,12 @@ function setup_property_pods() {
                     'name' => 'guest_count',
                     'label' => 'Количество гостей',
                     'type' => 'number',
+                    'required' => false,
+                ),
+                'location' => array(
+                    'name' => 'location',
+                    'label' => 'Расположение',
+                    'type' => 'text',
                     'required' => false,
                 ),
                 'availability_dates' => array(

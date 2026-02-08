@@ -43,7 +43,13 @@ article.post {
      margin-bottom: 5px;
   }
 }
-
+.font-bold {
+  font-weight: 700;
+}
+.py-10 {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
 .post_meta {
   display: flex;
   gap: 5px;
@@ -421,4 +427,42 @@ article.post .the-content {
 
 .selected-products .product a:hover {
   text-decoration: underline;
+}
+// home
+.hero-banner {
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('~@assets/images/home-bg.jpeg') center/cover no-repeat;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #fff;
+  padding: 40px 0;
+  position: relative;
+  border-radius: 18px;
+  margin-top: 40px;
+  .hero-content {
+    width: 100%;
+    padding: 0 20px;
+    z-index: 2;
+  }
+
+  .hero-title {
+    font-size: 40px;
+    margin-bottom: 15px;
+    color: #fff;
+  }
+  .hero-subtitle {
+    font-size: 24px;
+    margin-bottom: 50px;
+  }
+}
+
+.map__block {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .col-full {
+     width: 100%;
+  }
 }

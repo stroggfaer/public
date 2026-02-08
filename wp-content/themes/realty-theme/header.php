@@ -19,6 +19,7 @@ $favicon = esc_url( get_template_directory_uri() ).'/favicon.ico';
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <?php // Loads HTML5 JavaScript file to add support for HTML5 elements in older IE versions. ?>
 <!--[if lt IE 9]>
 <script src="<?php echo get_template_directory_uri(); ?>/js/html5.js" type="text/javascript"></script>
@@ -27,7 +28,7 @@ $favicon = esc_url( get_template_directory_uri() ).'/favicon.ico';
 ?>
 </head>
 
-<body <?php body_class(); ?> >
+<body <?php body_class(is_singular('property') ? 'single-property' : ''); ?> >
 <!--Подключаем интерефейс шапку -->
 <?php  get_template_part( 'template-parts/component/header' ); ?>
 <!--./Подключаем интерефейс шапку -->

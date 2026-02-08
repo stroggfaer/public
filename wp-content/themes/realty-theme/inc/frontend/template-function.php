@@ -44,8 +44,8 @@ function custom_widgets_init() {
         'description'   => __('Добавьте сюда свои виджеты.', 'text_domain'),
         'before_widget' => '<div class="widget %2$s">',
         'after_widget'  => '</div>',
-        'before_title'  => '<h2 class="widget-title">',
-        'after_title'   => '</h2>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
     ));
     register_sidebar(array(
         'name'          => __('Футер виджет 2', 'text_domain'),
@@ -53,8 +53,8 @@ function custom_widgets_init() {
         'description'   => __('Добавьте сюда свои виджеты.', 'text_domain'),
         'before_widget' => '<div class="widget %2$s">',
         'after_widget'  => '</div>',
-        'before_title'  => '<h2 class="widget-title">',
-        'after_title'   => '</h2>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
     ));
     register_sidebar(array(
         'name'          => __('Футер виджет 3', 'text_domain'),
@@ -62,8 +62,17 @@ function custom_widgets_init() {
         'description'   => __('Добавьте сюда свои виджеты.', 'text_domain'),
         'before_widget' => '<div class="widget %2$s">',
         'after_widget'  => '</div>',
-        'before_title'  => '<h2 class="widget-title">',
-        'after_title'   => '</h2>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
+    ));
+    register_sidebar(array(
+        'name'          => __('Футер виджет 4', 'text_domain'),
+        'id'            => 'footer-widget-4',
+        'description'   => __('Добавьте сюда свои виджеты.', 'text_domain'),
+        'before_widget' => '<div class="widget %2$s">',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
     ));
 }
 

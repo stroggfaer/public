@@ -9,30 +9,64 @@ get_header(); ?>
 
 <div id="primary" class="content-area">
     <main id="main" class="site-main" role="main">
-        
-        <!-- Визуальный баннер с формой поиска -->
-        <section class="hero-banner">
-            <div class="container">
+        <div class="col-full">
+            <!-- Визуальный баннер с формой поиска -->
+            <section class="hero-banner">
                 <div class="hero-content">
-                    <h1 class="hero-title">Найдите идеальное жилье для вашего отдыха</h1>
-                    <p class="hero-subtitle">Более 10,000 вариантов аренды по всему миру</p>
-                
+                    <h1 class="hero-title">Найдите идеальное жилье<br> для вашего отдыха</h1>
+                    <div class="hero-subtitle">Более 10,000 вариантов аренды по всему миру</div>
+
                     <!-- Форма поиска недвижимости -->
-                    <div class="search-form-container">
+                    <div class="main-search-form-container">
                         <?php echo property_filter_render_home_form(); ?>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="chips py-10">
+            <div class="col-full">
+                <div class="chip-container">
+                    <div class="chip__com">
+                        <span class="material-symbols-outlined">beach_access</span>
+                        <span class="chip__com-text">Beachfront</span>
+                    </div>
+
+                    <div class="chip__com">
+                        <span class="material-symbols-outlined">cabin</span>
+                        <span class="chip__com-text">Cabins</span>
+                    </div>
+
+                    <div class="chip__com">
+                        <span class="material-symbols-outlined">apartment</span>
+                        <span class="chip__com-text">City Flats</span>
+                    </div>
+
+                    <div class="chip__com">
+                        <span class="material-symbols-outlined">pool</span>
+                        <span class="chip__com-text">Amazing Pools</span>
+                    </div>
+
+                    <div class="chip__com">
+                        <span class="material-symbols-outlined">landscape</span>
+                        <span class="chip__com-text">Mountain Views</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Дополнительный контент -->
-        <section class="featured-properties">
-            <div class="container">
-                <h2 class="section-title">Популярные предложения</h2>
+        <section class="featured-properties__com py-10">
+            <div class="col-full">
+                <div class="featured-header">
+                    <h2 class="section-title font-bold">Trending Destinations</h2>
+                    <a href="#" class="bold border">View all</a>
+                </div>
+
                 <?php
                 // Выводим несколько популярных объектов недвижимости
                 $featured_properties = pods('property', array(
-                    'limit' => 6,
+                    'limit' => 4,
                     'orderby' => 'RAND()',
                     'where' => 't.post_status = "publish"'
                 ));
@@ -50,6 +84,29 @@ get_header(); ?>
             </div>
         </section>
 
+
+        <section class="map__block py-10">
+            <div class="col-full">
+                <div class="map-card__com ">
+                    <div class="map-card__com-content">
+                        <h2 class="map-card__com-title">Discover on the map</h2>
+                        <p class="map-card__com-description">
+                            Explore the best rentals in your favorite neighborhood with our interactive map search tool.
+                        </p>
+                        <button class="button__com lg">
+                            <span class="material-symbols-outlined">map</span>
+                            Open Interactive Map
+                        </button>
+                    </div>
+
+                    <div class="map-card__com-image-wrapper">
+                        <div class="point animate-pulse">
+                            <span class="material-symbols-outlined">location_on</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 </div>
 

@@ -135,83 +135,106 @@ function property_filter_render_home_form() {
     ?>
     <form id="property-home-filter-form" class="property-filter-form home-filter" method="GET" action="<?php echo esc_url(home_url('/property/')); ?>">
         <div class="filter-row">
-            <?php if (in_array('location', $active_filters)): ?>
-                  <div class="filter-group location-group">
-                      <label for="filter-location">Город или регион:</label>
-                      <input type="text" name="location" id="filter-location" class="location-autocomplete"
-                             autocomplete="nope"
-                             value="<?php
-                             if (isset($_GET['location']) && !empty($_GET['location'])) {
-                                 $location_slug = sanitize_text_field($_GET['location']);
-                                 // Пытаемся найти термин по slug
-                                 $location_term = get_term_by('slug', $location_slug, 'location');
-                                 if ($location_term) {
-                                     // Если нашли, выводим имя
-                                     echo esc_attr($location_term->name);
-                                 } else {
-                                     // Если не нашли, выводим то, что ввели
-                                     echo esc_attr($location_slug);
-                                 }
-                             }
-                             ?>" placeholder="Введите город или регион">
-                      <input type="hidden" name="location_slug" id="filter-location-slug"
-                             value="<?php echo isset($_GET['location']) ? esc_attr(sanitize_text_field($_GET['location'])) : ''; ?>">
-                  </div>
-                  <?php endif; ?>
+                   <?php if (in_array('location', $active_filters)): ?>
+                         <div class="input-group__com location-group" data-name-icon="location_on">
+                             <div class="input-with-icon">
+                                 <span class="icon material-symbols-outlined">location_on</span>
+                                 <input type="text" name="location" id="filter-location" class="location-autocomplete input__com"
+                                        autocomplete="nope"
+                                        value="<?php
+                                        if (isset($_GET['location']) && !empty($_GET['location'])) {
+                                            $location_slug = sanitize_text_field($_GET['location']);
+                                            // Пытаемся найти термин по slug
+                                            $location_term = get_term_by('slug', $location_slug, 'location');
+                                            if ($location_term) {
+                                                // Если нашли, выводим имя
+                                                echo esc_attr($location_term->name);
+                                            } else {
+                                                // Если не нашли, выводим то, что ввели
+                                                echo esc_attr($location_slug);
+                                            }
+                                        }
+                                        ?>" placeholder="Город или регион">
+                             </div>
+                             <input type="hidden" name="location_slug" id="filter-location-slug"
+                                    value="<?php echo isset($_GET['location']) ? esc_attr(sanitize_text_field($_GET['location'])) : ''; ?>">
+                         </div>
+                   <?php endif; ?>
+       
+                   <?php if (in_array('checkin_date', $active_filters) && in_array('checkout_date', $active_filters)): ?>
+                     <div class="input-group__com date-group">
+                       <div class="input-with-icon">
+                         <span class="icon material-symbols-outlined">date_range</span>
+                           <input type="text" id="daterange" name="daterange" readonly
+                                  value="<?php
+                                  $checkin = isset($_GET['checkin_date']) ? $_GET['checkin_date'] : '';
+                                  $checkout = isset($_GET['checkout_date']) ? $_GET['checkout_date'] : '';
+                                  if ($checkin && $checkout) {
+                                      echo esc_attr($checkin . ' - ' . $checkout);
+                                  } elseif ($checkin) {
+                                      echo esc_attr($checkin . ' - ');
+                                  } elseif ($checkout) {
+                                      echo esc_attr(' - ' . $checkout);
+                                  }
+                                  ?>" placeholder="Даты" class="input__com">
+                       </div>
+                       <input type="hidden" name="checkin_date" id="filter-checkin"
+                              value="<?php echo isset($_GET['checkin_date']) ? esc_attr($_GET['checkin_date']) : ''; ?>">
+                       <input type="hidden" name="checkout_date" id="filter-checkout"
+                              value="<?php echo isset($_GET['checkout_date']) ? esc_attr($_GET['checkout_date']) : ''; ?>">
+                   </div>
+                   <?php endif; ?>
 
-            <?php if (in_array('checkin_date', $active_filters) && in_array('checkout_date', $active_filters)): ?>
-            <div class="filter-group date-group">
-                <label>Даты проживания:</label>
-                <input type="text" id="daterange" name="daterange" readonly
-                       value="<?php
-                       $checkin = isset($_GET['checkin_date']) ? $_GET['checkin_date'] : '';
-                       $checkout = isset($_GET['checkout_date']) ? $_GET['checkout_date'] : '';
-                       if ($checkin && $checkout) {
-                           echo esc_attr($checkin . ' - ' . $checkout);
-                       } elseif ($checkin) {
-                           echo esc_attr($checkin . ' - ');
-                       } elseif ($checkout) {
-                           echo esc_attr(' - ' . $checkout);
-                       }
-                       ?>" placeholder="Выберите даты">
-                <input type="hidden" name="checkin_date" id="filter-checkin"
-                       value="<?php echo isset($_GET['checkin_date']) ? esc_attr($_GET['checkin_date']) : ''; ?>">
-                <input type="hidden" name="checkout_date" id="filter-checkout"
-                       value="<?php echo isset($_GET['checkout_date']) ? esc_attr($_GET['checkout_date']) : ''; ?>">
-            </div>
-            <?php endif; ?>
-        </div>
-
-        <div class="filter-row">
             <?php if (in_array('adults', $active_filters) || in_array('children', $active_filters)): ?>
-            <div class="filter-group guests-group">
-                <label>Гости:</label>
-                <div class="guest-controls">
-                    <div class="guest-control">
-                        <span class="guest-label">Взрослые</span>
-                        <div class="guest-input">
-                            <button type="button" class="guest-decrease" data-target="adults">-</button>
-                            <input type="text" name="adults" id="filter-adults" value="<?php echo isset($_GET['adults']) ? intval($_GET['adults']) : 1; ?>" readonly>
-                            <button type="button" class="guest-increase" data-target="adults">+</button>
+                <div class="input-group__com guests-group">
+                    <div class="input-with-icon">
+                        <div class="icon material-symbols-outlined">group</div>
+                        <input type="text" readonly name="location" value class="input__com guests-placeholder js-guests-val" autocomplete="nope" placeholder="Гости">
+                    </div>
+                    <div class="guest-controls-wrapper">
+                        <div class="guest-controls">
+                            <div class="guest-control">
+                                <div class="flex-label">
+                                    <span class="guest-label">Взрослые</span>
+                                    <span class="guest-desc">от 13 лет</span>
+                                </div>
+                                <div class="guest-input">
+                                    <button type="button" class="guest-decrease" data-target="adults">
+                                        <span class="material-symbols-outlined">remove</span>
+                                    </button>
+                                    <input type="text" name="adults"  value="<?php echo isset($_GET['adults']) ? intval($_GET['adults']) : 1; ?>" readonly>
+                                    <button type="button" class="guest-increase" data-target="adults">
+                                         <span class="material-symbols-outlined">add_2</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <?php if (in_array('children', $active_filters)): ?>
+                                <div class="guest-control">
+                                    <div class="flex-label">
+                                        <span class="guest-label">Дети</span>
+                                        <span class="guest-desc">от 2 до 12 лет</span>
+                                    </div>
+                                    <div class="guest-input">
+                                        <button type="button" class="guest-decrease" data-target="children">
+                                            <span class="material-symbols-outlined">remove</span>
+                                        </button>
+                                        <input type="text" name="children" value="<?php echo isset($_GET['children']) ? intval($_GET['children']) : 0; ?>" readonly>
+                                        <button type="button" class="guest-increase" data-target="children">
+                                            <span class="material-symbols-outlined">add_2</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <?php if (in_array('children', $active_filters)): ?>
-                    <div class="guest-control">
-                        <span class="guest-label">Дети</span>
-                        <div class="guest-input">
-                            <button type="button" class="guest-decrease" data-target="children">-</button>
-                            <input type="text" name="children" id="filter-children" value="<?php echo isset($_GET['children']) ? intval($_GET['children']) : 0; ?>" readonly>
-                            <button type="button" class="guest-increase" data-target="children">+</button>
-                        </div>
-                    </div>
-                    <?php endif; ?>
                 </div>
-            </div>
             <?php endif; ?>
         </div>
-
         <div class="filter-actions">
-            <button type="submit" class="filter-submit">Искать</button>
+            <button type="submit" class="button__com lg">
+                <div class="icon material-symbols-outlined">search</div>
+                Искать
+            </button>
         </div>
     </form>
     <?php
@@ -368,7 +391,7 @@ function property_filter_build_where($filters = array()) {
         }
     }
     
-    // Фильтр по отдельной дате выезда
+    // Фильтр по отдельной дате выезд��
     if (empty($filters['checkin_date']) && !empty($filters['checkout_date'])) {
         $checkout_date = sanitize_text_field($filters['checkout_date']);
         $checkout_ts = strtotime($checkout_date);
@@ -499,97 +522,64 @@ function filter_properties_custom_ajax_handler() {
 
     $pod = pods('property', $params);
 
-    // Подготовка координат для карты
-    $coordinates = array();
-    ob_start();
-
     if ($pod->total() > 0) {
+        ob_start();
         echo '<div class="properties-grid">';
         while ($pod->fetch()) {
-            // Получаем координаты для каждого объекта
-            $property_id = $pod->id();
-            $property_lat = $pod->field('latitude');
-            $property_lng = $pod->field('longitude');
-            $property_title = $pod->display('post_title');
-
-            // Добавляем координаты в массив, если они существуют
-            if (!empty($property_lat) && !empty($property_lng)) {
-                $coordinates[] = array(
-                    'id' => $property_id,
-                    'lat' => $property_lat,
-                    'lng' => $property_lng,
-                    'title' => $property_title
-                );
-            }
-
             get_template_part('template-parts/component/property-card', null, array('pod' => $pod));
         }
         echo '</div>';
+        $html = ob_get_clean();
 
-        echo '<div class="results-info">';
-        echo '<p>Всего объектов: ' . $pod->total() . '</p>';
-        echo '</div>';
+        wp_send_json_success(array(
+            'html' => $html,
+            'total' => $pod->total(),
+            'total_pages' => $pod->total_pages(),
+            'pagination' => $pod->pagination(array('type' => 'list'))
+        ));
     } else {
-        echo '<div class="no-results">';
-        echo '<p>Недвижимость не найдена.</p>';
-        echo '</div>';
+        wp_send_json_success(array(
+            'html' => '<p>Недвижимость не найдена.</p>',
+            'total' => 0
+        ));
     }
-
-    wp_send_json_success(array(
-        'properties_html' => ob_get_clean(),
-        'count'           => $pod->total(),
-        'coordinates'     => $coordinates
-    ));
 }
-
-
-// Регистрируем новый AJAX обработчик
 add_action('wp_ajax_filter_properties_custom', 'filter_properties_custom_ajax_handler');
 add_action('wp_ajax_nopriv_filter_properties_custom', 'filter_properties_custom_ajax_handler');
 
 /**
- * Проверяет корректность дат (заезд не позже выезда и не в прошлом)
+ * AJAX обработчик для автодополнения местоположений
  */
-function validate_property_dates($checkin_date, $checkout_date) {
-    $errors = array();
-    
-    if (!empty($checkin_date)) {
-        $checkin_timestamp = strtotime($checkin_date);
-        $current_time = time();
-        
-        // Проверяем, что дата заезда не в прошлом
-        if ($checkin_timestamp < $current_time - 86400) { // -1 день для учета часового пояса
-            $errors[] = 'Дата заезда не может быть в прошлом.';
-        }
+function location_autocomplete_ajax_handler() {
+    if (
+        !isset($_GET['nonce']) ||
+        !wp_verify_nonce($_GET['nonce'], 'property_filter_nonce')
+    ) {
+        wp_send_json_error('Security check failed');
     }
     
-    if (!empty($checkin_date) && !empty($checkout_date)) {
-        $checkin_timestamp = strtotime($checkin_date);
-        $checkout_timestamp = strtotime($checkout_date);
-        
-        // Проверяем, что дата заезда не позже даты выезда
-        if ($checkin_timestamp > $checkout_timestamp) {
-            $errors[] = 'Дата заезда не может быть позже даты выезда.';
-        }
-    }
-    
-    return $errors;
-}
+    $search_term = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
 
-/**
- * Проверяет корректность количества гостей
- */
-function validate_guest_numbers($adults, $children) {
-    $errors = array();
-    
-    if (!empty($adults) && ($adults < 1 || $adults > 10)) {
-        $errors[] = 'Количество взрослых должно быть от 1 до 10.';
+    if (empty($search_term)) {
+        wp_send_json_error('Empty search term');
     }
-    
-    if (!empty($children) && ($children < 0 || $children > 8)) {
-        $errors[] = 'Количество детей должно быть от 0 до 8.';
-    }
-    
-    return $errors;
-}
 
+    $locations = get_terms(array(
+        'taxonomy' => 'location',
+        'name__like' => $search_term,
+        'hide_empty' => false,
+        'number' => 10
+    ));
+
+    $results = array();
+    foreach ($locations as $location) {
+        $results[] = array(
+            'label' => $location->name,
+            'value' => $location->slug
+        );
+    }
+
+    wp_send_json($results);
+}
+add_action('wp_ajax_location_autocomplete', 'location_autocomplete_ajax_handler');
+add_action('wp_ajax_nopriv_location_autocomplete', 'location_autocomplete_ajax_handler');
