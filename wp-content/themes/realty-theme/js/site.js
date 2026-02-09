@@ -18,23 +18,23 @@ jQuery(document).ready(function($) {
         }
     });
 });
-document.addEventListener('DOMContentLoaded', function () {
-    const menu = document.querySelector('.menu');
-    const toggle = document.querySelector('.menu-toggle');
+// document.addEventListener('DOMContentLoaded', function () {
+//     const menu = document.querySelector('.menu');
+//     const toggle = document.querySelector('.menu-toggle');
 
-    toggle.addEventListener('click', () => {
-        menu.classList.toggle('active');
+//     toggle.addEventListener('click', () => {
+//         menu.classList.toggle('active');
 
-        // Переключение значка
-        if (menu.classList.contains('active')) {
-            toggle.textContent = '×'; // Крестик
-            toggle.setAttribute('aria-label', 'Закрыть меню');
-        } else {
-            toggle.textContent = '☰'; // Гамбургер
-            toggle.setAttribute('aria-label', 'Открыть меню');
-        }
-    });
-});
+//         // Переключение значка
+//         if (menu.classList.contains('active')) {
+//             toggle.textContent = '×'; // Крестик
+//             toggle.setAttribute('aria-label', 'Закрыть меню');
+//         } else {
+//             toggle.textContent = '☰'; // Гамбургер
+//             toggle.setAttribute('aria-label', 'Открыть меню');
+//         }
+//     });
+// });
 
 $(function () {
 
@@ -123,7 +123,38 @@ $(function () {
     $(document).on('click', function () {
         $('.guest-controls-wrapper').removeClass('open');
     });
-
 });
 
 
+document.addEventListener('DOMContentLoaded', function () {
+    const thumbnails = new Splide('#thumbnail-slider', {
+        fixedWidth: 150,      // Ширина миниатюры
+        fixedHeight: 100,     // Высота миниатюры
+        gap: 10,              // Отступ между ними
+        rewind: true,
+        pagination: false,
+        isNavigation: true,   // Делает слайды кликабельными
+        direction: 'ttb',     // Вертикальное направление
+        height: '500px',      // Общая высота блока (подстройте под основной слайдер)
+        arrows: true,         // Стрелки вверх/вниз
+        breakpoints: {
+            768: {
+                fixedWidth: 100,
+                fixedHeight: 70,
+                direction: 'ltr', // На мобильных лучше сделать горизонтально
+                height: 'auto',
+            },
+        },
+    });
+
+    // 2. Инициализация основного слайдера
+    const mainSlider = new Splide('#main-slider', {
+        type: 'fade',      // Плавный переход
+        rewind: true,
+        pagination: false,
+        arrows: false,     // Стрелки можно скрыть, если управление через миниатюры
+    });
+    mainSlider.sync(thumbnails);
+    mainSlider.mount();
+    thumbnails.mount();
+});

@@ -67,11 +67,20 @@ function naked_scripts()  {
     wp_enqueue_style('font-awesome.min.css', get_stylesheet_directory_uri() . '/assets/font-awesome/css/font-awesome.min.css');
     wp_enqueue_style('font-awesome.min.css', get_stylesheet_directory_uri() . '/assets/font-awesome/css/font-awesome.min.css');
     wp_enqueue_style('main.min.css', get_stylesheet_directory_uri() . '/dist/css/main.min.css');
+    // Подключаем стили Splide для галереи на странице недвижимости
+    if (is_singular('property')) {
+        wp_enqueue_style('splide-core', get_template_directory_uri() . '/js/slider/splide.min.css', array(), NAKED_VERSION, 'all');
+    }
 //    wp_enqueue_style('main.css', get_stylesheet_directory_uri() . '/assets/css/main.css');
     /*----End CSS----*/
     wp_enqueue_script( 'naked-jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js', array( 'jquery' ), NAKED_VERSION, true );
 	// add theme scripts
     wp_enqueue_script( 'naked', get_template_directory_uri() . '/js/site.js', array(), NAKED_VERSION, true );
+    
+    // Подключаем скрипт Splide для галереи на странице недвижимости
+    if (is_singular('property')) {
+        wp_enqueue_script('splide-core', get_template_directory_uri() . '/js/slider/splide.min.js', array('jquery'), NAKED_VERSION, true);
+    }
 
     /*----End JS----*/
 
