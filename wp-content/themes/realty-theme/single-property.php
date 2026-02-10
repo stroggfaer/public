@@ -36,48 +36,50 @@ get_header(); ?>
                             Reine, Lofoten Islands, Norway
                         </div>
 
-                        <div class="property-description">
-                            <?php the_content(); ?>
+                        <div class="property-features">
+                            <div class="feature-item">
+                                <div class="icon-circle">
+                                    <span class="material-symbols-outlined">group</span>
+                                </div>
+                                <div class="feature-text">
+                                    <span class="label">GUESTS</span>
+                                    <span class="value">Up to 4</span>
+                                </div>
+                            </div>
+
+                            <div class="feature-item">
+                                <div class="icon-circle">
+                                    <span class="material-symbols-outlined">bed</span>
+                                </div>
+                                <div class="feature-text">
+                                    <span class="label">BEDROOMS</span>
+                                    <span class="value">2 Queen</span>
+                                </div>
+                            </div>
+
+                            <div class="feature-item">
+                                <div class="icon-circle">
+                                    <span class="material-symbols-outlined">bathtub</span>
+                                </div>
+                                <div class="feature-text">
+                                    <span class="label">BATHS</span>
+                                    <span class="value">1.5 Baths</span>
+                                </div>
+                            </div>
+
+                            <div class="feature-item">
+                                <div class="icon-circle">
+                                    <span class="material-symbols-outlined">wifi</span>
+                                </div>
+                                <div class="feature-text">
+                                    <span class="label">FIBER</span>
+                                    <span class="value">500 Mbps</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="property-features">
-                            <h3>Основные характеристики</h3>
-                            <ul>
-                                <?php
-                                // Получаем данные из пользовательских полей (Pods)
-                                $price = $pod->field('price');
-                                if (!empty($price)) {
-                                    echo '<li><strong>Цена:</strong> ' . esc_html($price) . '</li>';
-                                }
-
-                                $area = $pod->field('area');
-                                if (!empty($area)) {
-                                    echo '<li><strong>Площадь:</strong> ' . esc_html($area) . ' м²</li>';
-                                }
-
-                                $rooms = $pod->field('rooms');
-                                if (!empty($rooms)) {
-                                    echo '<li><strong>Количество комнат:</strong> ' . esc_html($rooms) . '</li>';
-                                }
-
-                                $floor = $pod->field('floor');
-                                if (!empty($floor)) {
-                                    echo '<li><strong>Этаж:</strong> ' . esc_html($floor) . '</li>';
-                                }
-
-                                $address = $pod->field('address');
-                                if (!empty($address)) {
-                                    echo '<li><strong>Адрес:</strong> ' . esc_html($address) . '</li>';
-                                }
-
-                                // Получаем таксономию location
-                                $location_terms = get_the_terms(get_the_ID(), 'location');
-                                if (!empty($location_terms) && !is_wp_error($location_terms)) {
-                                    $location_names = wp_list_pluck($location_terms, 'name');
-                                    echo '<li><strong>Расположение:</strong> ' . esc_html(implode(', ', $location_names)) . '</li>';
-                                }
-                                ?>
-                            </ul>
+                        <div class="property-description">
+                            <?php the_content(); ?>
                         </div>
 
                         <div class="property-map">
