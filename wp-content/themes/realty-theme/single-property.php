@@ -79,11 +79,49 @@ get_header(); ?>
                         </div>
 
                         <div class="property-description">
+                            <h3 class="title">Описание</h3>
                             <?php the_content(); ?>
                         </div>
 
+                        <div class="property-key-characteristics">
+                            <h3 class="title">Основные характеристики</h3>
+                            <div class="characteristics-grid">
+                                <div class="characteristic-item">
+                                    <span class="material-symbols-outlined">pets</span>
+                                    <span class="label">Pet Friendly</span>
+                                    <span class="value">Allowed</span>
+                                </div>
+                                <div class="characteristic-item">
+                                    <span class="material-symbols-outlined">work</span>
+                                    <span class="label">Workstation</span>
+                                    <span class="value">Ergonomic</span>
+                                </div>
+                                <div class="characteristic-item">
+                                    <span class="material-symbols-outlined">thermostat</span>
+                                    <span class="label">Heating</span>
+                                    <span class="value">Geothermal</span>
+                                </div>
+                                <div class="characteristic-item">
+                                    <span class="material-symbols-outlined">ac_unit</span>
+                                    <span class="label">Cooling</span>
+                                    <span class="value">Air Purifier</span>
+                                </div>
+                                <div class="characteristic-item">
+                                    <span class="material-symbols-outlined">kitchen</span>
+                                    <span class="label">Kitchen</span>
+                                    <span class="value">Fully Equipped</span>
+                                </div>
+                                <div class="characteristic-item">
+                                    <span class="material-symbols-outlined">ev_charger</span>
+                                    <span class="label">EV Charging</span>
+                                    <span class="value">Level 2</span>
+                                </div>
+                            </div>
+                            <div class="action"><a href="#" class="bold border all">Показыть все</a></div>
+                        </div>
+
                         <div class="property-map">
-                            <h3>Местоположение</h3>
+                            <h3 class="title">Местоположение</h3>
                             <?php
                             // Получаем координаты для отображения карты
                             // Используем Pods для получения значений полей

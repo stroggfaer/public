@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+SC:wght@100..900&family=Noto+Sans+TC:wght@500&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');/*
+/*
 Theme Name: realty-theme
 Theme URI:
 Author: Rendzhi
@@ -97,7 +97,7 @@ video {
   vertical-align: baseline;
   font: inherit;
   font-size: 100%;
-  font-family: 'Inter';
+  font-family: 'Manrope', sans-serif;
 }
 /* HTML5 display-role reset for older browsers */
 article,
@@ -673,25 +673,6 @@ html[xmlns] .clearfix {
     min-width: 0; /* Prevents flex item from overflowing */
 }
 
-.property-map-container {
-    flex: 1;
-    padding: 20px;
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
-}
-
-.property-map-container h2 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.5em;
-}
-
-.property-map {
-    width: 100%;
-    height: 500px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
 
 .entry-title {
     margin: 0 0 10px 0;

@@ -1,10 +1,6 @@
 /*!**********************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[2].use[3]!./assets/sass/main.scss ***!
   \**********************************************************************************************************************************************************************************************************************************************/
-@import url(https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200);
-/*!**************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[2].use[3]!./assets/sass/main.scss (1) ***!
-  \**************************************************************************************************************************************************************************************************************************************************/
 @charset "UTF-8";
 body, html {
   height: 100%;
@@ -291,7 +287,6 @@ body, html {
   margin: 0 0 0 5px;
 }
 
-/* Подключение шрифта Google Material Symbols в начале вашего файла */
 .chip-container {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -1896,6 +1891,12 @@ input[type=submit]:hover {
   cursor: auto;
 }
 
+.property-detail {
+  margin-bottom: 30px;
+}
+.property-detail h3.title {
+  margin-bottom: 24px;
+}
 .property-detail .property-columns {
   display: grid;
   grid-template-columns: 1fr 400px;
@@ -2237,6 +2238,57 @@ input[type=submit]:hover {
   .property-detail .property-features .feature-item {
     width: calc(50% - 10px);
   }
+}
+.property-detail .property-key-characteristics {
+  padding: 30px 0;
+  border-bottom: 1px solid rgb(243, 244, 246);
+}
+.property-detail .property-key-characteristics .characteristics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+@media (max-width: 768px) {
+  .property-detail .property-key-characteristics .characteristics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.property-detail .property-key-characteristics .characteristic-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 16px;
+}
+.property-detail .property-key-characteristics .characteristic-item .material-symbols-outlined {
+  font-size: 24px;
+  color: #9ca3af;
+}
+.property-detail .property-key-characteristics .characteristic-item .label {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+}
+.property-detail .property-key-characteristics .characteristic-item .value {
+  font-weight: 400;
+  color: #307875;
+}
+.property-detail .property-key-characteristics .action {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
+  margin-top: 10px;
+}
+.property-detail .property-description {
+  font-size: 18px;
+  font-weight: 300;
+}
+.property-detail .property-map {
+  margin-top: 20px;
 }
 
 .footer {
