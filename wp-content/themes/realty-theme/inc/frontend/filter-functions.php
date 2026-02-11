@@ -160,7 +160,7 @@ function property_filter_render_home_form() {
                                     value="<?php echo isset($_GET['location']) ? esc_attr(sanitize_text_field($_GET['location'])) : ''; ?>">
                          </div>
                    <?php endif; ?>
-       
+        
                    <?php if (in_array('checkin_date', $active_filters) && in_array('checkout_date', $active_filters)): ?>
                      <div class="input-group__com date-group">
                        <div class="input-with-icon">
@@ -391,7 +391,7 @@ function property_filter_build_where($filters = array()) {
         }
     }
     
-    // Фильтр по отдельной дате выезд��
+    // Фильтр по отдельной дате выезда
     if (empty($filters['checkin_date']) && !empty($filters['checkout_date'])) {
         $checkout_date = sanitize_text_field($filters['checkout_date']);
         $checkout_ts = strtotime($checkout_date);

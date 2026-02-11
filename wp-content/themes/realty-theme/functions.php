@@ -11,23 +11,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'NAKED_VERSION', 1.0 );
 
 /*-----------------------------------------------------------------------------------*/
-/*  Set the maximum allowed width for any content in the theme
-/*-----------------------------------------------------------------------------------*/
+	/*  Set the maximum allowed width for any content in the theme
+	/*-----------------------------------------------------------------------------------*/
 if ( ! isset( $content_width ) ) $content_width = 900;
 
 /*-----------------------------------------------------------------------------------*/
-/* Add Rss feed support to Head section
-/*-----------------------------------------------------------------------------------*/
+	/* Add Rss feed support to Head section
+	/*-----------------------------------------------------------------------------------*/
 add_theme_support( 'automatic-feed-links' );
 
 /*-----------------------------------------------------------------------------------*/
-/* Add post thumbnail/featured image support
-/*-----------------------------------------------------------------------------------*/
+	/* Add post thumbnail/featured image support
+	/*-----------------------------------------------------------------------------------*/
 add_theme_support( 'post-thumbnails' );
 
 /*-----------------------------------------------------------------------------------*/
-/* Register main menu for Wordpress use
-/*-----------------------------------------------------------------------------------*/
+	/* Register main menu for Wordpress use
+	/*-----------------------------------------------------------------------------------*/
 register_nav_menus(
 	array(
 		'primary'	=>	__( 'Primary Menu', 'naked' ), // Register the Primary menu
@@ -37,8 +37,8 @@ register_nav_menus(
 );
 
 /*-----------------------------------------------------------------------------------*/
-/* Activate sidebar for Wordpress use
-/*-----------------------------------------------------------------------------------*/
+	/* Activate sidebar for Wordpress use
+	/*-----------------------------------------------------------------------------------*/
 function naked_register_sidebars() {
 	register_sidebar(array(				// Start a series of sidebars to register
 		'id' => 'sidebar', 					// Make an ID
@@ -49,7 +49,7 @@ function naked_register_sidebars() {
 		'before_title' => '<h3 class="side-title">',	// What to display before each widget's title
 		'after_title' => '</h3>',		// What to display following each widget's title
 		'empty_title'=> '',					// What to display in the case of no title defined for a widget
-		// Copy and paste the lines above right here if you want to make another sidebar,
+		// Copy and paste the lines above right here if you want to make another menu,
 		// just change the values of id and name to another word/name
 	));
 }
@@ -57,8 +57,8 @@ function naked_register_sidebars() {
 add_action( 'widgets_init', 'naked_register_sidebars' );
 
 /*-----------------------------------------------------------------------------------*/
-/* Enqueue Styles and Scripts
-/*-----------------------------------------------------------------------------------*/
+	/* Enqueue Styles and Scripts
+	/*-----------------------------------------------------------------------------------*/
 function naked_scripts()  {
     /*----Start CSS----*/
     wp_enqueue_style('element-ui-style', 'https://unpkg.com/element-ui/lib/theme-chalk/index.css', array(), NAKED_VERSION, 'all');
@@ -136,10 +136,10 @@ require get_template_directory() . '/inc/admin/admin-function.php';
 require get_template_directory() . '/inc/frontend/template-function.php';
 // Подключаем файл с функциями фильтрации
 require get_template_directory() . '/inc/frontend/filter-functions.php';
-// Подключаем файл с административными функциями фильтрации
-require get_template_directory() . '/inc/admin/admin-filter-function.php';
 // Подключаем файл с регистрацией CPT и таксономий
 require get_template_directory() . '/inc/admin/pods-registration.php';
+// Подключаем универсальную страницу настроек
+require get_template_directory() . '/inc/admin/settings/index-settings.php';
 
 // Добавляем проверку валидности параметров фильтрации при загрузке страницы
 add_action('template_redirect', 'validate_property_search_parameters');
