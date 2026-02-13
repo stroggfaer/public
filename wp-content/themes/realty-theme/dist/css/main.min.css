@@ -2273,6 +2273,11 @@ input[type=submit]:hover {
 .property-detail .location .material-symbols-outlined {
   color: #6b7280;
 }
+.property-detail .property-features-title {
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 12px;
+}
 .property-detail .property-features {
   display: -webkit-box;
   display: -ms-flexbox;

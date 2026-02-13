@@ -5,8 +5,9 @@
  * @package WordPress
  * @subpackage Realty Theme
  */
+get_header();
 
-get_header(); ?>
+?>
 
 <div class="col-full">
     <div class="property-detail">
@@ -15,6 +16,18 @@ get_header(); ?>
         while (have_posts()) :
             the_post();
             $pod = pods('property', get_the_ID());
+            $address = $pod->field('address') ?? false;
+            $price = $pod->field('price'); // Цена
+
+            // Получаем город из таксономии location
+            $locations = get_the_terms(get_the_ID(), 'location');
+            $city = !is_wp_error($locations) && !empty($locations) ? $locations[0]->name : '';
+
+            // Формируем отображение: г. Город, Адрес
+            $location_display = trim('г. ' . $city . ', ' . $address, ', ');
+//            echo '<pre>';
+//            print_r($pod);
+//            echo '</pre>';
             ?>
             <?php  get_template_part( 'template-parts/component/breadcrumbs'); ?>
             <div class="property-columns">
@@ -32,9 +45,8 @@ get_header(); ?>
                         </div>
                         <div class="location">
                             <span class="material-symbols-outlined">location_on</span>
-                            Reine, Lofoten Islands, Norway
+                            <?=esc_html($location_display)?>
                         </div>
-
                         <?php  get_template_part( 'template-parts/content/single/property-features',null, array('pod' => $pod)); ?>
 
                         <?php  get_template_part( 'template-parts/content/single/property-rules',null, array('pod' => $pod)); ?>

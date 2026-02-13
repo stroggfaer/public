@@ -12,7 +12,12 @@ $pod = $args['pod'] ?? null;
 if (!$pod) {
     return;
 }
+$floor = $pod->field('floor'); // Этаж:
+$rooms = $pod->field('rooms'); // Количество комнат
+$area = $pod->field('area'); // Площадь
+
 ?>
+<div class="property-features-title">Квартира</div>
 <div class="section-property property-features">
     <div class="feature-item__com">
         <div class="icon-circle">

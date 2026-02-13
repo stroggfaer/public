@@ -222,7 +222,11 @@
             color: $color-dark-grey-2;
         }
     }
-
+    .property-features-title {
+        font-size: 20px;
+        font-weight: 300;
+        margin-bottom: 12px;
+    }
     .property-features {
         display: flex;
         flex-wrap: wrap;
