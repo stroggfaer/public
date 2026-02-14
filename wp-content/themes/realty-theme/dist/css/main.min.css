@@ -2070,6 +2070,24 @@ input[type=submit]:hover {
   border: 2px solid #1890FF;
 }
 .property-detail .property-gallery-container {
+  /* Одиночное изображение */
+}
+.property-detail .property-gallery-container .property-gallery-single {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.property-detail .property-gallery-container .property-gallery-single img,
+.property-detail .property-gallery-container .property-gallery-single .property-gallery-image,
+.property-detail .property-gallery-container .property-gallery-single .property-featured-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  display: block;
+}
+.property-detail .property-gallery-container {
   /* Адаптивность для мобилок */
 }
 @media (max-width: 768px) {
@@ -2081,6 +2099,35 @@ input[type=submit]:hover {
   }
   .property-detail .property-gallery-container .thumb-slider-wrapper {
     width: 100%;
+  }
+  .property-detail .property-gallery-container .thumb-slider-wrapper .splide__track {
+    padding-bottom: 10px;
+  }
+  .property-detail .property-gallery-container .thumb-slider-wrapper .splide__list {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    gap: 8px;
+  }
+  .property-detail .property-gallery-container .thumb-slider-wrapper .splide__slide {
+    width: 80px !important;
+    height: 60px !important;
+    -ms-flex-negative: 0;
+        flex-shrink: 0;
+  }
+  .property-detail .property-gallery-container .thumb-slider-wrapper .splide__slide img {
+    width: 100%;
+    height: 60px;
+    -o-object-fit: cover;
+       object-fit: cover;
+  }
+  .property-detail .property-gallery-container .main-slider-wrapper img {
+    height: 300px;
+  }
+  .property-detail .property-gallery-container .property-gallery-single img,
+  .property-detail .property-gallery-container .property-gallery-single .property-gallery-image,
+  .property-detail .property-gallery-container .property-gallery-single .property-featured-image {
+    max-height: 300px;
   }
 }
 .property-detail {

@@ -38,7 +38,7 @@ function display_property_thumbnail_column($column_name, $post_id) {
            echo '<img src="' . get_the_post_thumbnail_url($post_id, 'thumbnail') . '" style="width: 80px; height: 80px; object-fit: cover;" />';
        } else {
            // Если миниатюры нет, выводим заглушку
-           echo '<img src="' . get_template_directory_uri() . '/assets/images/no_image.png" alt="Заглушка" style="width: 80px; height: auto;" />';
+           echo '<img src="' . get_template_directory_uri() . '/assets/images/no_image.jpg" alt="Заглушка" style="width: 80px; height: auto;" />';
        }
    }
 }

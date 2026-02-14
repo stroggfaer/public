@@ -31,9 +31,12 @@ $max_children = get_post_meta($property_id, '_max_children', true);
 
 // Получаем изображение
 $thumbnail_url = get_the_post_thumbnail_url($property_id, 'medium');
+$gallery_data = pod_get_gallery_data($pod, 'medium', true);
+
 if (!$thumbnail_url) {
-    $thumbnail_url = get_template_directory_uri() . '/assets/images/no_image.png';
+    $thumbnail_url = $gallery_data['src'];
 }
+
 ?>
 <article class="property-card" data-id="<?php echo esc_attr($property_id); ?>"
     data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">

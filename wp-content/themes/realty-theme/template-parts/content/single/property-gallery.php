@@ -1,9 +1,12 @@
 <?php
 /**
- * Шаблон Галлерия недвижимости
+ * Шаблон: Галерея объекта недвижимости
  *
- * @param object $pod Pods объект недвижимости
+ * Логика:
+ * - если галерея Pods пустая → показываем featured image (если есть)
+ * - иначе → всегда карусель Splide (даже если 1 фото)
  */
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -12,60 +15,69 @@ $pod = $args['pod'] ?? null;
 if (!$pod) {
     return;
 }
-?>
 
-<div class="property-gallery-container">
+$post_id    = get_the_ID();
+$post_title = get_the_title($post_id);
+
+// Получаем данные галереи Pods
+$gallery_data = pod_get_gallery_data($pod, 'large');
+
+// Если галерея пустая выводим заглушка
+if (empty($gallery_data)) { ?>
+    <div class="property-gallery-container">
+        <div class="property-gallery-single">
+            <img src="<?= empty_img_placeholder() ?>" alt="<?= esc_attr($post_title) ?>" />
+        </div>
+    </div>
     <?php
+    return;
+}
+// Если одна;
+if (count($gallery_data) === 1) { ?>
+    <div class="property-gallery-container">
+        <div class="property-gallery-single">
+            <img src="<?= $gallery_data[0]['src'] ?>" alt="<?= esc_attr($post_title) ?>" />
+        </div>
+    </div>
+    <?php
+    return;
+}
 
-    $gallery_images = $pod->field('gallery');
 
-    // Очищаем массив от пустых элементов и проверяем, что это массив
-    if (!empty($gallery_images)) {
-        $gallery_images = is_array($gallery_images) ? array_filter($gallery_images) : array($gallery_images);
-    }
-
-    if (!empty($gallery_images)) :
-        $count = count($gallery_images);
-        ?>
-        <div class="property-gallery <?php echo ($count === 1) ? 'single-image-mode' : ''; ?>">
-
-            <div id="main-slider" class="splide main-slider-wrapper">
+?>
+    <div class="property-gallery-container">
+        <div class="property-gallery">
+            <div id="main-slider" class="splide main-slider-wrapper" role="group" aria-label="Галерея объекта">
                 <div class="splide__track">
                     <ul class="splide__list">
-                        <?php foreach ($gallery_images as $image_id) :
-                            $img = wp_get_attachment_image_src($image_id, 'large');
-                            if ($img) : ?>
-                                <li class="splide__slide">
-                                    <img src="<?php echo esc_url($img[0]); ?>" alt="Property Image">
-                                </li>
-                            <?php endif;
-                        endforeach; ?>
+                        <?php foreach ($gallery_data as $item):?>
+                            <li class="splide__slide">
+                                <img src="<?= esc_url($item['src']) ?>"
+                                     alt="<?= esc_attr($item['alt']) ?>"
+                                     loading="lazy"
+                                >
+                            </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
             </div>
 
-            <?php if ($count > 1) : ?>
-                <div id="thumbnail-slider" class="splide thumb-slider-wrapper">
+            <?php if (count($gallery_data) > 1): ?>
+                <div id="thumbnail-slider" class="splide thumb-slider-wrapper" role="group" aria-label="Превью галереи">
                     <div class="splide__track">
                         <ul class="splide__list">
-                            <?php foreach ($gallery_images as $image_id) :
-                                $thumb = wp_get_attachment_image_src($image_id, 'thumbnail');
-                                if ($thumb) : ?>
-                                    <li class="splide__slide">
-                                        <img src="<?php echo esc_url($thumb[0]); ?>" alt="Thumbnail">
-                                    </li>
-                                <?php endif;
-                            endforeach; ?>
+                            <?php foreach ($gallery_data as $item): ?>
+                                <li class="splide__slide">
+                                    <img src="<?= esc_url($item['src']) ?>"
+                                         alt="<?= esc_attr($item['alt']) ?>"
+                                         loading="lazy">
+                                </li>
+                            <?php endforeach; ?>
                         </ul>
                     </div>
                 </div>
             <?php endif; ?>
 
         </div>
-    <?php else : ?>
-        <div class="property-gallery-empty">
-            <?php the_post_thumbnail('large'); ?>
-        </div>
-    <?php endif; ?>
-</div>
-
+    </div>
+<?php

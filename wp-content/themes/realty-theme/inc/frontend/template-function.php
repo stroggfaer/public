@@ -375,3 +375,95 @@ function query_post($args = [], $per_page = null) {
     // Выполняем запрос и возвращаем объект WP_Query
     return new WP_Query($query_args);
 }
+
+/**
+ * Получает данные галереи Pods
+ * - cover_only = true  → возвращает один элемент (обложка или заглушка)
+ * - cover_only = false → возвращает массив всех элементов (или пустой)
+ *
+ * @param int|object $post_or_pod  ID поста / Pods-объект / WP_Post
+ * @param string     $size         Размер изображения ('large', 'medium', 'full'…)
+ * @param bool       $cover_only   true = только первое фото / заглушка
+ * @return array                   один элемент или массив элементов
+ */
+function pod_get_gallery_data($post_or_pod, string $size = 'large', bool $cover_only = false): array {
+    // Нормализация входных данных → получаем Pods и post_id
+    if (is_numeric($post_or_pod)) {
+        $post_id = (int) $post_or_pod;
+        $pod = function_exists('pods') ? pods('property', $post_id) : null;
+    } elseif (is_object($post_or_pod)) {
+        if (method_exists($post_or_pod, 'field')) {
+            $pod = $post_or_pod;
+            $post_id = $pod->id() ?: get_the_ID();
+        } else {
+            $post_id = $post_or_pod->ID ?? get_the_ID();
+            $pod = function_exists('pods') ? pods('property', $post_id) : null;
+        }
+    } else {
+        $post_id = get_the_ID();
+        $pod = function_exists('pods') ? pods('property', $post_id) : null;
+    }
+
+    // Нет Pods или невалидный → заглушка или пусто
+    if (!$pod || !$pod->valid()) {
+        return $cover_only ? pod_placeholder($post_id) : [];
+    }
+
+    $raw = $pod->field('gallery');
+    if (empty($raw)) {
+        return $cover_only ? pod_placeholder($post_id) : [];
+    }
+
+    $items = (array) $raw;
+    $title = get_the_title($post_id);
+
+    foreach ($items as $item) {
+        $id = 0;
+        if (is_array($item))     $id = (int) ($item['ID']   ?? 0);
+        elseif (is_object($item)) $id = (int) ($item->ID    ?? 0);
+        elseif (is_numeric($item)) $id = (int) $item;
+
+        if ($id < 1) continue;
+
+        $img = wp_get_attachment_image_src($id, $size);
+        if (!$img || empty($img[0])) continue;
+
+        $data = [
+            'id'     => $id,
+            'src'    => esc_url($img[0]),
+            'alt'    => esc_attr(get_post_meta($id, '_wp_attachment_image_alt', true) ?: $title),
+            'width'  => (int) ($img[1] ?? 0),
+            'height' => (int) ($img[2] ?? 0),
+        ];
+
+        if ($cover_only) {
+            return $data;  // ← сразу возвращаем один элемент
+        }
+
+        $result[] = $data;
+    }
+
+    // Если ничего не нашли и cover_only → заглушка
+    if ($cover_only) {
+        return pod_placeholder($post_id);
+    }
+
+    return $result ?? [];
+}
+
+/** Заглушка в формате элемента галереи */
+function pod_placeholder(int $post_id): array {
+    $url = empty_img_placeholder();
+    $title = get_the_title($post_id);
+    return [
+        'id'     => 0,
+        'src'    => $url,
+        'alt'    => esc_attr($title),
+        'width'  => 0,
+        'height' => 0,
+    ];
+}
+
+function empty_img_placeholder() : string {
+   return esc_url(get_template_directory_uri() . '/assets/images/no_image.jpg');
+}
