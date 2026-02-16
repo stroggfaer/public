@@ -1,446 +1,316 @@
 jQuery(document).ready(function($) {
-    // Отключаем автозаполнение для поля локации
-    $('.location-autocomplete').attr('autocomplete', 'off');
-    
-    // Логика фильтрации
-    $('#property-filter-form').on('submit', function(e) {
+    // =============================================================
+    // Константы и основные селекторы
+    // =============================================================
+    const AJAX_URL = propertyFilter?.ajaxurl || '/wp-admin/admin-ajax.php';
+    const NONCE    = propertyFilter?.nonce    || '';
+
+    const SELECTORS = {
+        locationInput:    '.location-autocomplete',
+        locationGroup:    '.location-group',
+        locationSlug:     '#filter-location-slug',
+        suggestions:      '.location-suggestions',
+        suggestion:       '.location-suggestion',
+        propertyList:     '.property-list',
+        propertyCard:     '.property-card',
+        mapContainer:     '#property-map',
+        mainForm:         '#property-filter-form',
+        homeForm:         '#property-home-filter-form',
+        resetBtn:         '.filter-reset',
+        dateRange:        '#daterange',
+        checkin:          '#filter-checkin',
+        checkout:         '#filter-checkout',
+        adults:           '#filter-adults',
+        children:         '#filter-children'
+    };
+
+    // =============================================================
+    // Глобальные переменные карты
+    // =============================================================
+    let map     = null;
+    let markers = [];
+
+    // =============================================================
+    // Автокомплит локации
+    // =============================================================
+    let keyboardFocus = -1;
+
+    function hideLocationSuggestions() {
+        $(SELECTORS.suggestions).remove();
+        keyboardFocus = -1;
+    }
+
+    function renderLocationSuggestions(locations) {
+        const icon = $('.input-group__com').data('name-icon') || '';
+
+        let html = '<div class="location-suggestions">';
+        if (!locations?.length) {
+            html += '<div class="location-suggestion no-results">Ничего не найдено</div>';
+        } else {
+            locations.forEach(loc => {
+                html += '<div class="location-suggestion" ' +
+                    `data-value="${loc.slug}" ` +
+                    `data-location-value="${loc.name}">`;
+                if (icon) {
+                    html += `<span class="icon material-symbols-outlined">${icon}</span>`;
+                }
+                html += `${loc.name}</div>`;
+            });
+        }
+        html += '</div>';
+
+        hideLocationSuggestions();
+        $(SELECTORS.locationGroup).append(html);
+    }
+
+    function fetchLocationSuggestions(term) {
+        if (term.length < 2) {
+            hideLocationSuggestions();
+            return;
+        }
+
+        $.ajax({
+            url: AJAX_URL,
+            type: 'POST',
+            data: {
+                action: 'get_locations_autocomplete',
+                term: term,
+                nonce: NONCE
+            },
+            success(response) {
+                if (response?.success) {
+                    renderLocationSuggestions(response.data);
+                }
+            }
+        });
+    }
+
+    // События поля автокомплита
+    $(SELECTORS.locationInput)
+        .attr('autocomplete', 'off')
+        .on('input', function() {
+            fetchLocationSuggestions($(this).val().trim());
+        })
+        .on('focus', function() {
+            const val = $(this).val().trim();
+            if (val.length >= 2) fetchLocationSuggestions(val);
+        })
+        .on('blur', () => setTimeout(hideLocationSuggestions, 200))
+        .on('keydown', function(e) {
+            const $items = $(SELECTORS.suggestion);
+            if (!$items.length) return;
+
+            if (e.which === 40) {         // Arrow Down
+                e.preventDefault();
+                keyboardFocus++;
+            } else if (e.which === 38) {  // Arrow Up
+                e.preventDefault();
+                keyboardFocus--;
+            } else if (e.which === 13) {  // Enter
+                e.preventDefault();
+                if (keyboardFocus >= 0 && !$items.eq(keyboardFocus).hasClass('no-results')) {
+                    const $active = $items.eq(keyboardFocus);
+                    $(SELECTORS.locationInput).val($active.data('location-value'));
+                    $(SELECTORS.locationSlug).val($active.data('value'));
+                    hideLocationSuggestions();
+                }
+                return;
+            } else {
+                return;
+            }
+
+            keyboardFocus = Math.max(0, Math.min($items.length - 1, keyboardFocus));
+            $items.removeClass('autocomplete-active');
+            $items.eq(keyboardFocus).addClass('autocomplete-active');
+        });
+
+    // Клик по подсказке (делегирование)
+    $(document).on('click', SELECTORS.suggestion, function() {
+        if ($(this).hasClass('no-results')) return;
+        $(SELECTORS.locationInput).val($(this).data('location-value'));
+        $(SELECTORS.locationSlug).val($(this).data('value'));
+        hideLocationSuggestions();
+    });
+
+    // =============================================================
+    // Фильтрация объектов (основная форма)
+    // =============================================================
+    $(SELECTORS.mainForm).on('submit', function(e) {
         e.preventDefault();
 
-        var formData = $(this).serialize();
- 
+        const formData = $(this).serialize();
+
         $.ajax({
-            url: propertyFilter.ajaxurl,
+            url: AJAX_URL,
             type: 'POST',
-            data: formData + '&action=filter_properties_custom&nonce=' + propertyFilter.nonce,
-            beforeSend: function() {
-                $('.property-list').html('<div class="loading-indicator" style="display: block;"><p>Загрузка результатов...</p></div>');
+            data: formData + '&action=filter_properties_custom&nonce=' + NONCE,
+            beforeSend() {
+                $(SELECTORS.propertyList).html(
+                    '<div class="loading-indicator" style="display:block;"><p>Загрузка результатов...</p></div>'
+                );
             },
-            success: function(data) {
-                if (data.success) {
-                    $('.property-list').html(data.data.properties_html);
-                    // Переинициализируем карту после загрузки новых результатов
-                    setTimeout(initMap, 100);
+            success(data) {
+                if (data?.success) {
+                    $(SELECTORS.propertyList).html(data.data.properties_html);
+                    setTimeout(initMap, 120);
                 } else {
-                    $('.property-list').html('<p>Ошибка при загрузке результатов: ' + data.data + '</p>');
+                    $(SELECTORS.propertyList).html('<p>Ошибка при загрузке результатов: ' + (data?.data || '—') + '</p>');
                 }
             },
-            error: function() {
-                $('.property-list').html('<p>Произошла ошибка.</p>');
+            error() {
+                $(SELECTORS.propertyList).html('<p>Произошла ошибка.</p>');
             }
         });
     });
 
-    $('.filter-reset').on('click', function(e) {
+    // Сброс фильтра
+    $(SELECTORS.resetBtn).on('click', function(e) {
         e.preventDefault();
-        $('#property-filter-form')[0].reset();
-        $('#property-filter-form').trigger('submit');
+        $(SELECTORS.mainForm)[0]?.reset();
+        $(SELECTORS.mainForm).trigger('submit');
     });
 
-    // Инициализация карты
-    var map = null;
-    var markers = [];
-
-    // Функция инициализации карты
+    // =============================================================
+    // Карта и маркеры
+    // =============================================================
     function initMap() {
-        if (typeof L !== 'undefined' && $('#property-map').length) {
-            // Инициализация карты
-            map = L.map('property-map').setView([55.7558, 37.6173], 10); // По умолчанию Москва
+        if (typeof L === 'undefined' || !$(SELECTORS.mapContainer).length) return;
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+        map = L.map('property-map').setView([55.7558, 37.6173], 10);
 
-            // Добавляем метки на карту
-            addMarkersToMap();
-        }
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        refreshMarkers();
     }
 
-    // Функция для добавления меток на карту
-    function addMarkersToMap() {
+    function refreshMarkers() {
         if (!map) return;
 
-        // Удаляем предыдущие метки
-        markers.forEach(function(marker) {
-            map.removeLayer(marker);
-        });
+        // Очистка старых маркеров
+        markers.forEach(marker => map.removeLayer(marker));
         markers = [];
 
-        // Добавляем новые метки
-        $('.property-card[data-lat][data-lng]').each(function() {
-            var $card = $(this);
-            var lat = parseFloat($card.data('lat'));
-            var lng = parseFloat($card.data('lng'));
-            var id = $card.data('id');
+        // Добавление новых
+        $(SELECTORS.propertyCard + '[data-lat][data-lng]').each(function() {
+            const $card = $(this);
+            const lat = parseFloat($card.data('lat'));
+            const lng = parseFloat($card.data('lng'));
+            const id  = $card.data('id');
 
-            if (lat && lng) {
-                var marker = L.marker([lat, lng]).addTo(map);
+            if (isNaN(lat) || isNaN(lng)) return;
 
-                // При клике на метку, выделяем карточку и скроллим к ней
-                marker.on('click', function() {
-                    // Снимаем выделение со всех карточек
-                    $('.property-card').removeClass('highlighted');
+            const marker = L.marker([lat, lng]).addTo(map);
 
-                    // Выделяем нужную карточку
-                    var $targetCard = $('.property-card[data-id="' + id + '"]');
-                    if ($targetCard.length) {
-                        $targetCard.addClass('highlighted');
+            marker.on('click', () => {
+                $(SELECTORS.propertyCard).removeClass('highlighted');
+                const $target = $(`${SELECTORS.propertyCard}[data-id="${id}"]`);
+                if ($target.length) {
+                    $target.addClass('highlighted');
+                    $('html, body').animate({
+                        scrollTop: $target.offset().top - 100
+                    }, 500);
+                }
+            });
 
-                        // Плавный скролл к карточке
-                        $('html, body').animate({
-                            scrollTop: $targetCard.offset().top - 100
-                        }, 500);
-                    }
-                });
-
-                markers.push(marker);
-            }
+            markers.push(marker);
         });
     }
 
-    // Инициализируем карту при загрузке страницы
-    setTimeout(initMap, 500); // Даем время для загрузки Leaflet
-
-    // При клике на карточку, активируем соответствующую метку
-    $(document).on('click', '.property-card', function() {
+    // Клик по карточке → подсветка и центрирование маркера
+    $(document).on('click', SELECTORS.propertyCard, function() {
         if (!map) return;
 
-        var id = $(this).data('id');
-        var lat = parseFloat($(this).data('lat'));
-        var lng = parseFloat($(this).data('lng'));
+        const lat = parseFloat($(this).data('lat'));
+        const lng = parseFloat($(this).data('lng'));
 
-        if (lat && lng) {
-            // Снимаем выделение со всех меток
-            markers.forEach(function(marker) {
-                if (marker._icon) {
-                    $(marker._icon).removeClass('leaflet-marker-highlighted');
-                }
-            });
+        if (isNaN(lat) || isNaN(lng)) return;
 
-            // Активируем нужную метку
-            markers.forEach(function(marker) {
-                if (Math.abs(marker.getLatLng().lat - lat) < 0.0001 &&
-                    Math.abs(marker.getLatLng().lng - lng) < 0.0001) {
-                    if (marker._icon) {
-                        $(marker._icon).addClass('leaflet-marker-highlighted');
-                    }
-                    map.setView([lat, lng], 14);
-                }
-            });
-        }
-    });
-    
-    // Автокомплит для локации
-    $('.location-autocomplete').on('change', function() {
-        var input = $(this).val();
-        if (input.length >= 2) {
-            $.ajax({
-                url: propertyFilter.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'get_locations_autocomplete',
-                    term: input,
-                    nonce: propertyFilter.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Показываем результаты автокомплита
-                        var suggestionsHtml = '<div class="location-suggestions">';
-                        if (response.data.length > 0) {
-                            response.data.forEach(function(location) {
-                                suggestionsHtml += '<div class="location-suggestion" data-value="' + location.slug + '">' + location.name + '</div>';
-                            });
-                        } else {
-                            suggestionsHtml += '<div class="location-suggestion no-results">Ничего не найдено</div>';
-                        }
-                        suggestionsHtml += '</div>';
-                        
-                        $('.location-suggestions').remove(); // Удаляем предыдущие результаты
-                        $('.location-group').append(suggestionsHtml);
-                        
-                        // Обработка клика по варианту
-                        $('.location-suggestion').off('click').on('click', function() {
-                            var selectedValue = $(this).data('value');
-                            var selectedText = $(this).text();
-                            if (selectedValue) {
-                               $('.location-autocomplete').val(selectedText);
-                               $('#filter-location-slug').val(selectedValue);
-                            }
-                            $('.location-suggestions').remove();
-                        });
-                    }
-                }
-            });
-        } else {
-            $('.location-suggestions').remove();
-        }
-    });
-    
-   // Обработчик события focus для отображения подсказок при повторном фокусе
-    $('.location-autocomplete').on('focus', function() {
-        var input = $(this).val();
-        if (input.length >= 2) {
-            // Имитируем нажатие клавиши для вызова автозаполнения
-            $(this).trigger('keyup');
-        }
-    });
+        markers.forEach(m => $(m._icon).removeClass('leaflet-marker-highlighted'));
 
-    // Скрытие подсказок при потере фокуса
-    $('.location-autocomplete').on('blur', function() {
-        // Добавляем небольшую задержку, чтобы успеть кликнуть по подсказке
-        setTimeout(function() {
-            $('.location-suggestions').remove();
-        }, 200);
-    });
-    
-    // Обработка клавиш стрелок и Enter для выбора из списка
-    var currentFocus = -1;
-    $('.location-autocomplete').on('keydown', function(e) {
-
-        var suggestions = $('.location-suggestion');
-        if (suggestions.length === 0) return;
-        if (e.which === 40) { // Arrow Down
-            e.preventDefault();
-            currentFocus++;
-            addActive(suggestions);
-        } else if (e.which === 38) { // Arrow Up
-            e.preventDefault();
-            currentFocus--;
-            addActive(suggestions);
-        } else if (e.which === 13) { // Enter
-            e.preventDefault();
-            if (currentFocus > -1) {
-                if (suggestions.eq(currentFocus).hasClass('no-results')) {
-                    return;
-                }
-                var selectedValue = suggestions.eq(currentFocus).data('value');
-                var selectedText = suggestions.eq(currentFocus).text();
-                $('.location-autocomplete').val(selectedText);
-                $('#filter-location-slug').val(selectedValue);
-                $('.location-suggestions').remove();
-                currentFocus = -1;
+        markers.forEach(m => {
+            const pos = m.getLatLng();
+            if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lng) < 0.0001) {
+                $(m._icon).addClass('leaflet-marker-highlighted');
+                map.setView([lat, lng], 14);
             }
-        }
+        });
     });
-    
-    function addActive(suggestions) {
-        if (!suggestions) return false;
-        removeActive(suggestions);
-        if (currentFocus >= suggestions.length) currentFocus = 0;
-        if (currentFocus < 0) currentFocus = (suggestions.length - 1);
-        suggestions.eq(currentFocus).addClass('autocomplete-active');
-    }
-    
-    function removeActive(suggestions) {
-        suggestions.removeClass('autocomplete-active');
-    }
-});
 
-// Добавляем валидацию для формы на главной странице
-jQuery(document).ready(function($) {
-    // Автокомплит для локации
-    $('.location-autocomplete').on('keyup', function() {
-        var input = $(this).val();
-        if (input.length >= 2) { // Изменено с >2 на >=2, чтобы "Ка" уже показывало результаты
-            $.ajax({
-                url: propertyFilter.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'get_locations_autocomplete',
-                    term: input,
-                    nonce: propertyFilter.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Показываем результаты автокомплита
-                        var icon = $(".input-group__com").data('name-icon')
-                        var suggestionsHtml = '<div class="location-suggestions">';
-                        if (response.data.length > 0) {
-                            response.data.forEach(function(location) {
-                                suggestionsHtml += '<div class="location-suggestion" data-value="' + location.slug + '">';
-                                    if (icon) {
-                                        suggestionsHtml += '<span class="icon material-symbols-outlined">' + icon + '</span>';
-                                    }
-                                suggestionsHtml += location.name + '</div>';
-                            });
-                        } else {
-                            suggestionsHtml += '<div class="location-suggestion no-results">Ничего не найдено</div>';
-                        }
-                        suggestionsHtml += '</div>';
-                        
-                        $('.location-suggestions').remove(); // Удаляем предыдущие результаты
-                        $('.location-group').append(suggestionsHtml);
-                        
-                        // Обработка клика по варианту
-                        $('.location-suggestion').off('click').on('click', function() {
-                            var selectedValue = $(this).data('value');
-                            var selectedText = $(this).text();
-                            if (selectedValue) {
-                               $('.location-autocomplete').val(selectedText);
-                               $('#filter-location-slug').val(selectedValue);
-                            }
-                            $('.location-suggestions').remove();
-                        });
-                    }
-                }
-            });
-        } else {
-            $('.location-suggestions').remove();
-        }
-    });
-    
-    // Скрытие подсказок при потере фокуса
-    $('.location-autocomplete').on('blur', function() {
-        // Добавляем небольшую задержку, чтобы успеть кликнуть по подсказке
-        setTimeout(function() {
-            $('.location-suggestions').remove();
-        }, 200);
-    });
-    
-    // Обработка клавиш стрелок и Enter для выбора из списка
-    var currentFocus = -1;
-    $('.location-autocomplete').on('keydown', function(e) {
-        var suggestions = $('.location-suggestion');
-        if (suggestions.length === 0) return;
-        
-        if (e.which === 40) { // Arrow Down
-            e.preventDefault();
-            currentFocus++;
-            addActive(suggestions);
-        } else if (e.which === 38) { // Arrow Up
-            e.preventDefault();
-            currentFocus--;
-            addActive(suggestions);
-        } else if (e.which === 13) { // Enter
-            e.preventDefault();
-            if (currentFocus > -1) {
-                if (suggestions.eq(currentFocus).hasClass('no-results')) {
-                    return;
-                }
-                var selectedValue = suggestions.eq(currentFocus).data('value');
-                var selectedText = suggestions.eq(currentFocus).text();
-                $('.location-autocomplete').val(selectedText);
-                $('#filter-location-slug').val(selectedValue);
-                $('.location-suggestions').remove();
-                currentFocus = -1;
-            }
-        }
-    });
-    
-    function addActive(suggestions) {
-        if (!suggestions) return false;
-        removeActive(suggestions);
-        if (currentFocus >= suggestions.length) currentFocus = 0;
-        if (currentFocus < 0) currentFocus = (suggestions.length - 1);
-        suggestions.eq(currentFocus).addClass('autocomplete-active');
-    }
-    
-    function removeActive(suggestions) {
-        suggestions.removeClass('autocomplete-active');
-    }
-    
-    // Обработка отправки формы
-    $('#property-home-filter-form').on('submit', function(e) {
-        var checkinInput = $('#filter-checkin');
-        var checkoutInput = $('#filter-checkout');
-        var adultsInput = $('#filter-adults');
-        var childrenInput = $('#filter-children');
-        var locationInput = $('.location-autocomplete');
-        var locationSlug = $('#filter-location-slug');
-        
-        var checkinDate = checkinInput.val();
-        var checkoutDate = checkoutInput.val();
-        var adults = parseInt(adultsInput.val());
-        var children = parseInt(childrenInput.val());
-        var location = locationSlug.val(); // Используем slug для отправки
+    // Запуск карты с небольшой задержкой
+    setTimeout(initMap, 600);
 
-        // Проверяем даты
+    // =============================================================
+    // Валидация формы на главной странице
+    // =============================================================
+    $(SELECTORS.homeForm).on('submit', function(e) {
+        const checkinDate  = $(SELECTORS.checkin).val();
+        const checkoutDate = $(SELECTORS.checkout).val();
+        const adults       = parseInt($(SELECTORS.adults).val());
+        const children     = parseInt($(SELECTORS.children).val());
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Проверка дат
         if (checkinDate && checkoutDate) {
-            var checkin = new Date(checkinDate);
-            var checkout = new Date(checkoutDate);
-            
+            const checkin  = new Date(checkinDate);
+            const checkout = new Date(checkoutDate);
             if (checkin > checkout) {
                 e.preventDefault();
                 alert('Дата заезда не может быть позже даты выезда.');
-                return false;
+                return;
             }
         }
-        
-        // Проверяем текущую дату
-        var currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0); // Устанавливаем время на начало дня
-        
+
         if (checkinDate) {
-            var checkin = new Date(checkinDate);
-            if (checkin < currentDate) {
+            const checkin = new Date(checkinDate);
+            if (checkin < today) {
                 e.preventDefault();
                 alert('Дата заезда не может быть в прошлом.');
-                return false;
+                return;
             }
         }
-        
-        // Проверяем количество гостей
-        if (adults && (isNaN(adults) || adults < 1 || adults > 10)) {
+
+        // Проверка количества гостей
+        if (isNaN(adults) || adults < 1 || adults > 10) {
             e.preventDefault();
             alert('Количество взрослых должно быть от 1 до 10.');
-            return false;
+            return;
         }
-        
-        if (children && (isNaN(children) || children < 0 || children > 8)) {
+
+        if (isNaN(children) || children < 0 || children > 8) {
             e.preventDefault();
             alert('Количество детей должно быть от 0 до 8.');
-            return false;
+            return;
         }
     });
-});
 
-// Инициализация date range picker
-jQuery(document).ready(function($) {
-    if ($('#daterange').length > 0) {
-        // Загружаем библиотеку date range picker если она доступна
-        if (typeof moment !== 'undefined' && typeof $.fn.daterangepicker !== 'undefined') {
-            $('#daterange').daterangepicker({
-                locale: {
-                    format: 'YYYY-MM-DD',
-                    separator: ' - ',
-                    applyLabel: "Применить",
-                    cancelLabel: "Отмена",
-                    fromLabel: "С",
-                    toLabel: "По",
-                    customRangeLabel: "Свой диапазон",
-                    weekLabel: "Н",
-                    daysOfWeek: [
-                        "Вс",
-                        "Пн",
-                        "Вт",
-                        "Ср",
-                        "Чт",
-                        "Пт",
-                        "Сб"
-                    ],
-                    monthNames: [
-                        "Январь",
-                        "Февраль",
-                        "Март",
-                        "Апрель",
-                        "Май",
-                        "Июнь",
-                        "Июль",
-                        "Август",
-                        "Сентябрь",
-                        "Октябрь",
-                        "Ноябрь",
-                        "Декабрь"
-                    ],
-                },
-                startDate: moment().add(1, 'day'), // Завтра
-                endDate: moment().add(2, 'day'),   // Послезавтра
-                minDate: moment(), // Минимум сегодня
-                opens: 'center'
-            }, function(start, end, label) {
-                // Обновляем скрытые поля
-                $('#filter-checkin').val(start.format('YYYY-MM-DD'));
-                $('#filter-checkout').val(end.format('YYYY-MM-DD'));
-            });
-        }
+    // =============================================================
+    // Date Range Picker (если подключен)
+    // =============================================================
+    if ($(SELECTORS.dateRange).length && typeof moment !== 'undefined' && $.fn.daterangepicker) {
+        $(SELECTORS.dateRange).daterangepicker({
+            locale: {
+                format: 'YYYY-MM-DD',
+                separator: ' - ',
+                applyLabel: "Применить",
+                cancelLabel: "Отмена",
+                fromLabel: "С",
+                toLabel: "По",
+                customRangeLabel: "Свой диапазон",
+                weekLabel: "Н",
+                daysOfWeek: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+                monthNames: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+            },
+            startDate: moment().add(1, 'day'),
+            endDate: moment().add(2, 'day'),
+            minDate: moment(),
+            opens: 'center'
+        }, function(start, end) {
+            $(SELECTORS.checkin).val(start.format('YYYY-MM-DD'));
+            $(SELECTORS.checkout).val(end.format('YYYY-MM-DD'));
+        });
     }
 });
