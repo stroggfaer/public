@@ -127,6 +127,11 @@ $(function () {
 
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Проверяем существует ли элемент thumbnail-slider на странице
+    if (!document.getElementById('thumbnail-slider')) {
+        return; // Если элемента нет, выходим
+    }
+
     const thumbnails = new Splide('#thumbnail-slider', {
         fixedWidth: 150,      // Ширина миниатюры
         fixedHeight: 100,     // Высота миниатюры
