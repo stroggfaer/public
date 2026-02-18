@@ -247,8 +247,8 @@ jQuery(document).ready(function($) {
     $(SELECTORS.homeForm).on('submit', function(e) {
         const checkinDate  = $(SELECTORS.checkin).val();
         const checkoutDate = $(SELECTORS.checkout).val();
-        const adults       = parseInt($(SELECTORS.adults).val());
-        const children     = parseInt($(SELECTORS.children).val());
+        const adults   = parseInt($('input[name="adults"]').val()   || 0, 10);
+        const children = parseInt($('input[name="children"]').val() || 0, 10);
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -313,4 +313,91 @@ jQuery(document).ready(function($) {
             $(SELECTORS.checkout).val(end.format('YYYY-MM-DD'));
         });
     }
+
+
+    // =============================================================
+    // Счётчик гостей — переиспользуемый компонент
+    // =============================================================
+    function initGuestCounter() {
+
+        // Находим все блоки с классом .guest-input
+        $('.guest-input').each(function() {
+            const $container = $(this);
+            const $input     = $container.find('input[type="text"][readonly]');
+            const $decrease  = $container.find('.guest-decrease');
+            const $increase  = $container.find('.guest-increase');
+
+            // Минимальное и максимальное значение (можно переопределять через data-атрибуты)
+            let min = $container.data('min') || 0;
+            let max = $container.data('max') || 20;
+
+            // Для взрослых почти всегда min = 1
+            if ($input.attr('name') === 'adults') {
+                min = 1;
+            }
+
+            // Текущее значение
+            let value = parseInt($input.val()) || min;
+
+            // Функция обновления значения и UI
+            function updateValue(newVal) {
+                if (newVal < min) newVal = min;
+                if (newVal > max) newVal = max;
+
+                value = newVal;
+                $input.val(value);
+
+                // Отключаем кнопку -, если достигли минимума
+                $decrease.prop('disabled', value <= min);
+                // Отключаем кнопку +, если достигли максимума
+                $increase.prop('disabled', value >= max);
+
+                // Обновляем общее отображение гостей
+                updateGuestsPlaceholder();
+            }
+
+            // Обработчики кликов
+            $decrease.on('click', function() {
+                updateValue(value - 1);
+            });
+
+            $increase.on('click', function() {
+                updateValue(value + 1);
+            });
+
+            // Инициализация состояния кнопок при загрузке
+            updateValue(value);
+        });
+    }
+
+    // =============================================================
+    // Обновление текста в поле "Гости" (3 гостя, 2 взрослых, 1 ребёнок и т.д.)
+    // =============================================================
+    function updateGuestsPlaceholder() {
+        const adults   = parseInt($('input[name="adults"]').val())   || 0;
+        const children = parseInt($('input[name="children"]').val()) || 0;
+        const total    = adults + children;
+
+        let text = 'Гости';
+
+        if (total > 0) {
+            const  objTotal = declension(['гостей', 'гость', 'гостя'], total);
+            text = `${objTotal.count} ${objTotal.text}`;
+        }
+
+        $('.js-guests-val').val(text);
+    }
+
+
+    // =============================================================
+    // Запуск
+    // =============================================================
+    initGuestCounter();
+    updateGuestsPlaceholder();   // начальное значение
+
+
+    // При изменении любым способом (в т.ч. если где-то ещё поменяют)
+    $(document).on('change input', 'input[name="adults"], input[name="children"]', function() {
+        updateGuestsPlaceholder();
+    });
 });
