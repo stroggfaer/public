@@ -291,27 +291,103 @@ jQuery(document).ready(function($) {
     // Date Range Picker (если подключен)
     // =============================================================
     if ($(SELECTORS.dateRange).length && typeof moment !== 'undefined' && $.fn.daterangepicker) {
-        $(SELECTORS.dateRange).daterangepicker({
-            locale: {
-                format: 'YYYY-MM-DD',
-                separator: ' - ',
-                applyLabel: "Применить",
-                cancelLabel: "Отмена",
-                fromLabel: "С",
-                toLabel: "По",
-                customRangeLabel: "Свой диапазон",
-                weekLabel: "Н",
-                daysOfWeek: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
-                monthNames: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
-            },
-            startDate: moment().add(1, 'day'),
-            endDate: moment().add(2, 'day'),
-            minDate: moment(),
-            opens: 'center'
-        }, function(start, end) {
-            $(SELECTORS.checkin).val(start.format('YYYY-MM-DD'));
-            $(SELECTORS.checkout).val(end.format('YYYY-MM-DD'));
+        // Сокращения месяцев на русском
+        const monthNamesShort = ['янв', 'февр', 'март', 'апр', 'май', 'июнь', 'июль', 'авг', 'сент', 'окт', 'нояб', 'дек'];
+
+        // Функция форматирования даты в русском формате
+        function formatDateRU(momentDate) {
+            const day = momentDate.format('D');
+            const month = monthNamesShort[momentDate.month()];
+            return day + ' ' + month;
+        }
+
+        // Функция формирования красивой строки диапазона
+        function formatDateRange(start, end) {
+            if (!start || !end) return '';
+
+            const startMonth = start.month();
+            const endMonth = end.month();
+
+            // Если один месяц: "5 – 12 март"
+            if (startMonth === endMonth) {
+                return start.format('D') + ' – ' + end.format('D') + ' ' + monthNamesShort[startMonth];
+            }
+            // Разные месяцы: "19 февр. – 21 февр."
+            return formatDateRU(start) + '. – ' + formatDateRU(end) + '.';
+        }
+
+        // Функция обновления видимого поля
+        function updateDateRangeInput(start, end) {
+            const $input = $(SELECTORS.dateRange);
+            if (start && end) {
+                $input.val(formatDateRange(start, end));
+            } else {
+                $input.val('');
+            }
+        }
+
+        // Функция инициализации daterangepicker
+        function initDateRangePicker() {
+            // Проверяем значения в hidden полях
+            const checkinVal  = $(SELECTORS.checkin).val();
+            const checkoutVal = $(SELECTORS.checkout).val();
+
+            let startDate, endDate;
+
+            if (checkinVal && checkoutVal) {
+                startDate = moment(checkinVal);
+                endDate = moment(checkoutVal);
+            } else {
+                // Значения по умолчанию - завтра и послезавтра
+                startDate = moment().add(1, 'day');
+                endDate = moment().add(2, 'day');
+            }
+
+            $(SELECTORS.dateRange).daterangepicker({
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' - ',
+                    applyLabel: 'Применить',
+                    cancelLabel: 'Отмена',
+                    fromLabel: 'С',
+                    toLabel: 'По',
+                    customRangeLabel: 'Свой диапазон',
+                    weekLabel: 'Н',
+                    daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+                    monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+                },
+                startDate: startDate,
+                endDate: endDate,
+                minDate: moment(),
+                opens: 'center',
+                autoUpdateInput: false
+            }, function(start, end) {
+                // Обновляем hidden поля
+                $(SELECTORS.checkin).val(start.format('YYYY-MM-DD'));
+                $(SELECTORS.checkout).val(end.format('YYYY-MM-DD'));
+                // Обновляем видимое поле
+                updateDateRangeInput(start, end);
+            });
+
+            // Если даты уже выбраны - показываем их
+            if (checkinVal && checkoutVal) {
+                updateDateRangeInput(startDate, endDate);
+            } else {
+                // Показываем placeholder
+                $(SELECTORS.dateRange).attr('placeholder', 'В любое время');
+            }
+        }
+
+        // Обработка кнопки "Отмена" - сброс выбора
+        $(SELECTORS.dateRange).on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+            $(SELECTORS.checkin).val('');
+            $(SELECTORS.checkout).val('');
+            $(this).attr('placeholder', 'В любое время');
         });
+
+        // Инициализация
+        initDateRangePicker();
     }
 
 

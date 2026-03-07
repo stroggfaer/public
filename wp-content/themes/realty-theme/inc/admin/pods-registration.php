@@ -12,15 +12,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Регистрация CPT property и связанных таксономий
  */
 function register_property_cpt_and_taxonomies() {
-    // Проверяем, активен ли плагин Pods
+    // Резервный вариант - регистрируем стандартными средствами WordPress
+    // Это гарантирует, что CPT будет зарегистрирован даже если Pods не активен
+    add_action( 'init', 'register_property_post_type', 0 );
+    add_action( 'init', 'register_property_location_taxonomy', 0 );
+    add_action( 'init', 'register_property_type_taxonomy', 0 );
+    
+    // Если Pods активен, дополнительно настраиваем через Pods
     if ( class_exists( 'Pods_Init' ) ) {
-        // Регистрируем CPT и таксономии через Pods
         add_action( 'init', 'setup_property_pods', 12 );
-    } else {
-        // Резервный вариант - регистрируем стандартными средствами WordPress
-        add_action( 'init', 'register_property_post_type' );
-        add_action( 'init', 'register_property_location_taxonomy' );
-        add_action( 'init', 'register_property_type_taxonomy' );
     }
 }
 
@@ -128,6 +128,7 @@ function setup_property_pods() {
                         'file_field_template' => 'rows',
                     )
                 ),
+
             ),
             'options' => array(
                 'public' => true,

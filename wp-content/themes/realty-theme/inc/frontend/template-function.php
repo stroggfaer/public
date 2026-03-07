@@ -467,3 +467,60 @@ function pod_placeholder(int $post_id): array {
 function empty_img_placeholder() : string {
    return esc_url(get_template_directory_uri() . '/assets/images/no_image.jpg');
 }
+
+/**
+ * Валидация дат заезда и выезда
+ */
+function validate_property_dates($checkin_date, $checkout_date = '') {
+    $errors = array();
+    
+    // Проверяем формат даты заезда
+    $checkin_ts = strtotime($checkin_date);
+    if ($checkin_ts === false) {
+        $errors[] = 'Неверный формат даты заезда';
+    } else {
+        // Проверяем, что дата заезда не в прошлом
+        $today = strtotime(date('Y-m-d'));
+        if ($checkin_ts < $today) {
+            $errors[] = 'Дата заезда не может быть в прошлом';
+        }
+    }
+    
+    // Проверяем формат даты выезда, если она передана
+    if (!empty($checkout_date)) {
+        $checkout_ts = strtotime($checkout_date);
+        if ($checkout_ts === false) {
+            $errors[] = 'Неверный формат даты выезда';
+        } else {
+            // Проверяем, что дата выезда не раньше даты заезда
+            if ($checkin_ts !== false && $checkout_ts < $checkin_ts) {
+                $errors[] = 'Дата выезда не может быть раньше даты заезда';
+            }
+        }
+    }
+    
+    return $errors;
+}
+
+/**
+ * Валидация количества гостей
+ */
+function validate_guest_numbers($adults = 0, $children = 0) {
+    $errors = array();
+    
+    // Проверяем количество взрослых
+    if ($adults < 1) {
+        $errors[] = 'Количество взрослых должно быть не менее 1';
+    } elseif ($adults > 10) {
+        $errors[] = 'Количество взрослых не может превышать 10';
+    }
+    
+    // Проверяем количество детей
+    if ($children < 0) {
+        $errors[] = 'Количество детей не может быть отрицательным';
+    } elseif ($children > 8) {
+        $errors[] = 'Количество детей не может превышать 8';
+    }
+    
+    return $errors;
+}

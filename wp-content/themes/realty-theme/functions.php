@@ -127,6 +127,15 @@ function enqueue_property_filter_scripts() {
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce'   => wp_create_nonce('property_filter_nonce')
     ));
+    
+    // Подключаем отдельный JS для фильтров на странице архива недвижимости
+    if (is_post_type_archive('property')) {
+        wp_enqueue_script('archive-property-filter', get_template_directory_uri() . '/js/archive-property-filter.js', array('jquery'), null, true);
+        wp_localize_script('archive-property-filter', 'propertyFilter', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('property_filter_nonce')
+        ));
+    }
 }
 
 // Админка часть;
@@ -215,6 +224,7 @@ function get_locations_autocomplete_callback() {
                 'slug' => $location->slug
             );
         }
+        
         
         // Сортируем результаты: сначала те, которые начинаются с введенного термина
         usort($results, function($a, $b) use ($term) {

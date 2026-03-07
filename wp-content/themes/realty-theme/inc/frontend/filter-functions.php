@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 /**
  * Рендер формы фильтрации
  */
-function property_filter_render_form() {
+function property_filter_render_form($context = 'default') {
     // Получаем настройки активных фильтров
     $active_filters = get_option('property_active_filters', array(
         'location', 'checkin_date', 'checkout_date', 'adults', 'children'
@@ -29,9 +29,12 @@ function property_filter_render_form() {
         'step' => 1000
     ));
 
+    // Определяем ID формы в зависимости от контекста
+    $form_id = ($context === 'archive') ? 'property-archive-filter-form' : 'property-filter-form';
+    
     ob_start();
     ?>
-    <form id="property-filter-form" class="property-filter-form">
+    <form id="<?php echo esc_attr($form_id); ?>" class="property-filter-form">
         <?php wp_nonce_field('property_filter_nonce', 'property_filter_nonce'); ?>
 
         <div class="filter-row">
@@ -176,7 +179,7 @@ function property_filter_render_home_form() {
                                   } elseif ($checkout) {
                                       echo esc_attr(' - ' . $checkout);
                                   }
-                                  ?>" placeholder="Даты" class="input__com">
+                                  ?>" placeholder="В любое время" class="input__com">
                        </div>
                        <input type="hidden" name="checkin_date" id="filter-checkin"
                               value="<?php echo isset($_GET['checkin_date']) ? esc_attr($_GET['checkin_date']) : ''; ?>">
@@ -189,7 +192,7 @@ function property_filter_render_home_form() {
                 <div class="input-group__com guests-group">
                     <div class="input-with-icon">
                         <div class="icon material-symbols-outlined">group</div>
-                        <input type="text" readonly name="location" value class="input__com guests-placeholder js-guests-val" autocomplete="nope" placeholder="Гости">
+                        <input type="text" readonly value class="input__com guests-placeholder js-guests-val" autocomplete="nope" placeholder="Гости">
                     </div>
                     <div class="guest-controls-wrapper">
                         <div class="guest-controls">
@@ -285,42 +288,125 @@ function property_filter_render_list($params = array()) {
         $filters['children'] = intval($_GET['children']);
     }
 
-    $default_params = array(
-        'limit' => 12,
-        'orderby' => 't.post_date DESC'
+    // Получаем номер страницы из GET параметра
+    $page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+
+    // Базовые параметры запроса
+    $args = array(
+        'post_type'      => 'property',
+        'post_status'    => 'publish',
+        'posts_per_page' => 12,
+        'paged'          => $page,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
     );
 
-    $params = array_merge($default_params, $params);
-    
-    // Формируем условие WHERE на основе фильтров
-    if (!empty($filters)) {
-        $where = property_filter_build_where($filters);
-        $params['where'] = $where;
-    } else {
-        $params['where'] = 't.post_status = "publish"';
+    // Добавляем фильтр по локации если есть
+    if (!empty($filters['location'])) {
+        $location = sanitize_text_field($filters['location']);
+        $location_term = get_term_by('slug', $location, 'location');
+        if (!$location_term) {
+            $location_term = get_term_by('name', $location, 'location');
+        }
+        if ($location_term) {
+            $args['tax_query'] = array(
+                array(
+                    'taxonomy' => 'location',
+                    'field'    => 'term_id',
+                    'terms'    => $location_term->term_id,
+                ),
+            );
+        }
     }
 
-    $pod = pods('property', $params);
+    // Выполняем запрос через WP_Query
+    $query = new WP_Query($args);
 
     ob_start();
 
-    if ($pod->total() > 0) {
+    // Отладочная информация (можно удалить после проверки)
+    $debug_info = '';
+    if (current_user_can('administrator')) {
+        $debug_info = '<!-- Debug: Found ' . $query->found_posts . ' posts, post_type=property -->';
+    }
+
+    if ($query->have_posts()) {
+        echo $debug_info;
         echo '<div class="properties-grid">';
-        while ($pod->fetch()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            // Получаем Pods объект для текущего поста
+            $pod = pods('property', get_the_ID());
             get_template_part('template-parts/component/property-card', null, array('pod' => $pod));
         }
         echo '</div>';
 
         echo '<div class="results-info">';
-        echo '<p>Всего объектов: ' . $pod->total() . '</p>';
+        $total_obj = declension(['объект', 'объекта', 'объектов'], $query->found_posts);
+        echo '<p>Всего ' . $query->found_posts . ' ' . $total_obj[1] . '</p>';
         echo '</div>';
+        
+        // Добавляем пагинацию
+        if ($query->max_num_pages > 1) {
+            echo '<div class="archive-pagination">';
+            echo '<ul class="pods-pagination">';
+            
+            // Текущая страница
+            $current_page = max(1, get_query_var('paged'));
+            
+            // Предыдущая страница
+            if ($current_page > 1) {
+                echo '<li><a href="' . esc_url(get_pagenum_link($current_page - 1)) . '">&laquo;</a></li>';
+            }
+            
+            // Номера страниц
+            for ($i = 1; $i <= min($query->max_num_pages, 5); $i++) {
+                if ($i == $current_page) {
+                    echo '<li><span class="current">' . $i . '</span></li>';
+                } else {
+                    echo '<li><a href="' . esc_url(get_pagenum_link($i)) . '">' . $i . '</a></li>';
+                }
+            }
+            
+            // Следующая страница
+            if ($current_page < $query->max_num_pages) {
+                echo '<li><a href="' . esc_url(get_pagenum_link($current_page + 1)) . '">&raquo;</a></li>';
+            }
+            
+            echo '</ul>';
+            echo '</div>';
+        }
+        
+        wp_reset_postdata();
     } else {
+        echo $debug_info;
         echo '<div class="no-results">';
         echo '<p>Недвижимость не найдена.</p>';
+        // Дополнительная отладка для администраторов
+        if (current_user_can('administrator')) {
+            echo '<p style="color: red; font-size: 12px;">Отладка: post_type=property, статус=publish. Проверьте, есть ли записи этого типа в базе данных.</p>';
+        }
         echo '</div>';
     }
 
     return ob_get_clean();
+}
+
+/**
+ * Функция склонения числительных
+ */
+function declension($words, $number) {
+    $number = abs($number) % 100;
+    $num = $number % 10;
+    if ($number > 10 && $number < 20) {
+        return array($number, $words[2]);
+    } elseif ($num > 1 && $num < 5) {
+        return array($number, $words[1]);
+    } elseif ($num == 1) {
+        return array($number, $words[0]);
+    } else {
+        return array($number, $words[2]);
+    }
 }
 
 /**
@@ -493,54 +579,78 @@ function filter_properties_custom_ajax_handler() {
         $location_raw = $decoded;
     }
 
-    // Обработка локации - если это имя, а не slug, пытаемся получить slug
+    // Получаем номер страницы
+    $page = isset($_POST['page']) ? max(1, intval($_POST['page'])) : 1;
+
+    // Базовые параметры запроса
+    $args = array(
+        'post_type'      => 'property',
+        'post_status'    => 'publish',
+        'posts_per_page' => 12,
+        'paged'          => $page,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    // Обработка локации
     $location_value = sanitize_text_field($location_raw);
-    $location_term = get_term_by('name', $location_value, 'location');
-    if ($location_term) {
-        // Если нашли по имени, используем slug
-        $location_filter_value = $location_term->slug;
-    } else {
-        // Иначе используем введенное значение (предполагаем, что это slug)
-        $location_filter_value = $location_value;
+    if (!empty($location_value)) {
+        $location_term = get_term_by('name', $location_value, 'location');
+        if (!$location_term) {
+            $location_term = get_term_by('slug', $location_value, 'location');
+        }
+        if ($location_term) {
+            $args['tax_query'] = array(
+                array(
+                    'taxonomy' => 'location',
+                    'field'    => 'term_id',
+                    'terms'    => $location_term->term_id,
+                ),
+            );
+        }
     }
 
-    $filters = array(
-        'location'  => $location_filter_value,
-        'price_min' => isset($_POST['price_min']) ? (int) $_POST['price_min'] : 0,
-        'price_max' => isset($_POST['price_max']) ? (int) $_POST['price_max'] : 0,
-        'adults'    => isset($_POST['adults']) ? (int) $_POST['adults'] : 0,
-        'children'  => isset($_POST['children']) ? (int) $_POST['children'] : 0,
-    );
+    // Выполняем запрос через WP_Query
+    $query = new WP_Query($args);
 
-    $where = property_filter_build_where($filters);
-
-    $params = array(
-        'where'   => $where,
-        'limit'   => 12,
-        'orderby' => 't.post_date DESC'
-    );
-
-    $pod = pods('property', $params);
-
-    if ($pod->total() > 0) {
+    if ($query->have_posts()) {
         ob_start();
         echo '<div class="properties-grid">';
-        while ($pod->fetch()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $pod = pods('property', get_the_ID());
             get_template_part('template-parts/component/property-card', null, array('pod' => $pod));
         }
         echo '</div>';
         $html = ob_get_clean();
 
+        // Формируем пагинацию
+        $pagination = '';
+        if ($query->max_num_pages > 1) {
+            $pagination = '<ul class="pods-pagination">';
+            for ($i = 1; $i <= min($query->max_num_pages, 5); $i++) {
+                if ($i == $page) {
+                    $pagination .= '<li><span class="current">' . $i . '</span></li>';
+                } else {
+                    $pagination .= '<li><a href="#" data-page="' . $i . '">' . $i . '</a></li>';
+                }
+            }
+            $pagination .= '</ul>';
+        }
+
+        wp_reset_postdata();
+
         wp_send_json_success(array(
             'html' => $html,
-            'total' => $pod->total(),
-            'total_pages' => $pod->total_pages(),
-            'pagination' => $pod->pagination(array('type' => 'list'))
+            'total' => $query->found_posts,
+            'total_pages' => $query->max_num_pages,
+            'pagination' => $pagination
         ));
     } else {
         wp_send_json_success(array(
             'html' => '<p>Недвижимость не найдена.</p>',
-            'total' => 0
+            'total' => 0,
+            'pagination' => ''
         ));
     }
 }
