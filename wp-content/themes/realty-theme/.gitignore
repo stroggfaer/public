@@ -14,3 +14,4 @@ sitemap.xml
 sitemap.xml.gz
 .DS_Store
 node_modules
+wp-content/themes/realty-theme/assets/vue_module/dist

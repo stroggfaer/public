@@ -40,7 +40,7 @@ wp-content/debug.log
 
 # Custom theme assets (if compiled)
 wp-content/themes/realty-theme/assets/css/main.css
-wp-content/themes/realty-theme/assets/js/bundle.js
+wp-content/themes/realty-theme/assets/vue_module/bundle.js
 
 # SASS/SCSS cache
 .sass-cache/
