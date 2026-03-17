@@ -1,9 +1,10 @@
 import store from './src/store/index.js';
-import HelloWorld from './components/helloWord.js';
+import HelloWorld from './src/components/helloWord.js';
+
 export function createAppModule(options = {}) {
   const app = Vue.createApp(options);
 
-  app.config.complerOptions =  {
+  app.config.compilerOptions =  {
      isCustomElement: (tag) => tag === 'noindex',
   }
   app.use(store);
