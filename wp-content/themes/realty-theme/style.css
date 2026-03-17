@@ -291,6 +291,9 @@ body.dark-mode textarea, body.dark-mode input[type=email], body.dark-mode input[
 .wpcf7-not-valid-tip {
     color: #dc3232 !important;
 }
+* {
+  box-sizing: border-box;
+}
 /* styles
 -------------------------------------------------------------- */
 body,
@@ -657,16 +660,7 @@ html[xmlns] .clearfix {
   height: 1%;
 }
 
-/* Archive Property Styles */
-.property-archive-filters {
-    margin: 20px 0;
-}
 
-.property-layout {
-    display: flex;
-    gap: 20px;
-    margin: 20px 0;
-}
 
 .property-list {
     flex: 1;

@@ -8,11 +8,7 @@
 get_header(); ?>
 
 <div id="primary" class="content-area">
-    <main id="main" class="site-main" role="main">
-        <header class="page-header">
-            <h1 class="page-title"><?php post_type_archive_title(); ?></h1>
-        </header>
-        
+    <main id="main" class="site-main-map" role="main">
         <?php
         // Показываем ошибки валидации, если они есть
         $validation_errors = get_property_search_errors();
@@ -87,38 +83,41 @@ get_header(); ?>
             <div class="property-content-area">
                 <!-- Контейнер для списка и карты -->
                 <div class="property-layout">
-                    <div class="property-list">
-                        <?php
-                        // Вывод начального списка недвижимости
-                        // Получаем параметры из GET-запроса для фильтрации
-                        $filters = array();
-                        if (isset($_GET['location_slug']) && !empty($_GET['location_slug'])) {
-                            // Используем slug если он доступен
-                            $filters['location'] = sanitize_text_field($_GET['location_slug']);
-                        } else if (isset($_GET['location']) && !empty($_GET['location'])) {
-                            // Обратная совместимость
-                            $filters['location'] = sanitize_text_field($_GET['location']);
-                        }
-                        if (isset($_GET['checkin_date']) && !empty($_GET['checkin_date'])) {
-                            $filters['checkin_date'] = sanitize_text_field($_GET['checkin_date']);
-                        }
-                        if (isset($_GET['checkout_date']) && !empty($_GET['checkout_date'])) {
-                            $filters['checkout_date'] = sanitize_text_field($_GET['checkout_date']);
-                        }
-                        if (isset($_GET['adults']) && !empty($_GET['adults'])) {
-                            $filters['adults'] = intval($_GET['adults']);
-                        }
-                        if (isset($_GET['children']) && !empty($_GET['children'])) {
-                            $filters['children'] = intval($_GET['children']);
-                        }
-                        
-                        echo property_filter_render_list($filters);
-                        ?>
+                    <div class="content-card-list">
+                        <div class="page-header">
+                            <h1 class="page-title"><?php post_type_archive_title(); ?></h1>
+                        </div>
+                        <div class="property-list">
+                            <?php
+                            // Вывод начального списка недвижимости
+                            // Получаем параметры из GET-запроса для фильтрации
+                            $filters = array();
+                            if (isset($_GET['location_slug']) && !empty($_GET['location_slug'])) {
+                                // Используем slug если он доступен
+                                $filters['location'] = sanitize_text_field($_GET['location_slug']);
+                            } else if (isset($_GET['location']) && !empty($_GET['location'])) {
+                                // Обратная совместимость
+                                $filters['location'] = sanitize_text_field($_GET['location']);
+                            }
+                            if (isset($_GET['checkin_date']) && !empty($_GET['checkin_date'])) {
+                                $filters['checkin_date'] = sanitize_text_field($_GET['checkin_date']);
+                            }
+                            if (isset($_GET['checkout_date']) && !empty($_GET['checkout_date'])) {
+                                $filters['checkout_date'] = sanitize_text_field($_GET['checkout_date']);
+                            }
+                            if (isset($_GET['adults']) && !empty($_GET['adults'])) {
+                                $filters['adults'] = intval($_GET['adults']);
+                            }
+                            if (isset($_GET['children']) && !empty($_GET['children'])) {
+                                $filters['children'] = intval($_GET['children']);
+                            }
+
+                            echo property_filter_render_list($filters);
+                            ?>
+                        </div>
                     </div>
-        
                     <!-- Контейнер для карты -->
-                    <div id="property-map-container" class="property-map-container">
-                        <h2>Расположение объектов на карте</h2>
+                    <div class="property-map-container">
                         <div id="property-map" class="property-map"></div>
                     </div>
                 </div>

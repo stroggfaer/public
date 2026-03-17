@@ -36,7 +36,6 @@ $gallery_data = pod_get_gallery_data($pod, 'medium', true);
 if (!$thumbnail_url) {
     $thumbnail_url = $gallery_data['src'];
 }
-
 ?>
 <article class="property-card" data-id="<?php echo esc_attr($property_id); ?>"
     data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
