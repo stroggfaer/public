@@ -6,7 +6,7 @@ export function createAppModule(options = {}) {
 
   app.config.compilerOptions =  {
      isCustomElement: (tag) => tag === 'noindex',
-  }
+  };
   app.use(store);
 
   return app;

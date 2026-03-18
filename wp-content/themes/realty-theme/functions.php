@@ -77,7 +77,7 @@ function naked_scripts()  {
     wp_enqueue_script( 'vue-js', get_template_directory_uri() . '/assets/vue_module/cdn/vue.global.min.js', array( 'naked-jquery' ), NAKED_VERSION, true );
     wp_enqueue_script( 'vuex-js', get_template_directory_uri() . '/assets/vue_module/cdn/vuex.global.min.js', array( 'vue-js' ), NAKED_VERSION, true );
         // add theme scripts vue
-	wp_enqueue_script( 'vue-build', get_template_directory_uri() . '/assets/vue_module/dish/vue_build.js', array('vue-js', 'vuex-js'), NAKED_VERSION, true );
+	wp_enqueue_script( 'vue-build', get_template_directory_uri() . '/assets/vue_module/dish/appVueBuild.js', array('vue-js', 'vuex-js'), NAKED_VERSION, true );
     // add theme scripts
     wp_enqueue_script( 'naked', get_template_directory_uri() . '/js/site.js', array(), NAKED_VERSION, true );
 
