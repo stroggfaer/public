@@ -60,10 +60,8 @@ add_action( 'widgets_init', 'naked_register_sidebars' );
 	/*-----------------------------------------------------------------------------------*/
 function naked_scripts()  {
     /*----Start CSS----*/
-    wp_enqueue_style('element-ui-style', 'https://unpkg.com/element-ui/lib/theme-chalk/index.css', array(), NAKED_VERSION, 'all');
-	// get the theme directory style.css and link to it in the header
+    // get the theme directory style.css and link to it in the header
 	wp_enqueue_style('style.css', get_stylesheet_directory_uri() . '/style.css');
-    wp_enqueue_style('font-awesome.min.css', get_stylesheet_directory_uri() . '/assets/font-awesome/css/font-awesome.min.css');
     wp_enqueue_style('font-awesome.min.css', get_stylesheet_directory_uri() . '/assets/font-awesome/css/font-awesome.min.css');
     wp_enqueue_style('main.min.css', get_stylesheet_directory_uri() . '/dist/css/main.min.css');
     // Подключаем стили Splide для галереи на странице недвижимости

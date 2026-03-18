@@ -1,22 +1,26 @@
 ````
 <!-- Vue 3 Hello World Test -->
 <div id="vue-app">
-test: {{test}}
-<hello-word></hello-word>
+    <hello-word></hello-word>
+    <el-button @click="visible = true">Button</el-button>
+    <el-dialog v-model="visible" title="Shipping address" width="500">
+        <p>Try Element</p>
+    </el-dialog>
 </div>
 <script type="module">
-    const {HelloWorld, createAppModule} = window.VueAppModule;
+    const {HelloWorld, createAppModule, ElButton, ElDialog } = window.VueAppModule;
     const { ref } = Vue;
     const AppTestWp = createAppModule({
         setup() {
-            const test = ref('test');
+            const visible = ref(false);
             return {
-                test
+                visible
             }
         }
     });
+    AppTestWp.component('el-button', ElButton);
+    AppTestWp.component('el-dialog', ElDialog);
     AppTestWp.component('hello-word', HelloWorld);
     AppTestWp.mount('#vue-app');
 </script>
-
 ````

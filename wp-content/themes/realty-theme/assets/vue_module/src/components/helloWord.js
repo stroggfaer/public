@@ -1,4 +1,5 @@
-const {ref} = Vue;
+import { ref } from 'vue';
+
 export default {
   // language=Vue
   template: `

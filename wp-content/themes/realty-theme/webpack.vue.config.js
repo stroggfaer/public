@@ -1,6 +1,11 @@
 const path = require('path');
 const { VueLoaderPlugin } = require('vue-loader');
 const TerserPlugin = require('terser-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+const AutoImport = require('unplugin-auto-import/webpack');
+const Components = require('unplugin-vue-components/webpack');
+const { ElementPlusResolver } = require('unplugin-vue-components/resolvers');
 
 module.exports = {
     entry: './assets/vue_module/appModule.js',
@@ -31,8 +36,20 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    'style-loader',
+                    process.env.NODE_ENV === 'production' 
+                        ? MiniCssExtractPlugin.loader 
+                        : 'style-loader',
                     'css-loader',
+                ],
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    process.env.NODE_ENV === 'production' 
+                        ? MiniCssExtractPlugin.loader 
+                        : 'style-loader',
+                    'css-loader',
+                    'sass-loader',
                 ],
             },
             {
@@ -46,6 +63,15 @@ module.exports = {
     },
     plugins: [
         new VueLoaderPlugin(),
+        AutoImport({
+            resolvers: [ElementPlusResolver()],
+            imports: ['vue', 'vuex'],
+            dts: false,
+        }),
+        Components({
+            resolvers: [ElementPlusResolver()],
+            dts: false,
+        }),
     ],
     output: {
         filename: 'appVueBuild.js',

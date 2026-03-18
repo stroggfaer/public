@@ -29,11 +29,14 @@
     "sass-loader": "^14.1.1",
     "style-loader": "^3.3.4",
     "terser-webpack-plugin": "^5.3.10",
+    "unplugin-auto-import": "^21.0.0",
+    "unplugin-vue-components": "^31.0.0",
     "vue-loader": "^17.4.2",
     "webpack": "^5.90.3",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "element-plus": "^2.13.5",
     "sass": "^1.32.0"
   }
 }
