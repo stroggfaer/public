@@ -126,6 +126,7 @@ function enqueue_property_filter_scripts() {
         wp_enqueue_style('daterangepicker-css', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', array(), '3.1.0');
     }
     
+    // Подключаем jQuery скрипт для карты и других функций
     wp_enqueue_script('property-filter', get_template_directory_uri() . '/js/property-filter.js', array('jquery'), null, true);
     wp_localize_script('property-filter', 'propertyFilter', array(
         'ajaxurl' => admin_url('admin-ajax.php'),

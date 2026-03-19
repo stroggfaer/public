@@ -15,9 +15,9 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Рендер формы фильтрации
+ * Рендер формы фильтрации (Vue 3 компонент)
  */
-function property_filter_render_form($context = 'default') {
+function property_filter_render_formTest($context = 'default') {
     // Получаем настройки активных фильтров
     $active_filters = get_option('property_active_filters', array(
         'location', 'checkin_date', 'checkout_date', 'adults', 'children'
@@ -29,98 +29,105 @@ function property_filter_render_form($context = 'default') {
         'step' => 1000
     ));
 
-    // Определяем ID формы в зависимости от контекста
-    $form_id = ($context === 'archive') ? 'property-archive-filter-form' : 'property-filter-form';
-    
+    // Получаем nonce
+    $nonce = wp_create_nonce('property_filter_nonce');
+
+    // Определяем ID контейнера в зависимости от контекста
+    $container_id = ($context === 'archive') ? 'property-filter-vue-archive' : 'property-filter-vue';
+
+    // Кодируем данные для безопасной передачи в JavaScript
+    $active_filters_json = esc_js(json_encode($active_filters));
+    $price_range_json = esc_js(json_encode($price_range));
+
     ob_start();
     ?>
-    <form id="<?php echo esc_attr($form_id); ?>" class="property-filter-form">
-        <?php wp_nonce_field('property_filter_nonce', 'property_filter_nonce'); ?>
+    <div id="<?php echo esc_attr($container_id); ?>"></div>
 
-        <div class="filter-row">
-            <?php if (in_array('location', $active_filters)): ?>
-            <div class="filter-group">
-                <label for="filter-location">Город:</label>
-                <select name="location" id="filter-location">
-                    <option value="">Все города</option>
-                    <?php
-                    $locations = get_terms(array(
-                        'taxonomy' => 'location',
-                        'hide_empty' => false,
-                    ));
-                    foreach ($locations as $location) {
-                        echo '<option value="' . esc_attr($location->slug) . '">' . esc_html($location->name) . '</option>';
-                    }
-                    ?>
-                </select>
-            </div>
-            <?php endif; ?>
+    <script type="module">
+        const { createAppModule, PropertyFilter } = window.VueAppModule;
 
-            <div class="filter-group">
-                <label for="filter-price-min">Цена от:</label>
-                <input type="number" name="price_min" id="filter-price-min"
-                       min="<?php echo esc_attr($price_range['min']); ?>"
-                       max="<?php echo esc_attr($price_range['max']); ?>"
-                       step="<?php echo esc_attr($price_range['step']); ?>"
-                       placeholder="<?php echo esc_attr($price_range['min']); ?>">
-            </div>
+        const app = createAppModule({
+            components: {
+                PropertyFilter
+            },
+            template: `
+                <property-filter
+                    context="<?php echo esc_js($context); ?>"
+                    :active-filters="<?php echo $active_filters_json; ?>"
+                    :price-range="<?php echo $price_range_json; ?>"
+                    ajax-url="<?php echo esc_js(admin_url('admin-ajax.php')); ?>"
+                    nonce="<?php echo esc_js($nonce); ?>"
+                />
+            `,
+            setup() {
+                return {};
+            }
+        });
 
-            <div class="filter-group">
-                <label for="filter-price-max">до:</label>
-                <input type="number" name="price_max" id="filter-price-max"
-                       min="<?php echo esc_attr($price_range['min']); ?>"
-                       max="<?php echo esc_attr($price_range['max']); ?>"
-                       step="<?php echo esc_attr($price_range['step']); ?>"
-                       placeholder="<?php echo esc_attr($price_range['max']); ?>">
-            </div>
-        </div>
+        app.mount('#<?php echo esc_attr($container_id); ?>');
+    </script>
+    <?php
+    return ob_get_clean();
+}
 
-        <div class="filter-row">
-            <?php if (in_array('checkin_date', $active_filters)): ?>
-            <div class="filter-group">
-                <label for="filter-checkin">Дата заезда:</label>
-                <input type="date" name="checkin_date" id="filter-checkin">
-            </div>
-            <?php endif; ?>
+function property_filter_render_form($context = 'default') {
+    $active_filters = get_option('property_active_filters', [
+            'location', 'checkin_date', 'checkout_date', 'adults', 'children'
+    ]);
 
-            <?php if (in_array('checkout_date', $active_filters)): ?>
-            <div class="filter-group">
-                <label for="filter-checkout">Дата выезда:</label>
-                <input type="date" name="checkout_date" id="filter-checkout">
-            </div>
-            <?php endif; ?>
+    $price_range = get_option('property_price_range', [
+            'min' => 0,
+            'max' => 1000000,
+            'step' => 1000
+    ]);
 
-            <?php if (in_array('adults', $active_filters)): ?>
-            <div class="filter-group">
-                <label for="filter-adults">Взрослые:</label>
-                <select name="adults" id="filter-adults">
-                    <option value="">Любое количество</option>
-                    <?php for ($i = 1; $i <= 10; $i++): ?>
-                        <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-            <?php endif; ?>
+    $nonce = wp_create_nonce('property_filter_nonce');
 
-            <?php if (in_array('children', $active_filters)): ?>
-            <div class="filter-group">
-                <label for="filter-children">Дети:</label>
-                <select name="children" id="filter-children">
-                    <option value="">Любое количество</option>
-                    <option value="0">Без детей</option>
-                    <?php for ($i = 1; $i <= 8; $i++): ?>
-                        <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-            <?php endif; ?>
-        </div>
+    $container_id = ($context === 'archive') ? 'property-filter-vue-archive' : 'property-filter-vue';
 
-        <div class="filter-actions">
-            <button type="submit" class="filter-submit">Применить фильтры</button>
-            <button type="button" class="filter-reset">Сбросить</button>
-        </div>
-    </form>
+    $initial_filters = [
+            'location'      => $_GET['location']       ?? '',
+            'location_slug' => $_GET['location_slug']  ?? '',
+            'price_min'     => $_GET['price_min']      ?? null,
+            'price_max'     => $_GET['price_max']      ?? null,
+            'checkin_date'  => $_GET['checkin_date']   ?? '',
+            'checkout_date' => $_GET['checkout_date']  ?? '',
+            'adults'        => $_GET['adults']         ?? 1,
+            'children'      => $_GET['children']       ?? 0,
+    ];
+
+    $active_filters_json   = esc_js(json_encode($active_filters));
+    $price_range_json      = esc_js(json_encode($price_range));
+    $initial_filters_json  = esc_js(json_encode($initial_filters));
+
+    ob_start();
+    ?>
+    <div id="<?php echo esc_attr($container_id); ?>"></div>
+
+    <script type="module">
+        const { createAppModule, PropertyFilter } = window.VueAppModule;
+
+        const app = createAppModule({
+            components: {
+                PropertyFilter
+            },
+            template: `
+                <property-filter
+                    context="<?php echo esc_js($context); ?>"
+                    :active-filters="<?php echo $active_filters_json; ?>"
+                    :price-range="<?php echo $price_range_json; ?>"
+                    :initial-filters="<?php echo $initial_filters_json; ?>"
+                    ajax-url="<?php echo esc_js(admin_url('admin-ajax.php')); ?>"
+                    nonce="<?php echo esc_js($nonce); ?>"
+                />
+            `,
+            setup() {
+                return {};
+            }
+        });
+
+        app.mount('#<?php echo esc_attr($container_id); ?>');
+    </script>
     <?php
     return ob_get_clean();
 }
