@@ -436,138 +436,6 @@ function declension($words, $number) {
 }
 
 /**
- * Подготовка WHERE условия для фильтрации
- */
-function property_filter_build_where($filters = array()) {
-    global $wpdb;
-
-    $where = array();
-    $where[] = "t.post_status = 'publish'";
-
-    // Фильтр по городу
-    if (!empty($filters['location'])) {
-        $location = sanitize_text_field($filters['location']);
-        
-        // Проверяем, является ли переданное значение slug или именем
-        $location_term = get_term_by('slug', $location, 'location');
-        if (!$location_term) {
-            // Если не нашли по slug, ищем по имени
-            $location_term = get_term_by('name', $location, 'location');
-        }
-        
-        if ($location_term) {
-            // Используем ID термина для более точной фильтрации
-            $location_id = (int) $location_term->term_id;
-            $where[] = "
-                EXISTS (
-                    SELECT 1
-                    FROM {$wpdb->term_relationships} tr
-                    INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
-                    WHERE tr.object_id = t.ID
-                    AND tt.taxonomy = 'location'
-                    AND tt.term_id = {$location_id}
-                )
-            ";
-        } else {
-            // Если термин не найден, добавляем условие, которое ничего не вернет
-            $where[] = "1=0";
-        }
-    }
-
-    // Фильтр по дате заезда и выезда
-    if (!empty($filters['checkin_date']) && !empty($filters['checkout_date'])) {
-        $checkin_date = sanitize_text_field($filters['checkin_date']);
-        $checkout_date = sanitize_text_field($filters['checkout_date']);
-        
-        // Проверяем формат дат
-        $checkin_ts = strtotime($checkin_date);
-        $checkout_ts = strtotime($checkout_date);
-        
-        if ($checkin_ts !== false && $checkout_ts !== false && $checkin_ts <= $checkout_ts) {
-            // Примечание: В будущем здесь должна быть реализована проверка на бронирования
-            // для исключения объектов, которые уже забронированы на указанный период
-            // Пример логики (псевдокод):
-            // Исключить объекты недвижимости, у которых есть подтвержденные бронирования,
-            // пересекающиеся с диапазоном checkin_date - checkout_date
-        }
-    }
-    
-    // Фильтр по отдельной дате заезда
-    if (!empty($filters['checkin_date']) && empty($filters['checkout_date'])) {
-        $checkin_date = sanitize_text_field($filters['checkin_date']);
-        $checkin_ts = strtotime($checkin_date);
-        
-        if ($checkin_ts === false) {
-            // Неверный формат даты
-            $where[] = "1=0"; // Это условие никогда не выполнится, эффективно исключая все результаты
-        }
-    }
-    
-    // Фильтр по отдельной дате выезда
-    if (empty($filters['checkin_date']) && !empty($filters['checkout_date'])) {
-        $checkout_date = sanitize_text_field($filters['checkout_date']);
-        $checkout_ts = strtotime($checkout_date);
-        
-        if ($checkout_ts === false) {
-            // Неверный формат даты
-            $where[] = "1=0"; // Это условие никогда не выполнится, эффективно исключая все результаты
-        }
-    }
-
-    // Фильтр по цене
-    if (!empty($filters['price_min'])) {
-        $price_min = (int) $filters['price_min'];
-        $where[] = "
-            CAST(
-                (SELECT meta_value FROM {$wpdb->postmeta}
-                 WHERE post_id = t.ID
-                 AND meta_key = 'price'
-                 LIMIT 1) AS UNSIGNED
-            ) >= {$price_min}
-        ";
-    }
-
-    if (!empty($filters['price_max'])) {
-        $price_max = (int) $filters['price_max'];
-        $where[] = "
-            CAST(
-                (SELECT meta_value FROM {$wpdb->postmeta}
-                 WHERE post_id = t.ID
-                 AND meta_key = 'price'
-                 LIMIT 1) AS UNSIGNED
-            ) <= {$price_max}
-        ";
-    }
-
-    // Фильтр по гостям
-    if (!empty($filters['adults'])) {
-        $adults = (int) $filters['adults'];
-        $where[] = "
-            CAST(
-                (SELECT meta_value FROM {$wpdb->postmeta}
-                 WHERE post_id = t.ID
-                 AND meta_key = '_max_adults'
-                 LIMIT 1) AS UNSIGNED
-            ) >= {$adults}
-        ";
-    }
-
-    if (!empty($filters['children'])) {
-        $children = (int) $filters['children'];
-        $where[] = "
-            CAST(
-                (SELECT meta_value FROM {$wpdb->postmeta}
-                 WHERE post_id = t.ID
-                 AND meta_key = '_max_children'
-                 LIMIT 1) AS UNSIGNED
-            ) >= {$children}
-        ";
-    }
-
-    return implode(' AND ', $where);
-}
-
-/**
  * Шорткод для отображения формы фильтрации
  * Использование: [property_filter]
  */
@@ -586,75 +454,109 @@ add_shortcode('property_filter', 'property_filter_shortcode');
  * AJAX обработчик для кастомной фильтрации через шорткод
  */
 function filter_properties_custom_ajax_handler() {
-    if (
-        !isset($_POST['nonce']) ||
-        !wp_verify_nonce($_POST['nonce'], 'property_filter_nonce')
-    ) {
+    global $wpdb;
+
+    // Проверка nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'property_filter_nonce')) {
         wp_send_json_error('Security check failed');
     }
 
-    // Нормализация входных данных
+    // Получаем и декодируем location
     $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : '';
-
-    // Фикс двойного URL encode
     while (strpos($location_raw, '%') !== false) {
         $decoded = rawurldecode($location_raw);
-        if ($decoded === $location_raw) {
-            break;
-        }
+        if ($decoded === $location_raw) break;
         $location_raw = $decoded;
     }
+    $location_slug = isset($_POST['location_slug']) ? sanitize_title($_POST['location_slug']) : '';
 
-    // Получаем номер страницы
     $page = isset($_POST['page']) ? max(1, intval($_POST['page'])) : 1;
 
-    // Базовые параметры запроса
-    $args = array(
-        'post_type'      => 'property',
-        'post_status'    => 'publish',
-        'posts_per_page' => 12,
-        'paged'          => $page,
-        'orderby'        => 'date',
-        'order'          => 'DESC',
+    // Фильтры из AJAX
+    $filters = array(
+            'price_min'     => isset($_POST['price_min']) ? (int) $_POST['price_min'] : 0,
+            'price_max'     => isset($_POST['price_max']) ? (int) $_POST['price_max'] : 0,
+            'adults'        => isset($_POST['adults']) ? (int) $_POST['adults'] : 0,
+            'children'      => isset($_POST['children']) ? (int) $_POST['children'] : 0, // Позже добавим
+            'location'      => sanitize_text_field($location_raw),
+            'location_slug' => $location_slug,
     );
 
-    // Обработка локации
-    $location_value = sanitize_text_field($location_raw);
-    if (!empty($location_value)) {
-        $location_term = get_term_by('name', $location_value, 'location');
-        if (!$location_term) {
-            $location_term = get_term_by('slug', $location_value, 'location');
-        }
-        if ($location_term) {
-            $args['tax_query'] = array(
-                array(
-                    'taxonomy' => 'location',
-                    'field'    => 'term_id',
-                    'terms'    => $location_term->term_id,
-                ),
-            );
-        }
+    // Строим WHERE для Pods
+    $where = array();
+    $where[] = "t.post_status = 'publish'";
+
+    // Локация
+    if (!empty($filters['location']) || !empty($filters['location_slug'])) {
+        $where[] = "EXISTS (
+            SELECT 1
+            FROM {$wpdb->term_relationships} tr
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
+            INNER JOIN {$wpdb->terms} tm ON tm.term_id = tt.term_id
+            WHERE tr.object_id = t.ID
+            AND tt.taxonomy = 'location'
+            AND (
+                tm.name = '" . esc_sql($filters['location']) . "'
+                OR tm.slug = '" . esc_sql($filters['location_slug']) . "'
+            )
+        )";
     }
 
-    // Выполняем запрос через WP_Query
-    $query = new WP_Query($args);
+    // Цена
+    if ($filters['price_min'] > 0) {
+        $where[] = "CAST((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = t.ID AND meta_key = 'price' LIMIT 1) AS UNSIGNED) >= {$filters['price_min']}";
+    }
+    if ($filters['price_max'] > 0) {
+        $where[] = "CAST((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = t.ID AND meta_key = 'price' LIMIT 1) AS UNSIGNED) <= {$filters['price_max']}";
+    }
 
-    if ($query->have_posts()) {
-        ob_start();
+    // Взрослые (guests_count)
+    if ($filters['adults'] > 0) {
+        $where[] = "CAST((SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = t.ID AND meta_key = 'guests_count' LIMIT 1) AS UNSIGNED) >= {$filters['adults']}";
+    }
+
+    // Дети (если отдельного поля нет, можно игнорировать)
+    // $filters['children'] пока не используем, так как нет отдельного поля
+
+    // Параметры Pods запроса
+    $params = array(
+            'where'   => implode(' AND ', $where),
+            'limit'   => 12,
+            'page'    => $page,
+            'orderby' => 't.post_date DESC',
+    );
+
+    $pod = pods('property', $params);
+
+    $coordinates = array();
+    ob_start();
+
+    if ($pod->total() > 0) {
         echo '<div class="properties-grid">';
-        while ($query->have_posts()) {
-            $query->the_post();
-            $pod = pods('property', get_the_ID());
+        while ($pod->fetch()) {
+            // Координаты для карты
+            $lat = $pod->field('latitude');
+            $lng = $pod->field('longitude');
+            if ($lat && $lng) {
+                $coordinates[] = array(
+                        'id'    => $pod->id(),
+                        'lat'   => $lat,
+                        'lng'   => $lng,
+                        'title' => $pod->display('post_title'),
+                );
+            }
+
+            // Шаблон карточки
             get_template_part('template-parts/component/property-card', null, array('pod' => $pod));
         }
         echo '</div>';
-        $html = ob_get_clean();
 
-        // Формируем пагинацию
+        // Пагинация
         $pagination = '';
-        if ($query->max_num_pages > 1) {
+        if ($pod->total() > 12) {
+            $total_pages = ceil($pod->total() / 12);
             $pagination = '<ul class="pods-pagination">';
-            for ($i = 1; $i <= min($query->max_num_pages, 5); $i++) {
+            for ($i = 1; $i <= min($total_pages, 5); $i++) {
                 if ($i == $page) {
                     $pagination .= '<li><span class="current">' . $i . '</span></li>';
                 } else {
@@ -664,22 +566,27 @@ function filter_properties_custom_ajax_handler() {
             $pagination .= '</ul>';
         }
 
-        wp_reset_postdata();
-
         wp_send_json_success(array(
-            'html' => $html,
-            'total' => $query->found_posts,
-            'total_pages' => $query->max_num_pages,
-            'pagination' => $pagination
+                'html'        => ob_get_clean(),
+                'count'       => $pod->total(),
+                'total_pages' => isset($total_pages) ? $total_pages : 1,
+                'pagination'  => $pagination,
+                'coordinates' => $coordinates,
         ));
+
     } else {
         wp_send_json_success(array(
-            'html' => '<p>Недвижимость не найдена.</p>',
-            'total' => 0,
-            'pagination' => ''
+                'html'        => '<p>Недвижимость не найдена.</p>',
+                'count'       => 0,
+                'total_pages' => 0,
+                'pagination'  => '',
+                'coordinates' => array(),
         ));
     }
 }
+
+
+
 add_action('wp_ajax_filter_properties_custom', 'filter_properties_custom_ajax_handler');
 add_action('wp_ajax_nopriv_filter_properties_custom', 'filter_properties_custom_ajax_handler');
 
