@@ -101,35 +101,48 @@ function property_filter_render_form($context = 'default') {
     // Определяем ID контейнера в зависимости от контекста
     $container_id = ($context === 'archive') ? 'property-filter-vue-archive' : 'property-filter-vue';
 
-    // Кодируем данные для безопасной передачи в JavaScript
-    $active_filters_json = esc_js(json_encode($active_filters));
-    $price_range_json = esc_js(json_encode($price_range));
-    $filters_json = esc_js(json_encode(get_current_filters_data()));
+    // Подготавливаем данные для передачи в JS
+    $data_to_localize = [
+            'containerId' => $container_id,
+            'activeFilters' => $active_filters,
+            'initFilters'   => get_current_filters_data(),
+            'priceRange'    => $price_range,
+            'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+            'nonce'         => $nonce,
+    ];
 
+    $propertyFilterData = wp_json_encode(
+             $data_to_localize,
+            JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+    );
 
     ob_start();
     ?>
     <div id="<?php echo esc_attr($container_id); ?>"></div>
 
     <script type="module">
+        const { ref } = Vue;
         const { createAppModule, PropertyFilter } = window.VueAppModule;
-
         const app = createAppModule({
             components: {
                 PropertyFilter
             },
+            // language=Vue
             template: `
                 <property-filter
-                    context="<?php echo esc_js($context); ?>"
-                    :active-filters="<?php echo $active_filters_json; ?>"
-                    :init-filters="<?php echo $filters_json; ?>"
-                    :price-range="<?php echo $price_range_json; ?>"
-                    ajax-url="<?php echo esc_js(admin_url('admin-ajax.php')); ?>"
-                    nonce="<?php echo esc_js($nonce); ?>"
+                    :context="propertyFilterData.containerId"
+                    :active-filters="propertyFilterData.activeFilters"
+                    :init-filters="propertyFilterData.initFilters"
+                    :price-range="propertyFilterData.priceRange"
+                    :ajax-url="propertyFilterData.ajaxUrl"
+                    :nonce="propertyFilterData.nonce"
                 />
             `,
             setup() {
-                return {};
+                const propertyFilterData = ref(<?=$propertyFilterData?>);
+                return {
+                    propertyFilterData
+                };
             }
         });
 
@@ -138,9 +151,6 @@ function property_filter_render_form($context = 'default') {
     <?php
     return ob_get_clean();
 }
-
-
-
 /**
  * Рендер формы фильтрации для главной страницы (отправляет GET-запрос на /property/)
  */

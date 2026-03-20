@@ -64,6 +64,9 @@ function naked_scripts()  {
 	wp_enqueue_style('style.css', get_stylesheet_directory_uri() . '/style.css');
     wp_enqueue_style('font-awesome.min.css', get_stylesheet_directory_uri() . '/assets/font-awesome/css/font-awesome.min.css');
     wp_enqueue_style('main.min.css', get_stylesheet_directory_uri() . '/dist/css/main.min.css');
+    // стили Element Plus
+    wp_enqueue_style('element-plus', get_template_directory_uri() . '/assets/vue_module/cdn/element-plus/index.css', array(), NAKED_VERSION, 'all');
+
     // Подключаем стили Splide для галереи на странице недвижимости
     if (is_singular('property')) {
         wp_enqueue_style('splide-core', get_template_directory_uri() . '/js/slider/splide.min.css', array(), NAKED_VERSION, 'all');

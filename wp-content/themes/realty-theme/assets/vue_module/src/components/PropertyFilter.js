@@ -27,7 +27,6 @@ export default {
 
   template: `
     <el-form :id="formId" @submit.prevent="handleSubmit" label-position="top">
-
       <!-- Локация -->
       <el-form-item v-if="activeFilters.includes('location')" label="Город">
         <el-autocomplete
@@ -180,7 +179,6 @@ export default {
     // Инициализация из GET-параметров
     onMounted(() => {
       console.log('[DEBUG] initFilters received:', props.initFilters);
-
       if (!Array.isArray(props.initFilters) || props.initFilters.length === 0) {
         console.warn('[DEBUG] Нет активных фильтров для инициализации');
       } else {
@@ -190,12 +188,12 @@ export default {
           const key = filter.key;
           const value = filter.value;
 
-          console.log(`[DEBUG] Applying filter: ${key} = ${value}`);
+          console.log(`[DEBUG] Applying filter:`, filter);
 
           switch (key) {
             case 'location':
+              locationSlug.value = value || '';
               locationInput.value = value || '';
-              locationSlug.value = filter.raw || value || '';
               break;
 
             case 'checkin_date':
@@ -217,8 +215,6 @@ export default {
             case 'children':
               filters.children = Number(value) || 0;
               break;
-
-              // Если в будущем добавите price в active filters:
               // case 'price_min': filters.price_min = Number(value) || props.priceRange.min; break;
               // case 'price_max': filters.price_max = Number(value) || props.priceRange.max; break;
           }
@@ -278,7 +274,7 @@ export default {
       ApiService.post(props.ajaxUrl, {
         action: 'filter_properties_custom',
         nonce: props.nonce,
-        location: locationSlug.value || locationInput.value,
+        location: locationInput.value,
         location_slug: locationSlug.value,
         ...filters,
         page: 1

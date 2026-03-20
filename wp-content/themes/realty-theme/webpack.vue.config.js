@@ -1,19 +1,14 @@
 const path = require('path');
 const { VueLoaderPlugin } = require('vue-loader');
 const TerserPlugin = require('terser-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
-const AutoImport = require('unplugin-auto-import/webpack');
-const Components = require('unplugin-vue-components/webpack');
-const { ElementPlusResolver } = require('unplugin-vue-components/resolvers');
-
 
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production';
+
     return {
         entry: './assets/vue_module/appModule.js',
         mode: isProd ? 'production' : 'development',
-        watch: true,
+
         resolve: {
             alias: {
                 '@assets': path.resolve(__dirname, 'assets'),
@@ -21,6 +16,7 @@ module.exports = (env, argv) => {
             },
             extensions: ['.js', '.vue', '.json'],
         },
+
         module: {
             rules: [
                 {
@@ -38,25 +34,6 @@ module.exports = (env, argv) => {
                     },
                 },
                 {
-                    test: /\.css$/,
-                    use: [
-                        process.env.NODE_ENV === 'production'
-                            ? MiniCssExtractPlugin.loader
-                            : 'style-loader',
-                        'css-loader',
-                    ],
-                },
-                {
-                    test: /\.scss$/,
-                    use: [
-                        process.env.NODE_ENV === 'production'
-                            ? MiniCssExtractPlugin.loader
-                            : 'style-loader',
-                        'css-loader',
-                        'sass-loader',
-                    ],
-                },
-                {
                     test: /\.(png|jpe?g|gif|svg)$/i,
                     type: 'asset/resource',
                     generator: {
@@ -65,48 +42,50 @@ module.exports = (env, argv) => {
                 },
             ],
         },
+
         plugins: [
             new VueLoaderPlugin(),
-            AutoImport({
-                resolvers: [ElementPlusResolver()],
-                imports: ['vue', 'vuex'],
-                dts: false,
-            }),
-            Components({
-                resolvers: [ElementPlusResolver()],
-                dts: false,
-            }),
         ],
-        //
+
         output: {
             filename: 'appVueBuild.js',
             path: path.resolve(__dirname, 'assets/vue_module/dish'),
-            ...(isProd && {
-                library: {
-                    name: 'VueAppModule',
-                    type: 'umd',
-                },
-                globalObject: 'this',
-            }),
+            library: {
+                name: 'VueAppModule',
+                type: 'umd',
+            },
+            globalObject: 'this',
         },
-        externals: isProd ? {
+
+        externals: {
             vue: 'Vue',
-        } : {},
-        optimization: {
-            minimize: true,
-            minimizer: [
-                new TerserPlugin({
-                    terserOptions: {
-                        compress: {
-                            drop_console: true,
-                        },
-                        output: {
-                            comments: false,
-                        },
-                    },
-                    extractComments: false,
-                }),
-            ],
         },
+
+        optimization: {
+            minimize: isProd,
+            minimizer: isProd
+                ? [
+                    new TerserPlugin({
+                        terserOptions: {
+                            compress: {
+                                drop_console: true,
+                            },
+                            output: {
+                                comments: false,
+                            },
+                        },
+                        extractComments: false,
+                    }),
+                ]
+                : [],
+        },
+
+        watchOptions: {
+            ignored: /node_modules/,
+            // poll: 1000,
+            aggregateTimeout: 300,
+        },
+
+        devtool: isProd ? false : 'eval-source-map',
     };
-}
+};
