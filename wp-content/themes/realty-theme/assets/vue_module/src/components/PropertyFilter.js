@@ -1,4 +1,5 @@
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch, inject } from 'vue';
+
 import {
   ElInput,
   ElInputNumber,
@@ -135,6 +136,7 @@ export default {
   },
 
   setup(props) {
+    const moment = inject('moment');
     const adultsMin = 1;
     const adultsMax = 10;
     const childrenMin = 0;
@@ -143,8 +145,8 @@ export default {
     const filters = reactive({
       price_min: Number(props.priceRange?.min) || 0,
       price_max: Number(props.priceRange?.max) || 1000000,
-      checkin_date: '',
-      checkout_date: '',
+      checkin_date: moment().format('YYYY-MM-DD'),
+      checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
       adults: 1,
       children: 0
     });
@@ -197,14 +199,14 @@ export default {
               break;
 
             case 'checkin_date':
-              if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                filters.checkin_date = value;
+              if (value && moment(value, 'YYYY-MM-DD', true).isValid()) {
+                filters.checkin_date = moment(value).format('YYYY-MM-DD');
               }
               break;
 
             case 'checkout_date':
-              if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                filters.checkout_date = value;
+              if (value && moment(value, 'YYYY-MM-DD', true).isValid()) {
+                filters.checkout_date = moment(value).format('YYYY-MM-DD');
               }
               break;
 
@@ -258,7 +260,7 @@ export default {
 
     function validateForm() {
       if (filters.checkin_date && filters.checkout_date) {
-        if (new Date(filters.checkin_date) > new Date(filters.checkout_date)) {
+        if (moment(filters.checkin_date).isAfter(moment(filters.checkout_date))) {
           ElMessage.error('Дата заезда позже выезда');
           return false;
         }
@@ -329,8 +331,9 @@ export default {
       filters.price_max = Number(props.priceRange?.max) || 1000000;
       priceRangeValue.value = [filters.price_min, filters.price_max];
 
-      filters.checkin_date = '';
-      filters.checkout_date = '';
+      // Дефолтные даты: сегодня + неделя
+      filters.checkin_date = moment().format('YYYY-MM-DD');
+      filters.checkout_date = moment().add(7, 'days').format('YYYY-MM-DD');
       filters.adults = 1;
       filters.children = 0;
 
@@ -341,14 +344,14 @@ export default {
     }
 
     function disabledCheckinDate(date) {
-      return date < new Date();
+      return moment(date).isBefore(moment(), 'day');
     }
 
     function disabledCheckoutDate(date) {
       if (filters.checkin_date) {
-        return date < new Date(filters.checkin_date);
+        return moment(date).isBefore(moment(filters.checkin_date), 'day');
       }
-      return date < new Date();
+      return moment(date).isBefore(moment(), 'day');
     }
 
     return {

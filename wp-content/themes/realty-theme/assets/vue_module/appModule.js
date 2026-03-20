@@ -3,6 +3,9 @@ import HelloWorld from './src/components/HelloWord.js';
 import PropertyFilter from './src/components/PropertyFilter.js';
 // Локализация для русского языка
 import ru from 'element-plus/dist/locale/ru.mjs';
+import moment from 'moment';
+import 'moment/locale/ru';
+moment.locale('ru');
 import {
   ElConfigProvider,
   ElButton,
@@ -36,6 +39,9 @@ export function createAppModule(options = {}) {
   app.component('ElInputNumber', ElInputNumber);
   app.component('ElDatePicker', ElDatePicker);
   app.component('ElAutocomplete', ElAutocomplete);
+
+  // Глобальная регистрация moment
+  app.provide('moment', moment);
 
   app.use(store);
   return app;
