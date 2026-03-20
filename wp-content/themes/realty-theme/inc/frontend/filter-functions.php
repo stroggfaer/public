@@ -15,9 +15,75 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Возвращает структурированные данные активных фильтров
+ *
+ * @return array
+ */
+function get_current_filters_data(): array {
+    $filters = [];
+
+    // Локация (поддерживаем location и location_slug)
+    $loc_slug = $_GET['location_slug'] ?? $_GET['location'] ?? '';
+    if (!empty($loc_slug)) {
+        $loc_slug = urldecode($loc_slug);
+        $term = get_term_by('slug', sanitize_text_field($loc_slug), 'location');
+      //  dd($loc_slug);
+        if ($term && ! is_wp_error($term)) {
+            $filters[] = [
+                    'key'   => 'location',
+                    'label' => 'Город',
+                    'value' => $term->name,
+                    'raw'   => $loc_slug,
+                    'type'  => 'taxonomy',
+            ];
+        }
+    }
+
+    // Даты
+    if (! empty($_GET['checkin_date'])) {
+        $filters[] = [
+                'key'   => 'checkin_date',
+                'label' => 'Заезд',
+                'value' => esc_html($_GET['checkin_date']),
+                'type'  => 'date',
+        ];
+    }
+
+    if (! empty($_GET['checkout_date'])) {
+        $filters[] = [
+                'key'   => 'checkout_date',
+                'label' => 'Выезд',
+                'value' => esc_html($_GET['checkout_date']),
+                'type'  => 'date',
+        ];
+    }
+
+    // Гости
+    if (! empty($_GET['adults'])) {
+        $filters[] = [
+                'key'   => 'adults',
+                'label' => 'Взрослые',
+                'value' => max(1, (int) $_GET['adults']),
+                'type'  => 'guests',
+        ];
+    }
+
+    if (! empty($_GET['children'])) {
+        $filters[] = [
+                'key'   => 'children',
+                'label' => 'Дети',
+                'value' => max(0, (int) $_GET['children']),
+                'type'  => 'guests',
+        ];
+    }
+
+    return $filters;
+}
+
+/**
  * Рендер формы фильтрации (Vue 3 компонент)
  */
-function property_filter_render_formTest($context = 'default') {
+function property_filter_render_form($context = 'default') {
     // Получаем настройки активных фильтров
     $active_filters = get_option('property_active_filters', array(
         'location', 'checkin_date', 'checkout_date', 'adults', 'children'
@@ -38,6 +104,8 @@ function property_filter_render_formTest($context = 'default') {
     // Кодируем данные для безопасной передачи в JavaScript
     $active_filters_json = esc_js(json_encode($active_filters));
     $price_range_json = esc_js(json_encode($price_range));
+    $filters_json = esc_js(json_encode(get_current_filters_data()));
+
 
     ob_start();
     ?>
@@ -54,6 +122,7 @@ function property_filter_render_formTest($context = 'default') {
                 <property-filter
                     context="<?php echo esc_js($context); ?>"
                     :active-filters="<?php echo $active_filters_json; ?>"
+                    :init-filters="<?php echo $filters_json; ?>"
                     :price-range="<?php echo $price_range_json; ?>"
                     ajax-url="<?php echo esc_js(admin_url('admin-ajax.php')); ?>"
                     nonce="<?php echo esc_js($nonce); ?>"
@@ -70,67 +139,7 @@ function property_filter_render_formTest($context = 'default') {
     return ob_get_clean();
 }
 
-function property_filter_render_form($context = 'default') {
-    $active_filters = get_option('property_active_filters', [
-            'location', 'checkin_date', 'checkout_date', 'adults', 'children'
-    ]);
 
-    $price_range = get_option('property_price_range', [
-            'min' => 0,
-            'max' => 1000000,
-            'step' => 1000
-    ]);
-
-    $nonce = wp_create_nonce('property_filter_nonce');
-
-    $container_id = ($context === 'archive') ? 'property-filter-vue-archive' : 'property-filter-vue';
-
-    $initial_filters = [
-            'location'      => $_GET['location']       ?? '',
-            'location_slug' => $_GET['location_slug']  ?? '',
-            'price_min'     => $_GET['price_min']      ?? null,
-            'price_max'     => $_GET['price_max']      ?? null,
-            'checkin_date'  => $_GET['checkin_date']   ?? '',
-            'checkout_date' => $_GET['checkout_date']  ?? '',
-            'adults'        => $_GET['adults']         ?? 1,
-            'children'      => $_GET['children']       ?? 0,
-    ];
-
-    $active_filters_json   = esc_js(json_encode($active_filters));
-    $price_range_json      = esc_js(json_encode($price_range));
-    $initial_filters_json  = esc_js(json_encode($initial_filters));
-
-    ob_start();
-    ?>
-    <div id="<?php echo esc_attr($container_id); ?>"></div>
-
-    <script type="module">
-        const { createAppModule, PropertyFilter } = window.VueAppModule;
-
-        const app = createAppModule({
-            components: {
-                PropertyFilter
-            },
-            template: `
-                <property-filter
-                    context="<?php echo esc_js($context); ?>"
-                    :active-filters="<?php echo $active_filters_json; ?>"
-                    :price-range="<?php echo $price_range_json; ?>"
-                    :initial-filters="<?php echo $initial_filters_json; ?>"
-                    ajax-url="<?php echo esc_js(admin_url('admin-ajax.php')); ?>"
-                    nonce="<?php echo esc_js($nonce); ?>"
-                />
-            `,
-            setup() {
-                return {};
-            }
-        });
-
-        app.mount('#<?php echo esc_attr($container_id); ?>');
-    </script>
-    <?php
-    return ob_get_clean();
-}
 
 /**
  * Рендер формы фильтрации для главной страницы (отправляет GET-запрос на /property/)

@@ -1,4 +1,4 @@
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import {
   ElInput,
   ElInputNumber,
@@ -7,7 +7,8 @@ import {
   ElForm,
   ElFormItem,
   ElAutocomplete,
-  ElMessage
+  ElMessage,
+  ElSlider
 } from 'element-plus';
 
 import {ApiService} from '../services/api';
@@ -20,7 +21,8 @@ export default {
     ElButton,
     ElForm,
     ElFormItem,
-    ElAutocomplete
+    ElAutocomplete,
+    ElSlider
   },
 
   template: `
@@ -35,7 +37,6 @@ export default {
             @select="handleLocationSelect"
             clearable
         >
-          <!-- 🔥 PREFIX ICON -->
           <template #prefix>
             <span class="material-symbols-outlined">location_on</span>
           </template>
@@ -52,23 +53,22 @@ export default {
         <input type="hidden" name="location_slug" v-model="locationSlug" />
       </el-form-item>
 
-      <!-- Цена -->
-      <el-form-item label="Цена от">
-        <el-input
-            v-model="filters.price_min"
-            :min="priceRange.min"
-            :max="priceRange.max"
-            :step="priceRange.step"
-        />
-      </el-form-item>
-
-      <el-form-item label="до">
-        <el-input
-            v-model="filters.price_max"
-            :min="priceRange.min"
-            :max="priceRange.max"
-            :step="priceRange.step"
-        />
+      <!-- Цена – слайдер с двумя ползунками -->
+      <el-form-item label="Цена">
+        <div class="price-range-wrapper">
+          <div class="price-labels">
+            <span>от {{ priceRangeValue[0] }} ₽</span>
+            <span>до {{ priceRangeValue[1] }} ₽</span>
+          </div>
+          <el-slider
+              v-model="priceRangeValue"
+              range
+              :min="Number(priceRange.min) || 0"
+              :max="Number(priceRange.max) || 1000000"
+              :step="safeStep"
+              :format-tooltip="formatPriceTooltip"
+          />
+        </div>
       </el-form-item>
 
       <!-- Даты -->
@@ -90,7 +90,7 @@ export default {
         />
       </el-form-item>
 
-      <!--ГОСТИ (НОВЫЙ ПОДХОД) -->
+      <!-- ГОСТИ -->
       <el-form-item v-if="activeFilters.includes('adults')" label="Взрослые">
         <el-input-number
             v-model="filters.adults"
@@ -117,7 +117,7 @@ export default {
           Сбросить
         </el-button>
       </el-form-item>
-      
+
       <!-- Loading -->
       <div v-if="isLoading">
         Загрузка...
@@ -129,6 +129,7 @@ export default {
   props: {
     activeFilters: Array,
     priceRange: Object,
+    initFilters: Array,
     ajaxUrl: String,
     nonce: String,
     context: String
@@ -141,13 +142,28 @@ export default {
     const childrenMax = 8;
 
     const filters = reactive({
-      price_min: null,
-      price_max: null,
+      price_min: Number(props.priceRange?.min) || 0,
+      price_max: Number(props.priceRange?.max) || 1000000,
       checkin_date: '',
       checkout_date: '',
       adults: 1,
       children: 0
     });
+
+    const priceRangeValue = ref([
+      filters.price_min,
+      filters.price_max
+    ]);
+
+    const safeStep = computed(() => {
+      const step = Number(props.priceRange?.step ?? 1000);
+      return step > 0 ? step : 1000; // защита от step = 0
+    });
+
+    // Синхронизация слайдера → filters
+    watch(priceRangeValue, (newVal) => {
+      [filters.price_min, filters.price_max] = newVal;
+    }, { deep: true });
 
     const locationInput = ref('');
     const locationSlug = ref('');
@@ -158,6 +174,60 @@ export default {
             ? 'property-filter-vue-archive'
             : 'property-filter-vue'
     );
+
+    const formatPriceTooltip = (val) => `${val} ₽`;
+
+    // Инициализация из GET-параметров
+    onMounted(() => {
+      console.log('[DEBUG] initFilters received:', props.initFilters);
+
+      if (!Array.isArray(props.initFilters) || props.initFilters.length === 0) {
+        console.warn('[DEBUG] Нет активных фильтров для инициализации');
+      } else {
+        props.initFilters.forEach(filter => {
+          if (!filter || typeof filter !== 'object' || !filter.key) return;
+
+          const key = filter.key;
+          const value = filter.value;
+
+          console.log(`[DEBUG] Applying filter: ${key} = ${value}`);
+
+          switch (key) {
+            case 'location':
+              locationInput.value = value || '';
+              locationSlug.value = filter.raw || value || '';
+              break;
+
+            case 'checkin_date':
+              if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                filters.checkin_date = value;
+              }
+              break;
+
+            case 'checkout_date':
+              if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                filters.checkout_date = value;
+              }
+              break;
+
+            case 'adults':
+              filters.adults = Number(value) || 1;
+              break;
+
+            case 'children':
+              filters.children = Number(value) || 0;
+              break;
+
+              // Если в будущем добавите price в active filters:
+              // case 'price_min': filters.price_min = Number(value) || props.priceRange.min; break;
+              // case 'price_max': filters.price_max = Number(value) || props.priceRange.max; break;
+          }
+        });
+      }
+
+      // Обязательно синхронизируем слайдер после всех изменений
+      priceRangeValue.value = [filters.price_min, filters.price_max];
+    });
 
     // AUTOCOMPLETE
     let timeout = null;
@@ -178,7 +248,9 @@ export default {
               name: i.name,
               slug: i.slug
             })));
-          } else cb([]);
+          } else {
+            cb([]);
+          }
         });
       }, 300);
     }
@@ -213,19 +285,16 @@ export default {
       })
           .then(res => {
             if (res?.success) {
-              // Обновляем список объектов недвижимости
               const propertyList = document.querySelector('.property-list');
               if (propertyList) {
                 propertyList.innerHTML = res.data.html || '<p>Недвижимость не найдена.</p>';
               }
-              console.log('handleSubmit',res.data);
-              // Обновляем пагинацию
+
               const pagination = document.querySelector('.archive-pagination');
               if (pagination) {
                 pagination.innerHTML = res.data.pagination || '';
               }
-              
-              // Обновляем информацию о результатах
+
               const resultsInfo = document.querySelector('.results-info');
               if (resultsInfo && res.data.total !== undefined) {
                 const total = res.data.total;
@@ -250,7 +319,6 @@ export default {
           });
     }
 
-    // Функция склонения числительных
     function declension(words, number) {
       const num = Math.abs(number) % 100;
       const n = num % 10;
@@ -261,14 +329,14 @@ export default {
     }
 
     function resetFilter() {
-      Object.assign(filters, {
-        price_min: null,
-        price_max: null,
-        checkin_date: '',
-        checkout_date: '',
-        adults: 1,
-        children: 0
-      });
+      filters.price_min = Number(props.priceRange?.min) || 0;
+      filters.price_max = Number(props.priceRange?.max) || 1000000;
+      priceRangeValue.value = [filters.price_min, filters.price_max];
+
+      filters.checkin_date = '';
+      filters.checkout_date = '';
+      filters.adults = 1;
+      filters.children = 0;
 
       locationInput.value = '';
       locationSlug.value = '';
@@ -289,10 +357,13 @@ export default {
 
     return {
       filters,
+      priceRangeValue,
+      safeStep,
       locationInput,
       locationSlug,
       isLoading,
       formId,
+      formatPriceTooltip,
 
       adultsMin,
       adultsMax,
