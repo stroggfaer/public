@@ -149,6 +149,8 @@ function enqueue_property_filter_scripts() {
 // Админка часть;
 require get_template_directory() . '/inc/admin/admin-function.php';
 // Подключаем файл с функциями
+require get_template_directory() . '/inc/backend/property-function.php';
+// Подключаем файл с функциями
 require get_template_directory() . '/inc/frontend/template-function.php';
 // Подключаем файл с функциями фильтрации
 require get_template_directory() . '/inc/frontend/filter-functions.php';

@@ -92,7 +92,7 @@ function property_filter_render_form($context = 'default') {
     $price_range = get_option('property_price_range', array(
         'min' => 0,
         'max' => 1000000,
-        'step' => 1000
+        'step' => 0
     ));
 
     // Получаем nonce
@@ -350,14 +350,8 @@ function property_filter_render_list($params = array()) {
 
     ob_start();
 
-    // Отладочная информация (можно удалить после проверки)
-    $debug_info = '';
-    if (current_user_can('administrator')) {
-        $debug_info = '<!-- Debug: Found ' . $query->found_posts . ' posts, post_type=property -->';
-    }
 
     if ($query->have_posts()) {
-        echo $debug_info;
         echo '<div class="properties-grid">';
         while ($query->have_posts()) {
             $query->the_post();
@@ -405,7 +399,6 @@ function property_filter_render_list($params = array()) {
         
         wp_reset_postdata();
     } else {
-        echo $debug_info;
         echo '<div class="no-results">';
         echo '<p>Недвижимость не найдена.</p>';
         // Дополнительная отладка для администраторов
@@ -453,7 +446,7 @@ add_shortcode('property_filter', 'property_filter_shortcode');
 /**
  * AJAX обработчик для кастомной фильтрации через шорткод
  */
-function filter_properties_custom_ajax_handler() {
+function filter_properties_custom_ajax_handlerOld() {
     global $wpdb;
 
     // Проверка nonce
@@ -580,6 +573,78 @@ function filter_properties_custom_ajax_handler() {
                 'count'       => 0,
                 'total_pages' => 0,
                 'pagination'  => '',
+                'coordinates' => array(),
+        ));
+    }
+}
+
+function filter_properties_custom_ajax_handler() {
+    // Проверка nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'property_filter_nonce')) {
+        wp_send_json_error('Security check failed');
+    }
+    // Получаем и декодируем location
+    $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : '';
+    $location_slug = isset($_POST['location_slug']) ? sanitize_title($_POST['location_slug']) : '';
+
+    $page = isset($_POST['page']) ? max(1, intval($_POST['page'])) : 1;
+
+    // Фильтры из AJAX
+    $params = array(
+            'page' => $page,
+            'price_min' => isset($_POST['price_min']) ? (int) $_POST['price_min'] : 0,
+            'price_max' => isset($_POST['price_max']) ? (int) $_POST['price_max'] : 0,
+            'adults' => isset($_POST['adults']) ? (int) $_POST['adults'] : 0,
+            'children' => isset($_POST['children']) ? (int) $_POST['children'] : 0,
+            'location' => sanitize_text_field($location_raw),
+            'location_slug' => $location_slug,
+    );
+
+    // Получаем результаты через универсальную функцию
+    $result = properties_list($params);
+
+    ob_start();
+
+    if (!empty($result['posts'])) {
+        echo '<div class="properties-grid">';
+            foreach ($result['posts'] as $post) {
+                setup_postdata($post);
+                // Получаем Pods объект для текущего поста
+                $pod = pods('property', $post->ID);
+                get_template_part('template-parts/component/property-card', null, array('pod' => $pod));
+            }
+        echo '</div>';
+
+        // Пагинация
+        $pagination = '';
+        $posts_per_page = isset($params['posts_per_page']) ? max(1, (int)$params['posts_per_page']) : 12;
+        $total_pages = ceil($result['total'] / $posts_per_page);
+        if ($total_pages > 1) {
+            $pagination = '<ul class="pods-pagination">';
+            for ($i = 1; $i <= min($total_pages, 5); $i++) {
+                if ($i == $page) {
+                    $pagination .= '<li><span class="current">' . $i . '</span></li>';
+                } else {
+                    $pagination .= '<li><a href="#" data-page="' . $i . '">' . $i . '</a></li>';
+                }
+            }
+            $pagination .= '</ul>';
+        }
+
+        wp_send_json_success(array(
+                'html' => ob_get_clean(),
+                'count' => $result['total'],
+                'total_pages' => $total_pages,
+                'pagination' => $pagination,
+                'coordinates' => $result['coordinates'],
+        ));
+
+    } else {
+        wp_send_json_success(array(
+                'html' => '<p>Недвижимость не найдена.</p>',
+                'count' => 0,
+                'total_pages' => 0,
+                'pagination' => '',
                 'coordinates' => array(),
         ));
     }
