@@ -134,39 +134,92 @@ class PropertyFeature {
     }
 
     /**
+     * Единая точка получения и нормализации всех фильтров
+     *
+     * @param string $context 'get' | 'post' | 'request'  — откуда брать данные
+     * @param array  $overrides Дополнительные/принудительные значения (удобно для AJAX)
+     * @return array Нормализованные фильтры + служебные поля
+     */
+    public function formatRequestParams(string $context = 'request', array $overrides = []): array
+    {
+        // 1. Определяем источник данных
+        $source = match (strtolower($context)) {
+            'post'    => $_POST,
+            'get'     => $_GET,
+            default   => $_REQUEST,
+        };
+
+        // 2. Базовые значения + overrides
+        $filters = array_merge([
+                'location'      => '',
+                'location_slug' => '',
+                'checkin_date'  => '',
+                'checkout_date' => '',
+                'adults'        => ($context === 'post') ? 0 : 1,
+                'children'      => 0,
+                'price_min'     => 0,
+                'price_max'     => 0,
+                'paged'         => 1,
+        ], $overrides);
+
+        // 3. Локация — самая сложная часть, делаем аккуратно
+        $loc_raw = $source['location']      ?? $filters['location'];
+        $loc_slug = $source['location_slug'] ?? $source['location'] ?? $filters['location_slug'];
+
+        if ($loc_raw !== '') {
+            $filters['location'] = sanitize_text_field(wp_unslash($loc_raw));
+        }
+        if ($loc_slug !== '') {
+            $filters['location_slug'] = sanitize_title($loc_slug);
+            if (empty($filters['location'])) {
+                $filters['location'] = $filters['location_slug'];
+            }
+        }
+
+        // 4. Даты — простая проверка формата
+        foreach (['checkin_date', 'checkout_date'] as $key) {
+            $val = $source[$key] ?? $filters[$key];
+            if ($val && preg_match('/^\d{4}-\d{2}-\d{2}$/', $val)) {
+                $filters[$key] = sanitize_text_field($val);
+            }
+        }
+
+        // 5. Числовые поля с минимальными значениями
+        $numeric_fields = [
+                'adults'    => ['min' => ($context === 'get' ? 1 : 0), 'default' => ($context === 'get' ? 1 : 0)],
+                'children'  => ['min' => 0, 'default' => 0],
+                'price_min' => ['min' => 0],
+                'price_max' => ['min' => 0],
+                'paged'     => ['min' => 1],
+        ];
+
+        foreach ($numeric_fields as $key => $rules) {
+            $val = $source[$key] ?? $filters[$key];
+            if (isset($source['page']) && $key === 'paged') {  // поддержка AJAX page
+                $val = $source['page'];
+            }
+            $filters[$key] = max($rules['min'] ?? 0, intval($val ?: $rules['default'] ?? 0));
+        }
+
+        // 6. Защита от мусора
+        $filters = array_filter($filters, function ($v, $k) {
+            if (in_array($k, ['paged', 'adults', 'children', 'price_min', 'price_max'])) {
+                return $v > 0; // убираем нулевые числовые, если не нужны
+            }
+            return $v !== '';
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return $filters;
+    }
+
+    /**
      * Получение списка недвижимости из GET параметров
      * Используется для рендеринга на странице архива
      * 
      * @return array
      */
     public function getListFromGet(): array {
-        $filters = [];
-
-        // Локация
-        $loc_slug = $_GET['location_slug'] ?? $_GET['location'] ?? '';
-        if (!empty($loc_slug)) {
-            $filters['location'] = sanitize_text_field($loc_slug);
-        }
-
-        // Даты
-        if (!empty($_GET['checkin_date'])) {
-            $filters['checkin_date'] = sanitize_text_field($_GET['checkin_date']);
-        }
-        if (!empty($_GET['checkout_date'])) {
-            $filters['checkout_date'] = sanitize_text_field($_GET['checkout_date']);
-        }
-
-        // Гости
-        if (!empty($_GET['adults'])) {
-            $filters['adults'] = intval($_GET['adults']);
-        }
-        if (!empty($_GET['children'])) {
-            $filters['children'] = intval($_GET['children']);
-        }
-
-        // Пагинация
-        $filters['paged'] = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-
+        $filters = $this->formatRequestParams('GET');
         return $this->getList($filters);
     }
 
@@ -176,12 +229,12 @@ class PropertyFeature {
      * @return array
      */
     public function getCurrentFilters(): array {
+        $params = $this->formatRequestParams('GET');
         $filters = [];
 
         // Локация
-        $loc_slug = $_GET['location_slug'] ?? $_GET['location'] ?? '';
-        if (!empty($loc_slug)) {
-            $loc_slug = urldecode($loc_slug);
+        if (!empty($params['location'])) {
+            $loc_slug = urldecode($params['location']);
             $term = get_term_by('slug', sanitize_text_field($loc_slug), 'location');
             if ($term && !is_wp_error($term)) {
                 $filters[] = [
@@ -195,39 +248,39 @@ class PropertyFeature {
         }
 
         // Даты
-        if (!empty($_GET['checkin_date'])) {
+        if (!empty($params['checkin_date'])) {
             $filters[] = [
                 'key' => 'checkin_date',
                 'label' => 'Заезд',
-                'value' => esc_html($_GET['checkin_date']),
+                'value' => esc_html($params['checkin_date']),
                 'type' => 'date',
             ];
         }
 
-        if (!empty($_GET['checkout_date'])) {
+        if (!empty($params['checkout_date'])) {
             $filters[] = [
                 'key' => 'checkout_date',
                 'label' => 'Выезд',
-                'value' => esc_html($_GET['checkout_date']),
+                'value' => esc_html($params['checkout_date']),
                 'type' => 'date',
             ];
         }
 
         // Гости
-        if (!empty($_GET['adults'])) {
+        if (!empty($params['adults'])) {
             $filters[] = [
                 'key' => 'adults',
                 'label' => 'Взрослые',
-                'value' => max(1, (int)$_GET['adults']),
+                'value' => $params['adults'],
                 'type' => 'guests',
             ];
         }
 
-        if (!empty($_GET['children'])) {
+        if (isset($params['children'])) {
             $filters[] = [
                 'key' => 'children',
                 'label' => 'Дети',
-                'value' => max(0, (int)$_GET['children']),
+                'value' => $params['children'],
                 'type' => 'guests',
             ];
         }
@@ -262,22 +315,10 @@ class PropertyFeature {
             wp_send_json_error('Security check failed');
         }
 
-        // Получаем и декодируем location
-        $location_raw = isset($_POST['location']) ? wp_unslash($_POST['location']) : '';
-        $location_slug = isset($_POST['location_slug']) ? sanitize_title($_POST['location_slug']) : '';
-
+        // Получаем параметры через унифицированный метод
+        $params = $this->formatRequestParams('POST');
         $page = isset($_POST['page']) ? max(1, intval($_POST['page'])) : 1;
-
-        // Параметры
-        $params = [
-            'page' => $page,
-            'price_min' => isset($_POST['price_min']) ? (int)$_POST['price_min'] : 0,
-            'price_max' => isset($_POST['price_max']) ? (int)$_POST['price_max'] : 0,
-            'adults' => isset($_POST['adults']) ? (int)$_POST['adults'] : 0,
-            'children' => isset($_POST['children']) ? (int)$_POST['children'] : 0,
-            'location' => sanitize_text_field($location_raw),
-            'location_slug' => $location_slug,
-        ];
+        $params['page'] = $page;
 
         // Получаем результаты
         $result = $this->getList($params);
@@ -656,13 +697,11 @@ class PropertyFeature {
 
     /**
      * Обёртка для обратной совместимости
+     * 
+     * @param array $params Параметры фильтрации. Если пустой - использует GET-параметры
      */
-    public function property_filter_render_list($params = array()) {
-        if (!empty($params)) {
-            $result = $this->getList($params);
-        } else {
-            $result = $this->getListFromGet();
-        }
+    public function property_filter_render_list() {
+        $result = $this->getListFromGet();
 
         ob_start();
 

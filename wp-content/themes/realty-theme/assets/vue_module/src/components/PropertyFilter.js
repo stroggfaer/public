@@ -49,8 +49,6 @@ export default {
             <span>Ничего не найдено</span>
           </template>
         </el-autocomplete>
-
-        <input type="hidden" name="location_slug" v-model="locationSlug" />
       </el-form-item>
 
       <!-- Цена – слайдер с двумя ползунками и инпутами -->
@@ -300,7 +298,7 @@ export default {
         action: 'filter_properties_custom',
         nonce: props.nonce,
         location: locationInput.value,
-        location_slug: locationSlug.value,
+       // location_slug: locationSlug.value,
         ...filters,
         page: 1
       })
