@@ -53,12 +53,30 @@ export default {
         <input type="hidden" name="location_slug" v-model="locationSlug" />
       </el-form-item>
 
-      <!-- Цена – слайдер с двумя ползунками -->
+      <!-- Цена – слайдер с двумя ползунками и инпутами -->
       <el-form-item label="Цена">
         <div class="price-range-wrapper">
-          <div class="price-labels">
-            <span>от {{ priceRangeValue[0] }} ₽</span>
-            <span>до {{ priceRangeValue[1] }} ₽</span>
+          <div class="price-inputs-row">
+            <el-input
+                v-model.number="filters.price_min"
+                type="number"
+                :min="Number(priceRange.min) || 0"
+                :max="filters.price_max"
+                placeholder="{{ priceRange.min || 0 }}"
+                size="small"
+                class="price-input"
+                @input="onPriceInput"
+            />
+            <el-input
+                v-model.number="filters.price_max"
+                type="number"
+                :min="filters.price_min"
+                :max="Number(priceRange.max) || 1000000"
+                placeholder="{{ priceRange.max || 1000000 }}"
+                size="small"
+                class="price-input"
+                @input="onPriceInput"
+            />
           </div>
           <el-slider
               v-model="priceRangeValue"
@@ -165,6 +183,11 @@ export default {
     watch(priceRangeValue, (newVal) => {
       [filters.price_min, filters.price_max] = newVal;
     }, { deep: true });
+
+    // Обработчик ввода в инпуты цены
+    function onPriceInput() {
+      priceRangeValue.value = [filters.price_min, filters.price_max];
+    }
 
     const locationInput = ref('');
     const locationSlug = ref('');
@@ -374,7 +397,8 @@ export default {
       handleSubmit,
       resetFilter,
       disabledCheckinDate,
-      disabledCheckoutDate
+      disabledCheckoutDate,
+      onPriceInput
     };
   }
 };

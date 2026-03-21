@@ -146,18 +146,65 @@ function enqueue_property_filter_scripts() {
     }
 }
 
+// Подключаем базовый класс темы
+require get_template_directory() . '/inc/core/RealtyCore.php';
+
+// Подключаем вспомогательные функции
+require get_template_directory() . '/inc/helpers/helpers.php';
+
+// Подключаем фичу Недвижимости
+require get_template_directory() . '/inc/features/property/property.php';
+
+// Инициализация фичи Недвижимости
+$propertyFeature = PropertyFeature::getInstance();
+$propertyFeature->init();
+
 // Админка часть;
 require get_template_directory() . '/inc/admin/admin-function.php';
-// Подключаем файл с функциями
-require get_template_directory() . '/inc/backend/property-function.php';
-// Подключаем файл с функциями
-require get_template_directory() . '/inc/frontend/template-function.php';
-// Подключаем файл с функциями фильтрации
-require get_template_directory() . '/inc/frontend/filter-functions.php';
 // Подключаем файл с регистрацией CPT и таксономий
 require get_template_directory() . '/inc/admin/pods-registration.php';
 // Подключаем универсальную страницу настроек
 require get_template_directory() . '/inc/admin/settings/index-settings.php';
+
+// ============================================================
+// Обратная совместимость - создаём глобальные функции-обёртки
+// ============================================================
+
+/**
+ * Универсальная функция для получения списка недвижимости
+ * Обёртка для PropertyFeature::getList()
+ */
+function properties_list($params = array()) {
+    return PropertyFeature::getInstance()->getList($params);
+}
+
+/**
+ * Рендер формы фильтрации (Vue компонент)
+ */
+function property_filter_render_form($context = 'default') {
+    return PropertyFeature::getInstance()->shortcodeFilter(['context' => $context]);
+}
+
+/**
+ * Рендер формы фильтрации для главной страницы
+ */
+function property_filter_render_home_form() {
+    return PropertyFeature::getInstance()->renderHomeForm();
+}
+
+/**
+ * Рендер списка недвижимости
+ */
+function property_filter_render_list($params = array()) {
+    return PropertyFeature::getInstance()->property_filter_render_list($params);
+}
+
+/**
+ * Получение данных активных фильтров
+ */
+function get_current_filters_data() {
+    return PropertyFeature::getInstance()->getCurrentFilters();
+}
 
 // Добавляем проверку валидности параметров фильтрации при загрузке страницы
 add_action('template_redirect', 'validate_property_search_parameters');
