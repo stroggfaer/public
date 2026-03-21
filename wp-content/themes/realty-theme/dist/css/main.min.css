@@ -2548,7 +2548,7 @@ input[type=submit]:hover {
   right: 0;
   top: 0;
 }
-.site-main-map .property-map-container .property-map {
+.site-main-map .property-map-container .property-map, .site-main-map .property-map-container #vue-property-map {
   height: 100%;
 }
 .site-main-map .active-filters-notification {

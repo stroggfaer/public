@@ -1,6 +1,7 @@
 import store from './src/store/index.js';
 import HelloWorld from './src/components/HelloWord.js';
 import PropertyFilter from './src/components/PropertyFilter.js';
+import GoogleMap from './src/components/GoogleMap.js';
 // Локализация для русского языка
 import ru from 'element-plus/dist/locale/ru.mjs';
 import moment from 'moment';
@@ -49,6 +50,7 @@ export function createAppModule(options = {}) {
 export {
   HelloWorld,
   PropertyFilter,
+  GoogleMap,
   ElButton,
   ElDialog,
   ElForm,
