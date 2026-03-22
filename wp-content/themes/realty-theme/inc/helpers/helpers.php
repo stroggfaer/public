@@ -162,3 +162,19 @@ function validate_guest_numbers($adults = 0, $children = 0) {
 }
 
 
+/**
+ * Склонение числительных
+ */
+function declension($words, $number) {
+    $number = abs($number) % 100;
+    $num = $number % 10;
+    if ($number > 10 && $number < 20) {
+        return [$number, $words[2]];
+    } elseif ($num > 1 && $num < 5) {
+        return [$number, $words[1]];
+    } elseif ($num == 1) {
+        return [$number, $words[0]];
+    } else {
+        return [$number, $words[2]];
+    }
+}

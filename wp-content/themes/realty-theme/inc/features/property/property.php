@@ -608,7 +608,7 @@ class PropertyFeature {
             echo '</div>';
 
             echo '<div class="results-info">';
-            $total_obj = $this->declension(['объект', 'объекта', 'объектов'], $result['total']);
+            $total_obj = declension(['объект', 'объекта', 'объектов'], $result['total']);
             echo '<p>Всего ' . $result['total'] . ' ' . $total_obj[1] . '</p>';
             echo '</div>';
 
@@ -653,22 +653,6 @@ class PropertyFeature {
         return ob_get_clean();
     }
 
-    /**
-     * Склонение числительных
-     */
-    private function declension($words, $number) {
-        $number = abs($number) % 100;
-        $num = $number % 10;
-        if ($number > 10 && $number < 20) {
-            return [$number, $words[2]];
-        } elseif ($num > 1 && $num < 5) {
-            return [$number, $words[1]];
-        } elseif ($num == 1) {
-            return [$number, $words[0]];
-        } else {
-            return [$number, $words[2]];
-        }
-    }
 
     // ============================================================
     // Для обратной совместимости - функции-обёртки
@@ -707,20 +691,20 @@ class PropertyFeature {
 
         if (!empty($result['posts'])) {
             echo '<div class="properties-grid">';
-            foreach ($result['posts'] as $post) {
-                setup_postdata($post);
-                $pod = pods('property', $post->ID);
-                get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
-            }
+                foreach ($result['posts'] as $post) {
+                    setup_postdata($post);
+                    $pod = pods('property', $post->ID);
+                    get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+                }
             echo '</div>';
 
             echo '<div class="results-info">';
-            $total_obj = $this->declension(['объект', 'объекта', 'объектов'], $result['total']);
-            echo '<p>Всего ' . $result['total'] . ' ' . $total_obj[1] . '</p>';
+                $total_obj = declension(['объект', 'объекта', 'объектов'], $result['total']);
+                echo '<p>Всего ' . $result['total'] . ' ' . $total_obj[1] . '</p>';
             echo '</div>';
         } else {
             echo '<div class="no-results">';
-            echo '<p>Недвижимость не найдена.</p>';
+              echo '<p>Недвижимость не найдена.</p>';
             echo '</div>';
         }
 
