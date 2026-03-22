@@ -195,7 +195,7 @@ function property_filter_render_home_form() {
 /**
  * Рендер списка недвижимости
  */
-function property_filter_render_list() {
+function property_render_list() {
     return PropertyFeature::getInstance()->property_filter_render_list();
 }
 
