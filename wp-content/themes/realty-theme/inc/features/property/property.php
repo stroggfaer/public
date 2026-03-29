@@ -697,11 +697,6 @@ class PropertyFeature {
                     get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
                 }
             echo '</div>';
-
-            echo '<div class="results-info">';
-                $total_obj = declension(['объект', 'объекта', 'объектов'], $result['total']);
-                echo '<p>Всего ' . $result['total'] . ' ' . $total_obj[1] . '</p>';
-            echo '</div>';
         } else {
             echo '<div class="no-results">';
               echo '<p>Недвижимость не найдена.</p>';

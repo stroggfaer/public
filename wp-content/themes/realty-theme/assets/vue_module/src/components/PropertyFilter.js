@@ -1,5 +1,3 @@
-import { inject } from 'vue';
-
 import {
   ElInput,
   ElInputNumber,
@@ -11,7 +9,7 @@ import {
   ElSlider
 } from 'element-plus';
 
-import { usePropertyFilters } from '../hooks/usePropertyFilters';
+import usePropertyFilters from '../hooks/usePropertyFilters';
 
 export default {
   components: {
@@ -150,8 +148,6 @@ export default {
   },
 
   setup(props) {
-    const moment = inject('moment');
-
     const {
       filters,
       priceRangeValue,
@@ -161,7 +157,6 @@ export default {
       safeStep,
       formId,
       formatPriceTooltip,
-
       querySearch,
       handleLocationSelect,
       fetchProperties,
@@ -172,7 +167,13 @@ export default {
       disabledCheckoutDate,
 
       CONFIG
-    } = usePropertyFilters(props, moment);
+    } = usePropertyFilters({
+      priceRange: props.priceRange,
+      context: props.context,
+      initFilters: props.initFilters,
+      ajaxUrl: props.ajaxUrl,
+      nonce: props.nonce
+    });
 
     function handleSubmit() {
       fetchProperties()

@@ -1,6 +1,7 @@
 // composables/usePropertyFilters.js
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { ApiService } from '../services/api';
+import moment from 'moment';
 
 // ---- CONFIG ----
 const CONFIG = {
@@ -15,12 +16,25 @@ const CONFIG = {
     }
 };
 
-export function usePropertyFilters(props, moment) {
+export default function usePropertyFilters(params = {}) {
+
+    // ---------------- PARAMS ----------------
+    const {
+        priceRange: {
+            min = CONFIG.price.min,
+            max = CONFIG.price.max,
+            step = CONFIG.price.step
+        } = {},
+        context = 'default',
+        initFilters: initialFilters = [],
+        ajaxUrl = '',
+        nonce = ''
+    } = params;
 
     // ---------------- STATE ----------------
     const filters = reactive({
-        price_min: Number(props.priceRange?.min) || CONFIG.price.min,
-        price_max: Number(props.priceRange?.max) || CONFIG.price.max,
+        price_min: Number(min),
+        price_max: Number(max),
         checkin_date: moment().format('YYYY-MM-DD'),
         checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
         adults: CONFIG.guests.adults.min,
@@ -38,12 +52,12 @@ export function usePropertyFilters(props, moment) {
 
     // ---------------- COMPUTED ----------------
     const safeStep = computed(() => {
-        const step = Number(props.priceRange?.step ?? CONFIG.price.step);
-        return step > 0 ? step : CONFIG.price.step;
+        const s = Number(step);
+        return s > 0 ? s : CONFIG.price.step;
     });
 
     const formId = computed(() =>
-        props.context === 'archive'
+        context === 'archive'
             ? 'property-filter-vue-archive'
             : 'property-filter-vue'
     );
@@ -61,9 +75,9 @@ export function usePropertyFilters(props, moment) {
 
     // ---------------- INIT ----------------
     function initFilters() {
-        if (!Array.isArray(props.initFilters)) return;
+        if (!Array.isArray(initFilters)) return;
 
-        props.initFilters.forEach(filter => {
+        initFilters.forEach(filter => {
             if (!filter?.key) return;
 
             const { key, value } = filter;
@@ -110,10 +124,10 @@ export function usePropertyFilters(props, moment) {
         clearTimeout(timeout);
 
         timeout = setTimeout(() => {
-            ApiService.post(props.ajaxUrl, {
+            ApiService.post(ajaxUrl, {
                 action: 'get_locations_autocomplete',
                 term: query,
-                nonce: props.nonce
+                nonce: nonce
             }).then(res => {
                 if (res?.success) {
                     cb(res.data.map(i => ({
@@ -149,9 +163,9 @@ export function usePropertyFilters(props, moment) {
         try {
             validate();
 
-            const res = await ApiService.post(props.ajaxUrl, {
+            const res = await ApiService.post(ajaxUrl, {
                 action: 'filter_properties_custom',
-                nonce: props.nonce,
+                nonce: nonce,
                 location: locationInput.value,
                 ...filters,
                 page: 1
@@ -166,8 +180,8 @@ export function usePropertyFilters(props, moment) {
 
     // ---------------- RESET ----------------
     function reset() {
-        filters.price_min = Number(props.priceRange?.min) || CONFIG.price.min;
-        filters.price_max = Number(props.priceRange?.max) || CONFIG.price.max;
+        filters.price_min = Number(min) || CONFIG.price.min;
+        filters.price_max = Number(max) || CONFIG.price.max;
 
         filters.checkin_date = moment().format('YYYY-MM-DD');
         filters.checkout_date = moment().add(7, 'days').format('YYYY-MM-DD');

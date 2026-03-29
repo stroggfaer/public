@@ -29,9 +29,7 @@ get_header(); ?>
                         <div class="page-header">
                             <h1 class="page-title"><?php post_type_archive_title(); ?></h1>
                         </div>
-                        <div class="property-list">
-                           <?php get_template_part('template-parts/content/list/property-card-list'); ?>
-                        </div>
+                        <?php get_template_part('template-parts/content/list/property-card-list'); ?>
                     </div>
                     <!-- Vue Google Map Container -->
                     <div class="property-map-container">
