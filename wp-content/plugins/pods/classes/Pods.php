@@ -1,5 +1,10 @@
 <?php
 
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 use Pods\Data\Map_Field_Values;
 use Pods\Whatsit\Object_Field;
 use Pods\Whatsit\Field;
@@ -2464,8 +2469,11 @@ class Pods implements Iterator {
 			}
 
 			foreach ( $params->orderby as $key => $prefix_orderby ) {
+				$prefix_orderby = (string) $prefix_orderby;
+
 				if (
-					false !== strpos( $prefix_orderby, ',' )
+					empty( $prefix_orderby )
+					|| false !== strpos( $prefix_orderby, ',' )
 					|| false !== strpos( $prefix_orderby, '(' )
 					|| false !== stripos( $prefix_orderby, ' AS ' )
 					|| false !== strpos( $prefix_orderby, '`' )
@@ -3363,6 +3371,19 @@ class Pods implements Iterator {
 	 * are simple, paginate and advanced. The base and format parameters
 	 * are used only for the paginate view.
 	 *
+	 * @since 3.3.5
+	 *
+	 * @param array|object $params Associative array of parameters.
+	 */
+	public function output_pagination( $params = null ) {
+		echo $this->pagination( $params ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+
+	/**
+	 * Display the pagination controls, types supported by default
+	 * are simple, paginate and advanced. The base and format parameters
+	 * are used only for the paginate view.
+	 *
 	 * @param array|object $params Associative array of parameters.
 	 *
 	 * @return string Pagination HTML
@@ -3379,7 +3400,7 @@ class Pods implements Iterator {
 
 		$this->page_var = pods_v( 'page_var', $params, $this->page_var );
 
-		$url = pods_query_arg( null, null, $this->page_var );
+		$url = (string) pods_query_arg( null, null, $this->page_var );
 
 		$append = '?';
 
@@ -3439,6 +3460,17 @@ class Pods implements Iterator {
 
 		return $this->do_hook( 'pagination', $this->do_hook( 'pagination_' . $params->type, $output, $params ), $params );
 
+	}
+
+	/**
+	 * Return a filter form for searching a Pod
+	 *
+	 * @since 3.3.5
+	 *
+	 * @param array|string $params Comma-separated list of fields or array of parameters.
+	 */
+	public function output_filters( $params = null ) {
+		echo $this->filters( $params ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -3609,7 +3641,7 @@ class Pods implements Iterator {
 
 		// Clean up helper callback (if string).
 		if ( is_string( $params['helper'] ) ) {
-			$params['helper'] = strip_tags( str_replace( array( '`', chr( 96 ) ), "'", $params['helper'] ) );
+			$params['helper'] = wp_strip_all_tags( str_replace( array( '`', chr( 96 ) ), "'", $params['helper'] ) );
 		}
 
 		if ( ! pods_access_callback_allowed( $params['helper'], $params ) ) {
@@ -3622,10 +3654,10 @@ class Pods implements Iterator {
 			}
 
 			if ( $include_obj ) {
-				return apply_filters( $params['helper'], $value, $this );
+				return apply_filters( $params['helper'], $value, $this ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 			}
 
-			return apply_filters( $params['helper'], $value );
+			return apply_filters( $params['helper'], $value ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 		}
 
 		try {
@@ -3877,6 +3909,21 @@ class Pods implements Iterator {
 		 * @param Pods   $pod  The current Pods object.
 		 */
 		return apply_filters( 'pods_template_content', $out, $code, $this );
+	}
+
+	/**
+	 * Embed a form to add / edit a pod item from within your theme. Provide an array of $fields to include
+	 * and override options where needed. For WP object based Pods, you can pass through the WP object
+	 * field names too, such as "post_title" or "post_content" for example.
+	 *
+	 * @since 3.3.5
+	 *
+	 * @param array  $params    (optional) Fields to show on the form, defaults to all fields.
+	 * @param string $label     (optional) Save button label, defaults to "Save Changes".
+	 * @param string $thank_you (optional) Thank you URL to send to upon success.
+	 */
+	public function output_form( $params = null, $label = null, $thank_you = null ) {
+		echo $this->form( $params, $label, $thank_you ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -4153,6 +4200,17 @@ class Pods implements Iterator {
 	/**
 	 * Render a singular view for the Pod item content.
 	 *
+	 * @since 3.3.5
+	 *
+	 * @param array|string|null $view_fields (optional) Fields to show in the view, defaults to all fields.
+	 */
+	public function output_view( $view_fields = null ) {
+		echo $this->view( $view_fields ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+
+	/**
+	 * Render a singular view for the Pod item content.
+	 *
 	 * @param array|string|null $view_fields (optional) Fields to show in the view, defaults to all fields.
 	 *
 	 * @return mixed
@@ -4208,10 +4266,14 @@ class Pods implements Iterator {
 				$field['name'] = $to_merge['name'];
 			}
 
-			if ( pods_v( 'hidden', $field, false, true ) || 'hidden' === $field['type'] ) {
+			if ( pods_v_bool( 'hidden', $field ) || 'hidden' === $field['type'] ) {
 				continue;
 			} elseif ( ! pods_permission( $field ) ) {
-				continue;
+				if ( pods_v_bool( 'read_only_restricted', $field ) ) {
+					$field['read_only'] = true;
+				} else {
+					continue;
+				}
 			}
 
 			$fields[ $field['name'] ] = $field;
@@ -4254,7 +4316,7 @@ class Pods implements Iterator {
 
 		if ( ! is_string( $code ) ) {
 			_doing_it_wrong( __FUNCTION__, 'Pods::do_magic_tags() must be given a string, a non-string was provided.', '3.3.2' );
-			pods_debug_log( 'Pods::do_magic_tags() called with non-string: ' . var_export( $code, true ) );
+			pods_debug_log( 'Pods::do_magic_tags() called with non-string: ' . wp_json_encode( $code, JSON_PRETTY_PRINT ) );
 
 			return '';
 		}
@@ -4702,7 +4764,7 @@ class Pods implements Iterator {
 		}
 
 		// Handle sending previously mapped PodsData properties directly to their correct place.
-		if ( 0 === strpos( $name, 'field_' ) ) {
+		if ( 0 === strpos( (string) $name, 'field_' ) ) {
 			if ( ! is_object( $this->pod_data ) ) {
 				return null;
 			}

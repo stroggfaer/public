@@ -3,6 +3,11 @@
  * @package Pods\Global\Functions\Media
  */
 
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 /**
  * Get the Attachment ID for a specific image field.
  *
@@ -28,8 +33,8 @@ function pods_image_id_from_field( $image ) {
 			} else {
 				$id = pods_image_id_from_field( current( $image ) );
 			}
-		} else {
-			if ( false === strpos( $image, '.' ) && is_numeric( $image ) ) {
+		} elseif ( is_string( $image ) || is_numeric( $image ) ) {
+			if ( false === strpos( (string) $image, '.' ) && is_numeric( $image ) ) {
 				$id = $image;
 
 				$the_post_type = get_post_type( $id );
@@ -246,7 +251,7 @@ function pods_attachment_import( $url, $post_parent = null, $featured = false, $
 
 	if ( ! ( $uploads && false === $uploads['error'] ) ) {
 		if ( $strict ) {
-			throw new Exception( sprintf( 'Attachment import failed, uploads directory has a problem: %s', var_export( $uploads, true ) ) );
+			throw new Exception( esc_html( sprintf( 'Attachment import failed, uploads directory has a problem: %s', wp_json_encode( $uploads, JSON_PRETTY_PRINT ) ) ) );
 		}
 
 		return 0;
@@ -257,7 +262,7 @@ function pods_attachment_import( $url, $post_parent = null, $featured = false, $
 
 	if ( ! copy( $url, $new_file ) ) {
         if ( $strict ) {
-            throw new Exception( sprintf( 'Attachment import failed, could not copy file from %s to %s', $url, $new_file ) );
+            throw new Exception( esc_html( sprintf( 'Attachment import failed, could not copy file from %s to %s', $url, $new_file ) ) );
         }
 
         return 0;
@@ -265,13 +270,21 @@ function pods_attachment_import( $url, $post_parent = null, $featured = false, $
 
 	$stat  = stat( dirname( $new_file ) );
 	$perms = $stat['mode'] & 0000666;
-	@chmod( $new_file, $perms );
+
+	require_once ABSPATH . '/wp-admin/includes/file.php';
+
+	/** @var WP_Filesystem_Base $wp_filesystem */
+	global $wp_filesystem;
+
+	if ( WP_Filesystem() && $wp_filesystem ) {
+		$wp_filesystem->chmod( $new_file, $perms );
+	}
 
 	$wp_filetype = wp_check_filetype( $filename );
 
 	if ( ! $wp_filetype['type'] || ! $wp_filetype['ext'] ) {
 		if ( $strict ) {
-			throw new Exception( sprintf( 'Attachment import failed, filetype check failed: %s', var_export( $wp_filetype, true ) ) );
+			throw new Exception( esc_html( sprintf( 'Attachment import failed, filetype check failed: %s', wp_json_encode( $wp_filetype, JSON_PRETTY_PRINT ) ) ) );
 		}
 
 		return 0;
@@ -285,11 +298,12 @@ function pods_attachment_import( $url, $post_parent = null, $featured = false, $
 		'post_content'   => '',
 	);
 
+	/** @var int|WP_Error $attachment_id */
 	$attachment_id = wp_insert_attachment( $attachment, $new_file, $post_parent );
 
 	if ( is_wp_error( $attachment_id ) ) {
 		if ( $strict ) {
-			throw new Exception( sprintf( 'Attachment import failed, wp_insert_attachment failed: %s', var_export( $attachment_id, true ) ) );
+			throw new Exception( esc_html( sprintf( 'Attachment import failed, wp_insert_attachment failed: %s', wp_json_encode( $attachment_id, JSON_PRETTY_PRINT ) ) ) );
 		}
 
 		return 0;

@@ -1,5 +1,10 @@
 <?php
 
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 use Pods\Static_Cache;
 
 /**
@@ -239,6 +244,8 @@ class PodsView {
 			$view_key = realpath( $view_key );
 		}
 
+		$view_key = (string) $view_key;
+
 		$pods_ui_dir         = realpath( PODS_DIR . 'ui/' );
 		$pods_components_dir = realpath( PODS_DIR . 'components/' );
 		$abspath_dir         = realpath( ABSPATH );
@@ -433,7 +440,7 @@ class PodsView {
 			} elseif ( 'cache' === $cache_mode && $object_cache_enabled ) {
 				$value = wp_cache_get( $key, ( empty( $group ) ? 'pods_view' : $group ) );
 			} elseif ( 'option-cache' === $cache_mode ) {
-				$pre = apply_filters( "pre_transient_{$key}", false );
+				$pre = apply_filters( "pre_transient_{$key}", false ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 
 				if ( false !== $pre ) {
 					$value = $pre;
@@ -481,7 +488,7 @@ class PodsView {
 				}//end if
 
 				if ( false !== $value ) {
-					$value = apply_filters( "transient_{$key}", $value );
+					$value = apply_filters( "transient_{$key}", $value ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 				}
 			} elseif ( 'static-cache' === $cache_mode ) {
 				$static_cache = pods_container( Static_Cache::class );
@@ -578,7 +585,7 @@ class PodsView {
 		} elseif ( 'option-cache' === $cache_mode ) {
 			$group = ( empty( $group ) ? 'pods_option_cache' : $group );
 
-			$value = apply_filters( "pre_set_transient_{$key}", $value );
+			$value = apply_filters( "pre_set_transient_{$key}", $value ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 
 			if ( $external_object_cache ) {
 				$result = wp_cache_set( $key, $value, $group, $expires );
@@ -604,8 +611,8 @@ class PodsView {
 			self::add_cached_key( $cache_mode, $key, $group, $original_key );
 
 			if ( $result ) {
-				do_action( "set_transient_{$key}", $value, $expires );
-				do_action( 'setted_transient', $key, $value, $expires );
+				do_action( "set_transient_{$key}", $value, $expires ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+				do_action( 'setted_transient', $key, $value, $expires ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			}
 		} elseif ( 'static-cache' === $cache_mode ) {
 			$static_cache = pods_container( Static_Cache::class );
@@ -676,9 +683,12 @@ class PodsView {
 			return true;
 		} elseif ( 'transient' === $cache_mode ) {
 			if ( true === $key ) {
-				$group_key = pods_sanitize_like( $group_key );
-
-				$wpdb->query( "DELETE FROM `{$wpdb->options}` WHERE option_name LIKE '_transient_{$group_key}%'" );
+				$wpdb->query(
+					$wpdb->prepare(
+						"DELETE FROM `{$wpdb->options}` WHERE `option_name` LIKE %s",
+						'_transient_' . $wpdb->esc_like( $group_key ) . '%'
+					)
+				);
 
 				if ( $object_cache_enabled ) {
 					if ( $group && function_exists( 'wp_cache_flush_group' ) && wp_cache_supports( 'flush_group' ) ) {
@@ -696,9 +706,12 @@ class PodsView {
 			}
 		} elseif ( 'site-transient' === $cache_mode ) {
 			if ( true === $key ) {
-				$group_key = pods_sanitize_like( $group_key );
-
-				$wpdb->query( "DELETE FROM `{$wpdb->options}` WHERE option_name LIKE '_site_transient_{$group_key}%'" );
+				$wpdb->query(
+					$wpdb->prepare(
+						"DELETE FROM `{$wpdb->options}` WHERE `option_name` LIKE %s",
+						'_site_transient_' . $wpdb->esc_like( $group_key ) . '%'
+					)
+				);
 
 				if ( $object_cache_enabled ) {
 					if ( $group && function_exists( 'wp_cache_flush_group' ) && wp_cache_supports( 'flush_group' ) ) {
@@ -734,7 +747,7 @@ class PodsView {
 				self::remove_cached_key( $cache_mode, $key, $group );
 			}
 		} elseif ( 'option-cache' === $cache_mode ) {
-			do_action( "delete_transient_{$key}", $key );
+			do_action( "delete_transient_{$key}", $key ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 
 			$group = ( empty( $group ) ? 'pods_option_cache' : $group );
 
@@ -756,7 +769,7 @@ class PodsView {
 			self::remove_cached_key( $cache_mode, $key, $group );
 
 			if ( $result ) {
-				do_action( 'deleted_transient', $key );
+				do_action( 'deleted_transient', $key ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 			}
 		} elseif ( 'static-cache' === $cache_mode ) {
 			$static_cache = pods_container( Static_Cache::class );
@@ -836,7 +849,7 @@ class PodsView {
 		if ( is_array( $_view ) ) {
 			$_views = [];
 
-			if ( isset( $_view[0] ) && false === strpos( $_view[0], '.php' ) ) {
+			if ( isset( $_view[0] ) && false === strpos( (string) $_view[0], '.php' ) ) {
 				$_view_count = count( $_view );
 
 				for ( $_view_x = $_view_count; 0 < $_view_x; $_view_x -- ) {

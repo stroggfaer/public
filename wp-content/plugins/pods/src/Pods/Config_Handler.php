@@ -2,6 +2,11 @@
 
 namespace Pods;
 
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 use Pods__Prefixed__Spyc as Spyc;
 
 /**
@@ -205,7 +210,7 @@ class Config_Handler {
 	 * @param string $path The config file path to use.
 	 */
 	public function register_path( $path ) {
-		$path = trailingslashit( $path );
+		$path = trailingslashit( (string) $path );
 
 		if ( 0 !== strpos( $path, ABSPATH ) ) {
 			$path = ABSPATH . $path;
@@ -222,7 +227,7 @@ class Config_Handler {
 	 * @param string $path The config file path to use.
 	 */
 	public function unregister_path( $path ) {
-		$path = trailingslashit( $path );
+		$path = trailingslashit( (string) $path );
 
 		if ( 0 !== strpos( $path, ABSPATH ) ) {
 			$path = ABSPATH . $path;

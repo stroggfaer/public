@@ -2,6 +2,11 @@
 
 namespace Pods\REST\V1\Validator;
 
+// Don't load directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	die( '-1' );
+}
+
 use Pods\REST\Interfaces\Validator_Interface;
 
 /**
@@ -191,8 +196,8 @@ class Base implements Validator_Interface {
 		];
 
 		foreach ( $mapped as $prefix_method => $mapped_method ) {
-			if ( 0 === strpos( $name, $prefix_method ) ) {
-				$pod_name = str_replace( $prefix_method, '', $name );
+			if ( 0 === strpos( (string) $name, $prefix_method ) ) {
+				$pod_name = str_replace( $prefix_method, '', (string) $name );
 
 				array_unshift( $pod_name, $arguments );
 
