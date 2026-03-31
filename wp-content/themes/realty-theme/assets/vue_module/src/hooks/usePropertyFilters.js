@@ -245,14 +245,12 @@ export default function usePropertyFilters(params = {}) {
         safeStep,
         formId,
         formatPriceTooltip,
-
         querySearch,
         handleLocationSelect,
         fetchProperties,
         reset,
         syncPriceInputs,
         setFilter,
-
         disabledCheckinDate,
         disabledCheckoutDate,
         validate,

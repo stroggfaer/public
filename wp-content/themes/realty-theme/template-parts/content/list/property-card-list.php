@@ -6,7 +6,11 @@
     const { ref } = Vue;
     const AppProperties = createAppModule({
         setup() {
-            return {}
+            const store = Vuex.useStore();
+            const getFilters = store.getters['propertyFilters/getData'];
+            return {
+                getFilters
+            }
         }
     });
     AppProperties.mount('#appProperties');

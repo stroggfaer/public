@@ -25,7 +25,6 @@ export default {
 
   template: `
     <el-form :id="formId" @submit.prevent="handleSubmit" label-position="top">
-      <pre>{{priceRange}}</pre>
       <!-- Локация -->
       <el-form-item v-if="activeFilters.includes('location')" label="Город">
         <el-autocomplete
