@@ -9,6 +9,7 @@ import {
   ElSlider
 } from 'element-plus';
 
+import { ref } from 'vue';
 import usePropertyFilters from '../hooks/usePropertyFilters';
 
 export default {
@@ -28,7 +29,7 @@ export default {
       <!-- Локация -->
       <el-form-item v-if="activeFilters.includes('location')" label="Город">
         <el-autocomplete
-            v-model="locationInput"
+            v-model="filters.locationInput"
             :fetch-suggestions="querySearch"
             placeholder="Город или регион"
             @select="handleLocationSelect"
@@ -151,8 +152,6 @@ export default {
     const {
       filters,
       priceRangeValue,
-      locationInput,
-      locationSlug,
       isLoading,
       safeStep,
       formId,
@@ -162,6 +161,7 @@ export default {
       fetchProperties,
       reset,
       syncPriceInputs,
+      setFilter,
 
       disabledCheckinDate,
       disabledCheckoutDate,
@@ -216,8 +216,6 @@ export default {
     return {
       filters,
       priceRangeValue,
-      locationInput,
-      locationSlug,
       isLoading,
       safeStep,
       formId,
