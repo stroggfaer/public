@@ -8,8 +8,7 @@ import {
   ElAutocomplete,
   ElSlider
 } from 'element-plus';
-
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import usePropertyFilters from '../hooks/usePropertyFilters';
 
 export default {
@@ -26,9 +25,11 @@ export default {
 
   template: `
     <el-form :id="formId" @submit.prevent="handleSubmit" label-position="top">
+      <pre>{{priceRange}}</pre>
       <!-- Локация -->
       <el-form-item v-if="activeFilters.includes('location')" label="Город">
         <el-autocomplete
+            ref="autocompleteRef"
             v-model="filters.locationInput"
             :fetch-suggestions="querySearch"
             placeholder="Город или регион"
@@ -48,7 +49,6 @@ export default {
           </template>
         </el-autocomplete>
       </el-form-item>
-
       <!-- Цена – слайдер с двумя ползунками и инпутами -->
       <el-form-item label="Цена">
         <div class="price-range-wrapper">
@@ -67,8 +67,8 @@ export default {
                 v-model.number="filters.price_max"
                 type="number"
                 :min="filters.price_min"
-                :max="Number(priceRange.max) || 1000000"
-                placeholder="{{ priceRange.max || 1000000 }}"
+                :max="Number(priceRange.max)"
+                placeholder="{{ priceRange.max }}"
                 size="small"
                 class="price-input"
                 @input="onPriceInput"
@@ -123,7 +123,7 @@ export default {
 
       <!-- Actions -->
       <el-form-item>
-        <el-button type="primary" native-type="submit">
+        <el-button type="primary" native-type="submit" :loading="isLoading">
           Применить
         </el-button>
 
@@ -131,17 +131,17 @@ export default {
           Сбросить
         </el-button>
       </el-form-item>
-
-      <!-- Loading -->
-      <div v-if="isLoading">
-        Загрузка...
-      </div>
+      
 
     </el-form>
   `,
   props: {
     activeFilters: Array,
     priceRange: Object,
+    config: {
+      type: Object,
+      default: null
+    },
     initFilters: Array,
     ajaxUrl: String,
     nonce: String,
@@ -161,21 +161,20 @@ export default {
       fetchProperties,
       reset,
       syncPriceInputs,
-      setFilter,
-
+      initFilters,
       disabledCheckinDate,
       disabledCheckoutDate,
-
-      CONFIG
+      validate
     } = usePropertyFilters({
-      priceRange: props.priceRange,
+      config: props.config,
       context: props.context,
       initFilters: props.initFilters,
       ajaxUrl: props.ajaxUrl,
       nonce: props.nonce
     });
-
+    const store = Vuex.useStore();
     function handleSubmit() {
+      validate();
       fetchProperties()
           .then(res => {
             if (res?.success) {
@@ -213,27 +212,35 @@ export default {
       handleSubmit();
     }
 
+    onMounted(()=>{
+        store.commit('propertyFilters/SET_INIT', {
+          config: props.config,
+          initFilters: props.initFilters,
+          activeFilter: props.activeFilters,
+        });
+    });
+
     return {
       filters,
       priceRangeValue,
       isLoading,
       safeStep,
       formId,
-      formatPriceTooltip,
-
-      querySearch,
       handleLocationSelect,
+
+      formatPriceTooltip,
+      querySearch,
       handleSubmit,
       resetFilter,
       onPriceInput,
-
       disabledCheckinDate,
       disabledCheckoutDate,
-
-      adultsMin: CONFIG.guests.adults.min,
-      adultsMax: CONFIG.guests.adults.max,
-      childrenMin: CONFIG.guests.children.min,
-      childrenMax: CONFIG.guests.children.max
+      priceRange: props.config.price_range,
+      adultsMin: props.config.guests.adults.min,
+      adultsMax: props.config.guests.adults.max,
+      childrenMin: props.config.guests.children.min,
+      childrenMax: props.config.guests.children.max,
+      initFilters
     };
   }
 };

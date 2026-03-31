@@ -3,90 +3,39 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { ApiService } from '../services/api';
 import moment from 'moment';
 
-// CONFIG - только здесь, не в store
-const CONFIG = {
-    guests: {
-        adults: { min: 1, max: 10 },
-        children: { min: 0, max: 8 }
-    },
-    price: {
-        min: 0,
-        max: 1000000,
-        step: 1000
-    }
-};
-
-// Проверка наличия store
 function hasStore() {
     return typeof window !== 'undefined' && window.store && window.store.state;
 }
 
 export default function usePropertyFilters(params = {}) {
+    const useStore = hasStore();
+    const store = useStore ? Vuex.useStore() : null;
 
-    // ---------------- PARAMS ----------------
     const {
-        priceRange: {
-            min = CONFIG.price.min,
-            max = CONFIG.price.max,
-            step = CONFIG.price.step
-        } = {},
+        config = {},
         context = 'default',
         initFilters: initialFilters = [],
         ajaxUrl = '',
         nonce = ''
     } = params;
 
-    // ---------------- STORE ----------------
-    const useStore = hasStore();
-    let store = null;
-    if (useStore) {
-        store = window.store;
-    }
+    const price_range = config.price_range || { min: 0, max: 1000000, step: 1000 };
 
-    // ---------------- STATE (reactive для слайдера) ----------------
-    // Цена для слайдера - реактивная, чтобы работал v-model
-    const priceRangeValue = ref([Number(min), Number(max)]);
-
-    // ---------------- INIT FROM URL ----------------
-    function initFromURL() {
-        if (typeof window === 'undefined') return null;
-        
-        const params = new URLSearchParams(window.location.search);
-        const urlFilters = {};
-        
-        // Читаем URL параметры
-        const location = params.get('location');
-        const location_slug = params.get('location_slug');
-        
-        if (location) {
-            urlFilters.location = decodeURIComponent(location);
-        }
-        if (location_slug) {
-            urlFilters.location_slug = decodeURIComponent(location_slug);
-        }
-        
-        const price_min = params.get('price_min');
-        const price_max = params.get('price_max');
-        if (price_min) urlFilters.price_min = Number(price_min);
-        if (price_max) urlFilters.price_max = Number(price_max);
-        
-        const checkin_date = params.get('checkin_date');
-        const checkout_date = params.get('checkout_date');
-        if (checkin_date) urlFilters.checkin_date = checkin_date;
-        if (checkout_date) urlFilters.checkout_date = checkout_date;
-        
-        const adults = params.get('adults');
-        const children = params.get('children');
-        if (adults) urlFilters.adults = Number(adults);
-        if (children) urlFilters.children = Number(children);
-        
-        return Object.keys(urlFilters).length > 0 ? urlFilters : null;
-    }
+    // ---------------- STATE ----------------
+    const priceRangeValue = ref([price_range.min, price_range.max]);
 
     // ---------------- COMPUTED ----------------
+    const filters = computed(() =>
+        useStore ? store.getters['propertyFilters/getFilters'] : {}
+    );
+
+    const isLoading = computed(() =>
+        useStore ? store.getters['propertyFilters/getIsLoading'] : false
+    );
+
     const safeStep = computed(() => {
-        const s = Number(step);
-        return s > 0 ? s : CONFIG.price.step;
+        const s = Number(price_range.step);
+        return s > 0 ? s : 1000;
     });
 
     const formId = computed(() =>
@@ -97,64 +46,56 @@ export default function usePropertyFilters(params = {}) {
 
     const formatPriceTooltip = (val) => `${val} ₽`;
 
-    // ---------------- FILTERS FROM STORE ----------------
-    const filters = computed(() => {
-        if (useStore) {
-            return store.getters['propertyFilters/getFilters'];
-        }
-        // Fallback - локальное состояние без store
-        return {
-            locationInput: '',
-            locationSlug: '',
-            price_min: Number(min),
-            price_max: Number(max),
-            checkin_date: moment().format('YYYY-MM-DD'),
-            checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
-            adults: CONFIG.guests.adults.min,
-            children: CONFIG.guests.children.min
-        };
-    });
-
-    // priceRangeValue - синхронизируется с filters
-    // Слайдер управляет фильтрами
-
-    const isLoading = computed(() => {
-        if (useStore) {
-            return store.getters['propertyFilters/getIsLoading'];
-        }
-        return false;
-    });
+    const initFilters = computed(() =>
+        useStore ? store.getters['propertyFilters/getInit'] : null
+    );
 
     // ---------------- METHODS ----------------
+    function getFiltersFromURL() {
+        if (typeof window === 'undefined') return null;
+
+        const params = new URLSearchParams(window.location.search);
+        const result = {};
+
+        params.forEach((value, key) => {
+            result[key] = decodeURIComponent(value);
+        });
+
+        return Object.keys(result).length ? result : null;
+    }
+    function validate() {
+        const f = filters.value;
+
+        // даты
+        if (f.checkin_date && f.checkout_date) {
+            if (moment(f.checkin_date).isAfter(moment(f.checkout_date))) {
+                throw new Error('Дата заезда позже выезда');
+            }
+        }
+
+        // цена (на будущее)
+        if (f.price_min > f.price_max) {
+            throw new Error('Некорректный диапазон цены');
+        }
+
+        // гости (на будущее)
+        if (f.adults < 1) {
+            throw new Error('Должен быть хотя бы 1 взрослый');
+        }
+
+        return true;
+    }
     function setFilter(key, value) {
         if (useStore) {
             store.commit('propertyFilters/SET_FILTER', { key, value });
         }
     }
 
-    function getFilters() {
-        if (useStore) {
-            return store.getters['propertyFilters/getFilters'];
-        }
-        return {
-            locationInput: '',
-            locationSlug: '',
-            price_min: Number(min),
-            price_max: Number(max),
-            checkin_date: moment().format('YYYY-MM-DD'),
-            checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
-            adults: CONFIG.guests.adults.min,
-            children: CONFIG.guests.children.min
-        };
-    }
-
     function syncPriceInputs() {
-        const f = getFilters();
-        // Синхронизируем слайдер с фильтрами
+        const f = filters.value;
         priceRangeValue.value = [f.price_min, f.price_max];
     }
 
-    // Синхронизация слайдера -> filters
     watch(priceRangeValue, (val) => {
         if (Array.isArray(val) && val.length === 2) {
             setFilter('price_min', val[0]);
@@ -163,17 +104,28 @@ export default function usePropertyFilters(params = {}) {
     });
 
     // ---------------- INIT ----------------
+    function initFromURL() {
+        if (typeof window === 'undefined') return null;
+
+        const params = new URLSearchParams(window.location.search);
+        const result = {};
+
+        params.forEach((value, key) => {
+            result[key] = decodeURIComponent(value);
+        });
+
+        return Object.keys(result).length ? result : null;
+    }
+
     function initFiltersFromStore() {
-        if (useStore) {
-            // Читаем URL параметры
-            const urlFilters = initFromURL();
-            if (urlFilters) {
-                // Применяем URL параметры в store
-                store.dispatch('propertyFilters/initializeFilters', urlFilters);
-            } else if (Array.isArray(initialFilters)) {
-                // Инициализируем из initialFilters (PHP)
-                store.dispatch('propertyFilters/initializeFilters', initialFilters);
-            }
+        if (!useStore) return;
+
+        const urlFilters = initFromURL();
+
+        if (urlFilters) {
+            store.dispatch('propertyFilters/initializeFilters', urlFilters);
+        } else if (Array.isArray(initialFilters)) {
+            store.dispatch('propertyFilters/initializeFilters', initialFilters);
         }
     }
 
@@ -183,17 +135,19 @@ export default function usePropertyFilters(params = {}) {
     let timeout = null;
 
     function querySearch(queryString, cb) {
-        if (queryString.length < 2) return cb([]);
         if (!ajaxUrl) return cb([]);
 
         clearTimeout(timeout);
 
-        timeout = setTimeout(() => {
-            ApiService.post(ajaxUrl, {
-                action: 'get_locations_autocomplete',
-                term: queryString,
-                nonce: nonce
-            }).then(res => {
+        timeout = setTimeout(async () => {
+            try {
+                const res = await ApiService.post(ajaxUrl, {
+                    action: 'get_locations_autocomplete',
+                    term: queryString || '',
+                    limit: 20,
+                    nonce
+                });
+
                 if (res?.success) {
                     cb(res.data.map(item => ({
                         value: item.name,
@@ -203,23 +157,15 @@ export default function usePropertyFilters(params = {}) {
                 } else {
                     cb([]);
                 }
-            });
-        }, 300);
+            } catch (e) {
+                cb([]);
+            }
+        }, 200); // debounce 200ms
     }
 
     function handleLocationSelect(item) {
         setFilter('locationInput', item.name);
         setFilter('locationSlug', item.slug);
-    }
-
-    // ---------------- VALIDATION ----------------
-    function validate() {
-        const f = getFilters();
-        if (f.checkin_date && f.checkout_date) {
-            if (moment(f.checkin_date).isAfter(moment(f.checkout_date))) {
-                throw new Error('Дата заезда позже выезда');
-            }
-        }
     }
 
     // ---------------- API ----------------
@@ -229,14 +175,13 @@ export default function usePropertyFilters(params = {}) {
         }
 
         try {
-            validate();
+            const f = filters.value;
 
-            const f = getFilters();
-            
             const res = await ApiService.post(ajaxUrl, {
                 action: 'filter_properties_custom',
-                nonce: nonce,
+                nonce,
                 location: f.locationInput,
+                location_slug: decodeURIComponent(f.locationSlug),
                 price_min: f.price_min,
                 price_max: f.price_max,
                 checkin_date: f.checkin_date,
@@ -247,7 +192,6 @@ export default function usePropertyFilters(params = {}) {
             });
 
             if (res?.success && useStore) {
-                // Сохраняем data и meta в store
                 store.commit('propertyFilters/SET_DATA', res.data.properties || []);
                 store.commit('propertyFilters/SET_META', {
                     page: 1,
@@ -266,27 +210,35 @@ export default function usePropertyFilters(params = {}) {
 
     // ---------------- RESET ----------------
     function reset() {
-        if (useStore) {
+        if (!useStore) return;
+
+        const urlFilters = getFiltersFromURL();
+
+        if (urlFilters) {
+            store.dispatch('propertyFilters/resetFilters', urlFilters);
+        } else if (Array.isArray(initialFilters)) {
+            store.dispatch('propertyFilters/resetFilters', initialFilters);
+        } else {
             store.dispatch('propertyFilters/resetFilters');
         }
     }
 
-    // ---------------- DATE HELPERS ----------------
+    // ---------------- DATE ----------------
     function disabledCheckinDate(date) {
         return moment(date).isBefore(moment(), 'day');
     }
 
     function disabledCheckoutDate(date) {
-        const f = getFilters();
+        const f = filters.value;
+
         if (f.checkin_date) {
             return moment(date).isBefore(moment(f.checkin_date), 'day');
         }
+
         return moment(date).isBefore(moment(), 'day');
     }
 
-    // ---------------- EXPORT ----------------
     return {
-        // Computed
         filters,
         priceRangeValue,
         isLoading,
@@ -294,20 +246,16 @@ export default function usePropertyFilters(params = {}) {
         formId,
         formatPriceTooltip,
 
-        // Methods
         querySearch,
         handleLocationSelect,
         fetchProperties,
         reset,
         syncPriceInputs,
         setFilter,
-        getFilters,
 
-        // Date helpers
         disabledCheckinDate,
         disabledCheckoutDate,
-
-        // Config
-        CONFIG
+        validate,
+        initFilters,
     };
 }

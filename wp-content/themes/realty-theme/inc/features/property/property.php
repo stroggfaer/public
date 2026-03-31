@@ -426,13 +426,19 @@ class PropertyFeature {
 
         $container_id = ($context === 'archive') ? 'property-filter-vue-archive' : 'property-filter-vue';
 
+        $config = [
+                'price_range' => $price_range,
+                'guests' => ['adults'=> ['min'=>1,'max'=>10],'children' => ['min'=>0,'max'=>8]]
+        ];
+
         $data = [
-            'containerId' => $container_id,
-            'activeFilters' => $active_filters,
-            'initFilters' => $this->getCurrentFilters(),
-            'priceRange' => $price_range,
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce($this->nonceAction),
+                'containerId' => $container_id,
+                'activeFilters' => $active_filters,
+                'initFilters' => $this->getCurrentFilters(),
+                'priceRange' => $price_range,
+                'config' => $config,
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce($this->nonceAction),
         ];
 
         $propertyFilterData = wp_json_encode(
@@ -457,6 +463,7 @@ class PropertyFeature {
                         :active-filters="propertyFilterData.activeFilters"
                         :init-filters="propertyFilterData.initFilters"
                         :price-range="propertyFilterData.priceRange"
+                        :config="propertyFilterData.config"
                         :ajax-url="propertyFilterData.ajaxUrl"
                         :nonce="propertyFilterData.nonce"
                     />
