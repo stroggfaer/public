@@ -122,7 +122,7 @@ export default {
 
       <!-- Actions -->
       <el-form-item>
-        <el-button type="primary" native-type="submit" :loading="isLoading">
+        <el-button type="primary" native-type="submit" :loading="loadingBtn">
           Применить
         </el-button>
 
@@ -151,7 +151,6 @@ export default {
     const {
       filters,
       priceRangeValue,
-      isLoading,
       safeStep,
       formId,
       formatPriceTooltip,
@@ -163,7 +162,8 @@ export default {
       initFilters,
       disabledCheckinDate,
       disabledCheckoutDate,
-      validate
+      validate,
+      fetchPropertiesRender
     } = usePropertyFilters({
       config: props.config,
       context: props.context,
@@ -171,35 +171,17 @@ export default {
       ajaxUrl: props.ajaxUrl,
       nonce: props.nonce
     });
+
     const store = Vuex.useStore();
-    function handleSubmit() {
+
+    const loadingBtn = ref(false);
+
+    // Фильтры запуск;
+    async function handleSubmit() {
       validate();
-      fetchProperties()
-          .then(res => {
-            if (res?.success) {
-
-              const propertyList = document.querySelector('.property-list');
-              if (propertyList) {
-                propertyList.innerHTML = res.data.html || '<p>Недвижимость не найдена.</p>';
-              }
-
-              const pagination = document.querySelector('.archive-pagination');
-              if (pagination) {
-                pagination.innerHTML = res.data.pagination || '';
-              }
-
-              const resultsInfo = document.querySelector('.results-info');
-              if (resultsInfo && res.data.total !== undefined) {
-                const total = res.data.total;
-                resultsInfo.innerHTML = total > 0
-                    ? `<p>Всего ${total}</p>`
-                    : '<p>Недвижимость не найдена.</p>';
-              }
-            }
-          })
-          .catch(error => {
-            console.error(error);
-          });
+      loadingBtn.value = true;
+      await fetchPropertiesRender();
+      loadingBtn.value = false;
     }
 
     function onPriceInput() {
@@ -222,7 +204,7 @@ export default {
     return {
       filters,
       priceRangeValue,
-      isLoading,
+      loadingBtn,
       safeStep,
       formId,
       handleLocationSelect,

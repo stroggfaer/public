@@ -2,6 +2,7 @@ import store from './src/store/index.js';
 import HelloWorld from './src/components/HelloWord.js';
 import PropertyFilter from './src/components/PropertyFilter.js';
 import useProperty from './src/hooks/useProperty.js';
+import usePropertyFilters from './src/hooks/usePropertyFilters';
 import GoogleMap from './src/components/GoogleMap.js';
 // Локализация для русского языка
 import ru from 'element-plus/dist/locale/ru.mjs';
@@ -62,5 +63,6 @@ export {
   ElAutocomplete,
   ElMessage,
   ApiService,
-  useProperty
+  useProperty,
+  usePropertyFilters
 }

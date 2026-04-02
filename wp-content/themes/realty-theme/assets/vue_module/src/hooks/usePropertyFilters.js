@@ -169,14 +169,14 @@ export default function usePropertyFilters(params = {}) {
     }
 
     // ---------------- API ----------------
-    async function fetchProperties() {
+    async function fetchProperties(params = {}) {
         if (useStore) {
             store.commit('propertyFilters/SET_LOADING', true);
         }
-
         try {
             const f = filters.value;
-
+            console.log('fetchProperties',f);
+            console.log('ajaxUrl nonce',ajaxUrl, nonce);
             const res = await ApiService.post(ajaxUrl, {
                 action: 'filter_properties_custom',
                 nonce,
@@ -188,7 +188,8 @@ export default function usePropertyFilters(params = {}) {
                 checkout_date: f.checkout_date,
                 adults: f.adults,
                 children: f.children,
-                page: 1
+                page: 1,
+                ...params
             });
 
             if (res?.success && useStore) {
@@ -205,6 +206,20 @@ export default function usePropertyFilters(params = {}) {
             if (useStore) {
                 store.commit('propertyFilters/SET_LOADING', false);
             }
+        }
+    }
+
+    async function fetchPropertiesRender() {
+        try {
+            const res = await fetchProperties();
+            if (res?.success) {
+                const propertyList = document.querySelector('.properties-grid');
+                if (propertyList) {
+                    propertyList.innerHTML = res.data.html || '<div class="no-results">Недвижимость не найдена.</div>';
+                }
+            }
+        } catch (e){
+            console.error(e);
         }
     }
 
@@ -247,6 +262,7 @@ export default function usePropertyFilters(params = {}) {
         formatPriceTooltip,
         querySearch,
         handleLocationSelect,
+        fetchPropertiesRender,
         fetchProperties,
         reset,
         syncPriceInputs,

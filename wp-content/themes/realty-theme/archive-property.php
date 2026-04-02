@@ -29,7 +29,10 @@ get_header(); ?>
                         <div class="page-header">
                             <h1 class="page-title"><?php post_type_archive_title(); ?></h1>
                         </div>
-                        <?php get_template_part('template-parts/content/list/property-card-list'); ?>
+                         <?php get_template_part('template-parts/content/list/property-card-list', null, [
+                             'ajaxUrl' => admin_url('admin-ajax.php'),
+                             'nonce' => wp_create_nonce('property_filter_nonce'),
+                         ]); ?>
                     </div>
                     <!-- Vue Google Map Container -->
                     <div class="property-map-container">

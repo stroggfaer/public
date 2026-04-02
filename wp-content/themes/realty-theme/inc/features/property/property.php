@@ -9,6 +9,9 @@ if (!defined('ABSPATH')) {
 }
 
 class PropertyFeature {
+
+    private static $PER_LIMIT = 4;
+
     private static $instance = null;
     private $nonceAction = 'property_filter_nonce';
 
@@ -40,7 +43,7 @@ class PropertyFeature {
      */
     public function getList(array $params = []): array {
         $defaults = [
-            'posts_per_page' => 12,
+            'posts_per_page' => self::$PER_LIMIT,
             'paged' => 1,
             'orderby' => 'date',
             'order' => 'DESC',
@@ -309,7 +312,7 @@ class PropertyFeature {
     /**
      * AJAX обработчик фильтрации
      */
-    public function ajaxFilter() {
+    public function ajaxFilterOld() {
         // Проверка nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], $this->nonceAction)) {
             wp_send_json_error('Security check failed');
@@ -366,6 +369,47 @@ class PropertyFeature {
                 'coordinates' => [],
             ]);
         }
+    }
+    public function ajaxFilter() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], $this->nonceAction)) {
+            wp_send_json_error('Security check failed');
+        }
+
+        $params = $this->formatRequestParams('POST');
+
+        $page     = max(1, intval($_POST['page'] ?? 1));
+        $per_page = max(self::$PER_LIMIT, intval($_POST['per_page'] ?? self::$PER_LIMIT));
+
+        $params['paged']          = $page;
+        $params['posts_per_page'] = $per_page;
+
+        $result = $this->getList($params);
+
+        ob_start();
+        if (!empty($result['posts'])) {
+            foreach ($result['posts'] as $post) {
+                setup_postdata($post);
+                $pod = pods('property', $post->ID);
+                get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+            }
+            $html = ob_get_clean();
+        } else {
+            $html = '';
+            ob_end_clean();
+        }
+
+        $total_pages = $result['max_pages'] ?? ceil($result['total'] / $per_page);
+
+        wp_send_json_success([
+                'html' => $html,
+                'meta' => [
+                        'current_page' => (int)$page,
+                        'page_count'   => (int)$total_pages,
+                        'per_page'     => (int)$per_page,
+                        'total'        => (int)$result['total']
+                ],
+                'coordinates' => $result['coordinates'] ?? []
+        ]);
     }
 
     /**
@@ -696,19 +740,17 @@ class PropertyFeature {
 
         ob_start();
 
-        if (!empty($result['posts'])) {
-            echo '<div class="properties-grid">';
-                foreach ($result['posts'] as $post) {
-                    setup_postdata($post);
-                    $pod = pods('property', $post->ID);
-                    get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
-                }
-            echo '</div>';
-        } else {
-            echo '<div class="no-results">';
-              echo '<p>Недвижимость не найдена.</p>';
-            echo '</div>';
-        }
+        echo '<div class="properties-grid">';
+          if (!empty($result['posts'])) {
+              foreach ($result['posts'] as $post) {
+                  setup_postdata($post);
+                  $pod = pods('property', $post->ID);
+                  get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+              }
+          } else {
+              echo '<div class="no-results">Недвижимость не найдена.</div>';
+          }
+        echo '</div>';
 
         wp_reset_postdata();
         return ob_get_clean();
