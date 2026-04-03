@@ -12,9 +12,9 @@ $appData = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 
 <div id="appProperties" class="property-list js-properties-list">
     <?php echo property_render_list(); // Вывод начального списка недвижимости ?>
-    <pre>{{appData}}</pre>
+
     <div class="more">
-        <el-button @click="loadMore" type="primary" size="large" :loading="isLoading">Еще загрузить</el-button>
+        <el-button v-if="hasMore" @click="loadMore" type="primary" size="large" :loading="isLoading">Еще загрузить</el-button>
     </div>
 </div>
 <script type="module">
@@ -38,27 +38,32 @@ $appData = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
             const currentPage = ref(1);
             const hasMore = ref(true);
             const isLoading = ref(false);
-            const perPage = ref(20);
 
             const loadMore = async () => {
                 if (isLoading.value || !hasMore.value) return;
+                isLoading.value = true;
                 try {
-                  const res = await fetchProperties({page: 2});
+                    const nextPage = currentPage.value + 1;
+                    const res = await fetchProperties({page: nextPage});
 
                     if (res?.success) {
                         const propertyList = document.querySelector('.properties-grid');
                         if (propertyList) {
-                            propertyList.innerHTML = res.data.html || '<div class="no-results">Недвижимость не найдена.</div>';
+                            propertyList.insertAdjacentHTML('beforeend', res.data.html || '');
                         }
+                        currentPage.value = res.data.meta.current_page;
+                        hasMore.value = res.data.meta.current_page < res.data.meta.page_count;
                     }
-                  console.log('loadMore',res);
-                }catch (e){
-
+                } catch (e) {
+                    console.error('Load more error:', e);
+                } finally {
+                    isLoading.value = false;
                 }
             }
             return {
                 appData,
                 isLoading,
+                hasMore,
                 getFilters,
                 loadMore
             }

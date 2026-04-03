@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 
 class PropertyFeature {
 
-    private static $PER_LIMIT = 4;
+    private static $PER_LIMIT = 10;
 
     private static $instance = null;
     private $nonceAction = 'property_filter_nonce';
