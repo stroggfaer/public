@@ -8,8 +8,23 @@ import {
   ElAutocomplete,
   ElSlider
 } from 'element-plus';
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, watch} from 'vue';
+import moment from 'moment';
 import usePropertyFilters from '../hooks/usePropertyFilters';
+
+function createDefaultFilters(overrides = {}) {
+    return {
+        locationInput: '',
+        locationSlug: '',
+        price_min: 0,
+        price_max: 1000000,
+        checkin_date: moment().format('YYYY-MM-DD'),
+        checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
+        adults: 1,
+        children: 0,
+        ...overrides
+    };
+}
 
 export default {
   components: {
@@ -29,10 +44,10 @@ export default {
       <el-form-item v-if="activeFilters.includes('location')" label="Город">
         <el-autocomplete
             ref="autocompleteRef"
-            v-model="filters.locationInput"
+            v-model="localFilters.locationInput"
             :fetch-suggestions="querySearch"
             placeholder="Город или регион"
-            @select="handleLocationSelect"
+            @select="localHandleLocationSelect"
             clearable
         >
           <template #prefix>
@@ -53,19 +68,19 @@ export default {
         <div class="price-range-wrapper">
           <div class="price-inputs-row">
             <el-input
-                v-model.number="filters.price_min"
+                v-model.number="localFilters.price_min"
                 type="number"
                 :min="Number(priceRange.min) || 0"
-                :max="filters.price_max"
+                :max="localFilters.price_max"
                 placeholder="{{ priceRange.min || 0 }}"
                 size="small"
                 class="price-input"
                 @input="onPriceInput"
             />
             <el-input
-                v-model.number="filters.price_max"
+                v-model.number="localFilters.price_max"
                 type="number"
-                :min="filters.price_min"
+                :min="localFilters.price_min"
                 :max="Number(priceRange.max)"
                 placeholder="{{ priceRange.max }}"
                 size="small"
@@ -74,7 +89,7 @@ export default {
             />
           </div>
           <el-slider
-              v-model="priceRangeValue"
+              v-model="localPriceRangeValue"
               range
               :min="Number(priceRange.min) || 0"
               :max="Number(priceRange.max) || 1000000"
@@ -87,7 +102,7 @@ export default {
       <!-- Даты -->
       <el-form-item v-if="activeFilters.includes('checkin_date')" label="Дата заезда">
         <el-date-picker
-            v-model="filters.checkin_date"
+            v-model="localFilters.checkin_date"
             type="date"
             value-format="YYYY-MM-DD"
             :disabled-date="disabledCheckinDate"
@@ -96,7 +111,7 @@ export default {
 
       <el-form-item v-if="activeFilters.includes('checkout_date')" label="Дата выезда">
         <el-date-picker
-            v-model="filters.checkout_date"
+            v-model="localFilters.checkout_date"
             type="date"
             value-format="YYYY-MM-DD"
             :disabled-date="disabledCheckoutDate"
@@ -106,7 +121,7 @@ export default {
       <!-- ГОСТИ -->
       <el-form-item v-if="activeFilters.includes('adults')" label="Взрослые">
         <el-input-number
-            v-model="filters.adults"
+            v-model="localFilters.adults"
             :min="adultsMin"
             :max="adultsMax"
         />
@@ -114,7 +129,7 @@ export default {
 
       <el-form-item v-if="activeFilters.includes('children')" label="Дети">
         <el-input-number
-            v-model="filters.children"
+            v-model="localFilters.children"
             :min="childrenMin"
             :max="childrenMax"
         />
@@ -176,21 +191,94 @@ export default {
 
     const loadingBtn = ref(false);
 
+    // Локальные фильтры для формы
+    const localFilters = ref({ ...filters.value });
+    const localPriceRangeValue = ref([...priceRangeValue.value]);
+
+    // Синхронизация локальных фильтров с store
+    watch(filters, (newVal) => {
+      localFilters.value = { ...newVal };
+    }, { immediate: true });
+
+    watch(priceRangeValue, (newVal) => {
+      localPriceRangeValue.value = [...newVal];
+    }, { immediate: true });
+
+    // Локальная синхронизация цены
+    function localSyncPriceInputs() {
+      localPriceRangeValue.value = [localFilters.value.price_min, localFilters.value.price_max];
+    }
+
+    // Watch для локального слайдера
+    watch(localPriceRangeValue, (val) => {
+      if (Array.isArray(val) && val.length === 2) {
+        localFilters.value.price_min = val[0];
+        localFilters.value.price_max = val[1];
+      }
+    });
+
+    // Локальная функция для выбора локации
+    function localHandleLocationSelect(item) {
+      localFilters.value.locationInput = item.name;
+      localFilters.value.locationSlug = item.slug;
+    }
+
+    // Локальная валидация
+    function localValidate() {
+      const f = localFilters.value;
+
+      if (f.checkin_date && f.checkout_date) {
+        if (moment(f.checkin_date).isAfter(moment(f.checkout_date))) {
+          throw new Error('Дата заезда позже выезда');
+        }
+      }
+
+      if (f.price_min > f.price_max) {
+        throw new Error('Некорректный диапазон цены');
+      }
+
+      if (f.adults < 1) {
+        throw new Error('Должен быть хотя бы 1 взрослый');
+      }
+
+      return true;
+    }
+
     // Фильтры запуск;
     async function handleSubmit() {
-      validate();
-      loadingBtn.value = true;
-      await fetchPropertiesRender();
-      loadingBtn.value = false;
+      try {
+        localValidate();
+        // Обновляем store только при сабмите
+        store.commit('propertyFilters/SET_FILTERS', localFilters.value);
+        loadingBtn.value = true;
+        await fetchPropertiesRender();
+        loadingBtn.value = false;
+      } catch (e) {
+        // Можно добавить уведомление об ошибке
+        console.error(e.message);
+      }
     }
 
     function onPriceInput() {
-      syncPriceInputs();
+      localSyncPriceInputs();
     }
 
-    function resetFilter() {
+    async function resetFilter() {
       reset();
-      handleSubmit();
+      // Обновляем локальные фильтры после обновления store
+      localFilters.value = { ...filters.value };
+      localPriceRangeValue.value = [localFilters.value.price_min, localFilters.value.price_max];
+      await handleSubmit();
+    }
+
+    function localDisabledCheckoutDate(date) {
+      const f = localFilters.value;
+
+      if (f.checkin_date) {
+        return moment(date).isBefore(moment(f.checkin_date), 'day');
+      }
+
+      return moment(date).isBefore(moment(), 'day');
     }
 
     onMounted(()=>{
@@ -202,12 +290,12 @@ export default {
     });
 
     return {
-      filters,
-      priceRangeValue,
+      localFilters,
+      localPriceRangeValue,
       loadingBtn,
       safeStep,
       formId,
-      handleLocationSelect,
+      localHandleLocationSelect,
 
       formatPriceTooltip,
       querySearch,
