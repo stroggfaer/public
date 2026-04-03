@@ -732,28 +732,41 @@ class PropertyFeature {
 
     /**
      * Обёртка для обратной совместимости
-     * 
+     *
      * @param array $params Параметры фильтрации. Если пустой - использует GET-параметры
      */
     public function property_filter_render_list() {
         $result = $this->getListFromGet();
 
         ob_start();
-
-        echo '<div class="properties-grid">';
-          if (!empty($result['posts'])) {
-              foreach ($result['posts'] as $post) {
-                  setup_postdata($post);
-                  $pod = pods('property', $post->ID);
-                  get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
-              }
-          } else {
-              echo '<div class="no-results">Недвижимость не найдена.</div>';
-          }
-        echo '</div>';
+        if (!empty($result['posts'])) {
+            foreach ($result['posts'] as $post) {
+                setup_postdata($post);
+                $pod = pods('property', $post->ID);
+                get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+            }
+            $html = ob_get_clean();
+        } else {
+            $html = '<div class="no-results">Недвижимость не найдена.</div>';
+            ob_end_clean();
+        }
 
         wp_reset_postdata();
-        return ob_get_clean();
+
+        $page = max(1, get_query_var('paged', 1));
+        $per_page = get_option('posts_per_page', self::$PER_LIMIT);
+        $total_pages = $result['max_pages'] ?? ceil($result['total'] / $per_page);
+
+        return [
+            'html' => $html,
+            'meta' => [
+                'current_page' => (int)$page,
+                'page_count'   => (int)$total_pages,
+                'per_page'     => (int)$per_page,
+                'total'        => (int)$result['total']
+            ],
+            'coordinates' => $result['coordinates'] ?? []
+        ];
     }
 
     /**

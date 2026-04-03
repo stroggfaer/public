@@ -175,13 +175,16 @@ export default function usePropertyFilters(params = {}) {
         }
         try {
             const f = filters.value;
-            console.log('fetchProperties',f);
+
             console.log('ajaxUrl nonce',ajaxUrl, nonce);
+            const meta = store.getters['propertyFilters/getMeta'];
+            // getMeta
+            console.log('meta',meta);
             const res = await ApiService.post(ajaxUrl, {
                 action: 'filter_properties_custom',
                 nonce,
                 location: f.locationInput,
-                location_slug: decodeURIComponent(f.locationSlug),
+                location_slug: f.locationInput ? decodeURIComponent(f.locationSlug) : '',
                 price_min: f.price_min,
                 price_max: f.price_max,
                 checkin_date: f.checkin_date,
@@ -194,10 +197,7 @@ export default function usePropertyFilters(params = {}) {
 
             if (res?.success && useStore) {
                 store.commit('propertyFilters/SET_DATA', res.data.properties || []);
-                store.commit('propertyFilters/SET_META', {
-                    page: 1,
-                    total: res.data.total || 0
-                });
+                store.commit('propertyFilters/SET_META', res.data.meta || {});
             }
 
             return res;

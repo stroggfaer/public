@@ -62,7 +62,9 @@ const propertyFiltersModule = {
 
             data: [],
             meta: {
-                page: 1,
+                current_page: 1,
+                page_count: 1,
+                per_page: 4,
                 total: 0
             },
             isLoading: false,
@@ -92,7 +94,7 @@ const propertyFiltersModule = {
 
         RESET_FILTERS(state, payload = {}) {
             state.filters = createDefaultFilters(payload);
-            state.meta.page = 1;
+            state.meta.current_page = 1;
         },
 
         SET_INIT(state, data) {
@@ -141,8 +143,9 @@ const propertyFiltersModule = {
         getData: (state) => state.data,
         getMeta: (state) => state.meta,
         getIsLoading: (state) => state.isLoading,
-        getPage: (state) => state.meta.page,
+        getPage: (state) => state.meta.current_page,
         getTotal: (state) => state.meta.total,
+        getPageCount: (state) => state.meta.page_count,
         getInit: (state) => state.initFilters,
     }
 };
