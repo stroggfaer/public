@@ -205,16 +205,26 @@ export function useGoogleMap(options = {}) {
         addMarkers(newCoordinates);
     }
 
-    // Обработчик клика по карточке
+    // Обработчик клика по кнопке карты
     function handleCardClick(event) {
-        const card = event.target.closest('.property-card');
-        if (!card || !map.value) return;
+        const mapButton = event.target.closest('.js-map-location');
+        if (!mapButton || !map.value) return;
 
-        const id = card.dataset.id;
-        const lat = card.dataset.lat;
-        const lng = card.dataset.lng;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const id = mapButton.dataset.id;
+        const lat = mapButton.dataset.lat;
+        const lng = mapButton.dataset.lng;
 
         if (lat && lng) {
+            // Убираем активный класс у всех кнопок карты
+            document.querySelectorAll('.js-map-location').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // Добавляем активный класс текущей кнопке
+            mapButton.classList.add('active');
+
             panToProperty(id, lat, lng);
         }
     }

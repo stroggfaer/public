@@ -39,10 +39,18 @@ if (!$thumbnail_url) {
 ?>
 <article class="property-card" data-id="<?php echo esc_attr($property_id); ?>"
     data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
-    <a href="<?php echo esc_url(get_permalink($property_id)); ?>" class="property-thumbnail">
+    <div class="property-thumbnail">
         <img src="<?php echo esc_url($thumbnail_url); ?>" alt="<?php echo esc_attr($property_title); ?>">
-        <div class="favorite"><span class="material-symbols-outlined">favorite</span></div>
-    </a>
+        <div class="property-actions">
+            <button type="button" class="map-location js-map-location" title="Показать на карте" data-id="<?php echo esc_attr($property_id); ?>" data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
+                <span class="material-symbols-outlined">map</span>
+            </button>
+            <button type="button" class="favorite js-favorite" title="Добавить в избранное">
+                <span class="material-symbols-outlined">favorite</span>
+            </button>
+        </div>
+        <a href="<?php echo esc_url(get_permalink($property_id)); ?>" class="property-link"></a>
+    </div>
     <div class="property-content" >
         <div class="entry-header">
             <h3 class="entry-title">

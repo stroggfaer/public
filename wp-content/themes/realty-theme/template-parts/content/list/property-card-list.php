@@ -18,7 +18,6 @@ $initialResult = wp_json_encode($result, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
         <?php echo $result['html']; // Вывод начального списка недвижимости ?>
     </div>
 
-
     <div class="more">
         <el-button v-if="hasMore" @click="loadMore" type="primary" size="large" :loading="isLoading">Еще загрузить</el-button>
     </div>

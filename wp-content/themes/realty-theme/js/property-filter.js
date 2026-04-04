@@ -218,14 +218,24 @@ jQuery(document).ready(function($) {
         });
     }
 
-    // Клик по карточке → подсветка и центрирование маркера
-    $(document).on('click', SELECTORS.propertyCard, function() {
+    // Клик по кнопке карты → подсветка и центрирование маркера
+    $(document).on('click', '.js-map-location', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (!map) return;
 
-        const lat = parseFloat($(this).data('lat'));
-        const lng = parseFloat($(this).data('lng'));
+        const $btn = $(this);
+        const id = $btn.data('id');
+        const lat = parseFloat($btn.data('lat'));
+        const lng = parseFloat($btn.data('lng'));
 
         if (isNaN(lat) || isNaN(lng)) return;
+
+        // Убираем активный класс у всех кнопок карты
+        $('.js-map-location').removeClass('active');
+        // Добавляем активный класс текущей кнопке
+        $btn.addClass('active');
 
         markers.forEach(m => $(m._icon).removeClass('leaflet-marker-highlighted'));
 

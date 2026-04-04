@@ -188,15 +188,24 @@ jQuery(document).ready(function($) {
         }
     }
 
-    // Обработка клика по карточке объекта - центрирование карты
-    $(document).on('click', '.property-card', function() {
+    // Обработка клика по кнопке карты - центрирование карты
+    $(document).on('click', '.js-map-location', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (!map) return;
 
-        var id = $(this).data('id');
-        var lat = parseFloat($(this).data('lat'));
-        var lng = parseFloat($(this).data('lng'));
+        var $btn = $(this);
+        var id = $btn.data('id');
+        var lat = parseFloat($btn.data('lat'));
+        var lng = parseFloat($btn.data('lng'));
 
         if (lat && lng) {
+            // Убираем активный класс у всех кнопок карты
+            $('.js-map-location').removeClass('active');
+            // Добавляем активный класс текущей кнопке
+            $btn.addClass('active');
+
             // Центрируем карту на этом объекте
             var position = new google.maps.LatLng(lat, lng);
             map.panTo(position);

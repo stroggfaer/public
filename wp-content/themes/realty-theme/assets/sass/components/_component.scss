@@ -161,34 +161,67 @@
      overflow: hidden;
      border-radius: 16px;
      position: relative;
-    .favorite {
-       border-radius: 12px;
+     
+     // Ссылка для клика по всей карточке
+     .property-link {
+       position: absolute;
+       top: 0;
+       left: 0;
+       width: 100%;
+       height: 100%;
+       z-index: 1;
+     }
+     
+     // Контейнер для кнопок действий
+     .property-actions {
        position: absolute;
        top: 12px;
-       right:  12px;
-       height: 48px;
-       width: 48px;
-       background: rgba(0, 0, 0, .4);
-       z-index: 100;
+       right: 12px;
        display: flex;
-       justify-content: center;
-       align-items: center;
-       @include ease();
-       opacity: 1;
-       &:hover {
-         opacity: 0.6;
-       }
-       &.active {
+       gap: 8px;
+       z-index: 100;
+       
+       button {
+         border-radius: 12px;
+         height: 48px;
+         width: 48px;
+         background: rgba(0, 0, 0, .4);
+         border: none;
+         cursor: pointer;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         @include ease();
+         opacity: 1;
+         
+         &:hover {
+           opacity: 0.6;
+         }
+         
          .material-symbols-outlined {
-           color: $color_red-2;
-           font-variation-settings: 'FILL' 1;
+           color: #fff;
+           font-size: 30px;
          }
        }
-       .material-symbols-outlined {
-         color: #fff;
-         font-size: 30px;
+       
+       .map-location {
+         &.active {
+           .material-symbols-outlined {
+             color: $color-blue-normal;
+             font-variation-settings: 'FILL' 1;
+           }
+         }
        }
-    }
+       
+       .favorite {
+         &.active {
+           .material-symbols-outlined {
+             color: $color_red-2;
+             font-variation-settings: 'FILL' 1;
+           }
+         }
+       }
+     }
      img {
        width: 100%;
        height: 100%;
