@@ -45,6 +45,10 @@ $initialResult = wp_json_encode($result, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 
             onMounted(() => {
                 store.commit('propertyFilters/SET_META', initialResult.value.meta);
+                // Initialize coordinates from initial result if available
+                if (initialResult.value.coordinates) {
+                    store.commit('propertyFilters/SET_COORDINATES', initialResult.value.coordinates);
+                }
             });
 
             const loadMore = async () => {

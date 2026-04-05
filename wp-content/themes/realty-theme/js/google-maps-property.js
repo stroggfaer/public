@@ -188,6 +188,23 @@ jQuery(document).ready(function($) {
         }
     }
 
+    // Функция для обновления карты из Vuex store
+    function updateMapFromStore() {
+        if (typeof window === 'undefined' || !window.store) return;
+        
+        const coordinates = window.store.getters['propertyFilters/getCoordinates'];
+        
+        if (coordinates && coordinates.length > 0) {
+            if (!map) {
+                // Инициализируем карту с координатами из store
+                initPropertyMap(coordinates);
+            } else {
+                // Обновляем маркеры на существующей карте
+                addMarkersToMap(coordinates);
+            }
+        }
+    }
+
     // Обработка клика по кнопке карты - центрирование карты
     $(document).on('click', '.js-map-location', function(e) {
         e.preventDefault();
@@ -224,6 +241,23 @@ jQuery(document).ready(function($) {
         }
     });
 
+    // Подписка на изменения координат в Vuex store
+    function subscribeToStoreChanges() {
+        if (typeof window === 'undefined' || !window.store) return;
+        
+        // Подписываемся на мутации store
+        window.store.subscribe(function(mutation, state) {
+            // Реагируем на изменения координатов
+            if (mutation.type === 'propertyFilters/ADD_COORDINATES' || 
+                mutation.type === 'propertyFilters/SET_COORDINATES') {
+                // Даем Vue время обновить состояние
+                setTimeout(function() {
+                    updateMapFromStore();
+                }, 50);
+            }
+        });
+    }
+
     // Обновление карты при изменении результатов фильтрации
     $(document).ajaxComplete(function(event, xhr, settings) {
         // Проверяем, является ли это нашим AJAX-запросом фильтрации
@@ -256,25 +290,56 @@ jQuery(document).ready(function($) {
             }
         } else if ($('body').hasClass('post-type-archive-property')) {
             // На странице архива недвижимости
-            // Получаем начальные координаты с сервера
-            // Используем уже существующие данные из карточек, если они есть
-            var initialCoordinates = [];
-            $('.property-card[data-lat][data-lng]').each(function() {
-                var $card = $(this);
-                initialCoordinates.push({
-                    id: $card.data('id'),
-                    lat: $card.data('lat'),
-                    lng: $card.data('lng'),
-                    title: $card.find('.entry-title a').text() || 'Объект недвижимости'
-                });
-            });
+            // Сначала пытаемся получить координаты из Vuex store
+            if (typeof window !== 'undefined' && window.store) {
+                var storeCoordinates = window.store.getters['propertyFilters/getCoordinates'];
+                
+                if (storeCoordinates && storeCoordinates.length > 0) {
+                    // Используем координаты из store
+                    initPropertyMap(storeCoordinates);
+                } else {
+                    // Fallback: получаем начальные координаты из карточек
+                    var initialCoordinates = [];
+                    $('.property-card[data-lat][data-lng]').each(function() {
+                        var $card = $(this);
+                        initialCoordinates.push({
+                            id: $card.data('id'),
+                            lat: $card.data('lat'),
+                            lng: $card.data('lng'),
+                            title: $card.find('.entry-title a').text() || 'Объект недвижимости'
+                        });
+                    });
 
-            if (initialCoordinates.length > 0) {
-                initPropertyMap(initialCoordinates);
+                    if (initialCoordinates.length > 0) {
+                        initPropertyMap(initialCoordinates);
+                    } else {
+                        // Инициализируем пустую карту
+                        initPropertyMap([]);
+                    }
+                }
             } else {
-                // Инициализируем пустую карту
-                initPropertyMap([]);
+                // Fallback для случаев без Vuex store
+                var initialCoordinates = [];
+                $('.property-card[data-lat][data-lng]').each(function() {
+                    var $card = $(this);
+                    initialCoordinates.push({
+                        id: $card.data('id'),
+                        lat: $card.data('lat'),
+                        lng: $card.data('lng'),
+                        title: $card.find('.entry-title a').text() || 'Объект недвижимости'
+                    });
+                });
+
+                if (initialCoordinates.length > 0) {
+                    initPropertyMap(initialCoordinates);
+                } else {
+                    // Инициализируем пустую карту
+                    initPropertyMap([]);
+                }
             }
+            
+            // Подписываемся на изменения в store
+            subscribeToStoreChanges();
         }
     }, 1000);
 });

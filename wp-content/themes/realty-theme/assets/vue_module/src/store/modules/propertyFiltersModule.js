@@ -61,6 +61,7 @@ const propertyFiltersModule = {
             },
 
             data: [],
+            coordinates: [], // Accumulated coordinates for map markers
             meta: {
                 current_page: 1,
                 page_count: 1,
@@ -82,6 +83,18 @@ const propertyFiltersModule = {
 
         SET_DATA(state, data) {
             state.data = data;
+        },
+
+        ADD_COORDINATES(state, coordinates) {
+            // Append new coordinates to existing ones (for pagination)
+            if (Array.isArray(coordinates)) {
+                state.coordinates = [...state.coordinates, ...coordinates];
+            }
+        },
+
+        SET_COORDINATES(state, coordinates) {
+            // Replace all coordinates (for initial load or filter reset)
+            state.coordinates = Array.isArray(coordinates) ? coordinates : [];
         },
 
         SET_META(state, meta) {
@@ -124,6 +137,14 @@ const propertyFiltersModule = {
             commit('SET_DATA', data);
         },
 
+        addCoordinates({ commit }, coordinates) {
+            commit('ADD_COORDINATES', coordinates);
+        },
+
+        setCoordinates({ commit }, coordinates) {
+            commit('SET_COORDINATES', coordinates);
+        },
+
         setMeta({ commit }, meta) {
             commit('SET_META', meta);
         },
@@ -141,6 +162,7 @@ const propertyFiltersModule = {
     getters: {
         getFilters: (state) => state.filters,
         getData: (state) => state.data,
+        getCoordinates: (state) => state.coordinates,
         getMeta: (state) => state.meta,
         getIsLoading: (state) => state.isLoading,
         getPage: (state) => state.meta.current_page,

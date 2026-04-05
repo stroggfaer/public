@@ -198,6 +198,18 @@ export default function usePropertyFilters(params = {}) {
             if (res?.success && useStore) {
                 store.commit('propertyFilters/SET_DATA', res.data.properties || []);
                 store.commit('propertyFilters/SET_META', res.data.meta || {});
+                
+                // Handle coordinates for map markers
+                const newCoordinates = res.data.coordinates || [];
+                const currentPage = params.page || 1;
+                
+                if (currentPage === 1) {
+                    // Replace coordinates on first page or filter change
+                    store.commit('propertyFilters/SET_COORDINATES', newCoordinates);
+                } else {
+                    // Append coordinates for pagination
+                    store.commit('propertyFilters/ADD_COORDINATES', newCoordinates);
+                }
             }
 
             return res;
