@@ -121,29 +121,6 @@ function enqueue_property_filter_scripts() {
         // Подключаем скрипт для работы с картами на странице архива и одиночной странице
         wp_enqueue_script('google-maps-property', get_template_directory_uri() . '/js/google-maps-property.js', array('jquery'), null, true);
     }
-    
-    // Подключаем библиотеку для выбора диапазона дат если находимся на главной странице
-    if (is_front_page()) {
-        wp_enqueue_script('moment-js', 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js', array(), '2.29.4', true);
-        wp_enqueue_script('daterangepicker-js', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js', array('jquery', 'moment-js'), '3.1.0', true);
-        wp_enqueue_style('daterangepicker-css', 'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css', array(), '3.1.0');
-    }
-    
-    // Подключаем jQuery скрипт для карты и других функций
-    wp_enqueue_script('property-filter', get_template_directory_uri() . '/js/property-filter.js', array('jquery'), null, true);
-    wp_localize_script('property-filter', 'propertyFilter', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce'   => wp_create_nonce('property_filter_nonce')
-    ));
-    
-    // Подключаем отдельный JS для фильтров на странице архива недвижимости
-    if (is_post_type_archive('property')) {
-        wp_enqueue_script('archive-property-filter', get_template_directory_uri() . '/js/archive-property-filter.js', array('jquery'), null, true);
-        wp_localize_script('archive-property-filter', 'propertyFilter', array(
-            'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce'   => wp_create_nonce('property_filter_nonce')
-        ));
-    }
 }
 
 // Подключаем базовый класс темы

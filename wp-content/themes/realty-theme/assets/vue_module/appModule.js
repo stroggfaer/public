@@ -1,6 +1,7 @@
 import store from './src/store/index.js';
 import HelloWorld from './src/components/HelloWord.js';
 import PropertyFilter from './src/components/PropertyFilter.js';
+import HomePropertyFilter from './src/components/HomePropertyFilter.js';
 import useProperty from './src/hooks/useProperty.js';
 import usePropertyFilters from './src/hooks/usePropertyFilters';
 import GoogleMap from './src/components/GoogleMap.js';
@@ -19,7 +20,8 @@ import {
   ElInputNumber,
   ElDatePicker,
   ElAutocomplete,
-  ElMessage
+  ElMessage,
+  ElPopover
 } from 'element-plus';
 import {ApiService} from './src/services/api';
 export function createAppModule(options = {}) {
@@ -42,6 +44,7 @@ export function createAppModule(options = {}) {
   app.component('ElInputNumber', ElInputNumber);
   app.component('ElDatePicker', ElDatePicker);
   app.component('ElAutocomplete', ElAutocomplete);
+  app.component('ElPopover', ElPopover);
 
   // Глобальная регистрация moment
   app.provide('moment', moment);
@@ -52,6 +55,7 @@ export function createAppModule(options = {}) {
 export {
   HelloWorld,
   PropertyFilter,
+  HomePropertyFilter,
   GoogleMap,
   ElButton,
   ElDialog,
@@ -61,6 +65,7 @@ export {
   ElInputNumber,
   ElDatePicker,
   ElAutocomplete,
+  ElPopover,
   ElMessage,
   ApiService,
   useProperty,

@@ -534,109 +534,57 @@ class PropertyFeature {
             'location', 'checkin_date', 'checkout_date', 'adults', 'children',
         ]);
 
+        $config = [
+            'guests' => [
+                'adults' => ['min' => 1, 'max' => 10],
+                'children' => ['min' => 0, 'max' => 8]
+            ]
+        ];
+
+        $data = [
+            'activeFilters' => $active_filters,
+            'config' => $config,
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce($this->nonceAction),
+        ];
+
+        $propertyFilterData = wp_json_encode(
+            $data,
+            JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+
         ob_start();
         ?>
-        <form id="property-home-filter-form" class="property-filter-form home-filter" method="GET" action="<?php echo esc_url(home_url('/property/')); ?>">
-            <div class="filter-row">
-                <?php if (in_array('location', $active_filters)): ?>
-                    <div class="input-group__com location-group" data-name-icon="location_on">
-                        <div class="input-with-icon">
-                            <span class="icon material-symbols-outlined">location_on</span>
-                            <input type="text" name="location" id="filter-location" class="location-autocomplete input__com"
-                                   autocomplete="nope"
-                                   value="<?php
-                                   if (isset($_GET['location']) && !empty($_GET['location'])) {
-                                       $location_slug = sanitize_text_field($_GET['location']);
-                                       $location_term = get_term_by('slug', $location_slug, 'location');
-                                       if ($location_term) {
-                                           echo esc_attr($location_term->name);
-                                       } else {
-                                           echo esc_attr($location_slug);
-                                       }
-                                   }
-                                   ?>" placeholder="Город или регион">
-                        </div>
-                        <input type="hidden" name="location_slug" id="filter-location-slug"
-                               value="<?php echo isset($_GET['location']) ? esc_attr(sanitize_text_field($_GET['location'])) : ''; ?>">
-                    </div>
-                <?php endif; ?>
+        <div id="property-home-filter-vue"></div>
 
-                <?php if (in_array('checkin_date', $active_filters) && in_array('checkout_date', $active_filters)): ?>
-                    <div class="input-group__com date-group">
-                        <div class="input-with-icon">
-                            <span class="icon material-symbols-outlined">date_range</span>
-                            <input type="text" id="daterange" name="daterange" readonly
-                                   value="<?php
-                                   $checkin = isset($_GET['checkin_date']) ? $_GET['checkin_date'] : '';
-                                   $checkout = isset($_GET['checkout_date']) ? $_GET['checkout_date'] : '';
-                                   if ($checkin && $checkout) {
-                                       echo esc_attr($checkin . ' - ' . $checkout);
-                                   } elseif ($checkin) {
-                                       echo esc_attr($checkin . ' - ');
-                                   } elseif ($checkout) {
-                                       echo esc_attr(' - ' . $checkout);
-                                   }
-                                   ?>" placeholder="В любое время" class="input__com">
-                        </div>
-                        <input type="hidden" name="checkin_date" id="filter-checkin"
-                               value="<?php echo isset($_GET['checkin_date']) ? esc_attr($_GET['checkin_date']) : ''; ?>">
-                        <input type="hidden" name="checkout_date" id="filter-checkout"
-                               value="<?php echo isset($_GET['checkout_date']) ? esc_attr($_GET['checkout_date']) : ''; ?>">
-                    </div>
-                <?php endif; ?>
+        <script type="module">
+            (function() {
+                const { ref } = Vue;
+                const { createAppModule, HomePropertyFilter } = window.VueAppModule;
+                
+                const homeApp = createAppModule({
+                    components: {
+                        HomePropertyFilter
+                    },
+                    template: `
+                        <home-property-filter
+                            :active-filters="propertyFilterData.activeFilters"
+                            :config="propertyFilterData.config"
+                            :ajax-url="propertyFilterData.ajaxUrl"
+                            :nonce="propertyFilterData.nonce"
+                        />
+                    `,
+                    setup() {
+                        const propertyFilterData = ref(<?php echo $propertyFilterData; ?>);
+                        return {
+                            propertyFilterData
+                        };
+                    }
+                });
 
-                <?php if (in_array('adults', $active_filters) || in_array('children', $active_filters)): ?>
-                    <div class="input-group__com guests-group">
-                        <div class="input-with-icon">
-                            <div class="icon material-symbols-outlined">group</div>
-                            <input type="text" readonly value class="input__com guests-placeholder js-guests-val" autocomplete="nope" placeholder="Гости">
-                        </div>
-                        <div class="guest-controls-wrapper">
-                            <div class="guest-controls">
-                                <div class="guest-control">
-                                    <div class="flex-label">
-                                        <span class="guest-label">Взрослые</span>
-                                        <span class="guest-desc">от 13 лет</span>
-                                    </div>
-                                    <div class="guest-input">
-                                        <button type="button" class="guest-decrease" data-target="adults">
-                                            <span class="material-symbols-outlined">remove</span>
-                                        </button>
-                                        <input type="text" name="adults" value="<?php echo isset($_GET['adults']) ? intval($_GET['adults']) : 1; ?>" readonly>
-                                        <button type="button" class="guest-increase" data-target="adults">
-                                            <span class="material-symbols-outlined">add_2</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <?php if (in_array('children', $active_filters)): ?>
-                                    <div class="guest-control">
-                                        <div class="flex-label">
-                                            <span class="guest-label">Дети</span>
-                                            <span class="guest-desc">от 2 до 12 лет</span>
-                                        </div>
-                                        <div class="guest-input">
-                                            <button type="button" class="guest-decrease" data-target="children">
-                                                <span class="material-symbols-outlined">remove</span>
-                                            </button>
-                                            <input type="text" name="children" value="<?php echo isset($_GET['children']) ? intval($_GET['children']) : 0; ?>" readonly>
-                                            <button type="button" class="guest-increase" data-target="children">
-                                                <span class="material-symbols-outlined">add_2</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <div class="filter-actions">
-                <button type="submit" class="button__com lg">
-                    <div class="icon material-symbols-outlined">search</div>
-                    Искать
-                </button>
-            </div>
-        </form>
+                homeApp.mount('#property-home-filter-vue');
+            })();
+        </script>
         <?php
         return ob_get_clean();
     }

@@ -11,21 +11,6 @@ import {
 import {onMounted, ref, watch} from 'vue';
 import moment from 'moment';
 import usePropertyFilters from '../hooks/usePropertyFilters';
-
-function createDefaultFilters(overrides = {}) {
-    return {
-        locationInput: '',
-        locationSlug: '',
-        price_min: 0,
-        price_max: 1000000,
-        checkin_date: moment().format('YYYY-MM-DD'),
-        checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
-        adults: 1,
-        children: 0,
-        ...overrides
-    };
-}
-
 export default {
   components: {
     ElInput,
@@ -271,16 +256,6 @@ export default {
       await handleSubmit();
     }
 
-    function localDisabledCheckoutDate(date) {
-      const f = localFilters.value;
-
-      if (f.checkin_date) {
-        return moment(date).isBefore(moment(f.checkin_date), 'day');
-      }
-
-      return moment(date).isBefore(moment(), 'day');
-    }
-
     onMounted(()=>{
         store.commit('propertyFilters/SET_INIT', {
           config: props.config,
@@ -296,7 +271,6 @@ export default {
       safeStep,
       formId,
       localHandleLocationSelect,
-
       formatPriceTooltip,
       querySearch,
       handleSubmit,
