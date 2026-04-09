@@ -36,94 +36,94 @@ jQuery(document).ready(function($) {
 //     });
 // });
 
-$(function () {
-
-    const $groups = $('.guests-group');
-
-    // Обработка инпута для гостей
-    $('.guest-increase').on('click', function() {
-        var target = $(this).data('target');
-        var input = $('#' + 'filter-' + target);
-        var currentVal = parseInt(input.val());
-        var maxVal = target === 'adults' ? 10 : 8;
-
-        if (!isNaN(currentVal) && currentVal < maxVal) {
-            input.val(currentVal + 1);
-        } else if (isNaN(currentVal)) {
-            input.val(1);
-        }
-    });
-
-    $('.guest-decrease').on('click', function() {
-        var target = $(this).data('target');
-        var input = $('#' + 'filter-' + target);
-        var currentVal = parseInt(input.val());
-        var minVal = target === 'adults' ? 1 : 0;
-
-        if (!isNaN(currentVal) && currentVal > minVal) {
-            input.val(currentVal - 1);
-        } else if (isNaN(currentVal)) {
-            input.val(minVal);
-        }
-    });
-
-    function getVal($el) {
-        return $el.length ? parseInt($el.val(), 10) || 0 : 0;
-    }
-
-    function updatePlaceholder($group) {
-        const adults = getVal($group.find('#filter-adults'));
-        const children = getVal($group.find('#filter-children'));
-
-        const total = adults + children;
-
-        $group.find('.guests-placeholder')
-            .val(total ? `Гостей: ${total}` : 'Гости');
-    }
-
-    $groups.each(function () {
-
-        const $group = $(this);
-        const $wrapper = $group.find('.guest-controls-wrapper');
-        const $placeholder = $group.find('.guests-placeholder');
-
-        /* открыть */
-        $placeholder.on('click', function (e) {
-            e.stopPropagation();
-            $wrapper.toggleClass('open');
-        });
-
-        /* кнопки */
-        $group.find('button[data-target]').on('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const target = $(this).data('target');
-            const $input = $group.find(`#filter-${target}`);
-
-            let value = getVal($input);
-
-            if ($(this).hasClass('guest-increase')) value++;
-            if ($(this).hasClass('guest-decrease')) value--;
-
-            value = target === 'adults'
-                ? Math.max(1, value)
-                : Math.max(0, value);
-
-            $input.val(value);
-
-            updatePlaceholder($group);
-        });
-
-        /* старт */
-        updatePlaceholder($group);
-    });
-
-    /* закрытие вне */
-    $(document).on('click', function () {
-        $('.guest-controls-wrapper').removeClass('open');
-    });
-});
+// $(function () {
+//
+//     const $groups = $('.guests-group');
+//
+//     // Обработка инпута для гостей
+//     $('.guest-increase').on('click', function() {
+//         var target = $(this).data('target');
+//         var input = $('#' + 'filter-' + target);
+//         var currentVal = parseInt(input.val());
+//         var maxVal = target === 'adults' ? 10 : 8;
+//
+//         if (!isNaN(currentVal) && currentVal < maxVal) {
+//             input.val(currentVal + 1);
+//         } else if (isNaN(currentVal)) {
+//             input.val(1);
+//         }
+//     });
+//
+//     $('.guest-decrease').on('click', function() {
+//         var target = $(this).data('target');
+//         var input = $('#' + 'filter-' + target);
+//         var currentVal = parseInt(input.val());
+//         var minVal = target === 'adults' ? 1 : 0;
+//
+//         if (!isNaN(currentVal) && currentVal > minVal) {
+//             input.val(currentVal - 1);
+//         } else if (isNaN(currentVal)) {
+//             input.val(minVal);
+//         }
+//     });
+//
+//     function getVal($el) {
+//         return $el.length ? parseInt($el.val(), 10) || 0 : 0;
+//     }
+//
+//     function updatePlaceholder($group) {
+//         const adults = getVal($group.find('#filter-adults'));
+//         const children = getVal($group.find('#filter-children'));
+//
+//         const total = adults + children;
+//
+//         $group.find('.guests-placeholder')
+//             .val(total ? `Гостей: ${total}` : 'Гости');
+//     }
+//
+//     $groups.each(function () {
+//
+//         const $group = $(this);
+//         const $wrapper = $group.find('.guest-controls-wrapper');
+//         const $placeholder = $group.find('.guests-placeholder');
+//
+//         /* открыть */
+//         $placeholder.on('click', function (e) {
+//             e.stopPropagation();
+//             $wrapper.toggleClass('open');
+//         });
+//
+//         /* кнопки */
+//         $group.find('button[data-target]').on('click', function (e) {
+//             e.preventDefault();
+//             e.stopPropagation();
+//
+//             const target = $(this).data('target');
+//             const $input = $group.find(`#filter-${target}`);
+//
+//             let value = getVal($input);
+//
+//             if ($(this).hasClass('guest-increase')) value++;
+//             if ($(this).hasClass('guest-decrease')) value--;
+//
+//             value = target === 'adults'
+//                 ? Math.max(1, value)
+//                 : Math.max(0, value);
+//
+//             $input.val(value);
+//
+//             updatePlaceholder($group);
+//         });
+//
+//         /* старт */
+//         updatePlaceholder($group);
+//     });
+//
+//     /* закрытие вне */
+//     $(document).on('click', function () {
+//         $('.guest-controls-wrapper').removeClass('open');
+//     });
+// });
 
 
 document.addEventListener('DOMContentLoaded', function () {

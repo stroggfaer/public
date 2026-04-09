@@ -134,8 +134,15 @@ export default function usePropertyFilters(params = {}) {
     // ---------------- AUTOCOMPLETE ----------------
     let timeout = null;
 
+    const cache = new Map();
     function querySearch(queryString, cb) {
         if (!ajaxUrl) return cb([]);
+
+        const key = queryString || '';
+
+        if (cache.has(key)) {
+            return cb(cache.get(key));
+        }
 
         clearTimeout(timeout);
 
@@ -143,24 +150,28 @@ export default function usePropertyFilters(params = {}) {
             try {
                 const res = await ApiService.post(ajaxUrl, {
                     action: 'get_locations_autocomplete',
-                    term: queryString || '',
+                    term: key,
                     limit: 20,
                     nonce
                 });
 
                 if (res?.success) {
-                    cb(res.data.map(item => ({
+                    const result = res.data.map(item => ({
                         value: item.name,
                         name: item.name,
                         slug: item.slug
-                    })));
+                    }));
+
+                    cache.set(key, result);
+
+                    cb(result);
                 } else {
                     cb([]);
                 }
             } catch (e) {
                 cb([]);
             }
-        }, 200); // debounce 200ms
+        }, 200);
     }
 
     function handleLocationSelect(item) {

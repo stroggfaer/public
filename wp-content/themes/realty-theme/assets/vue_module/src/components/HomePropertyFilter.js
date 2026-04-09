@@ -6,7 +6,7 @@ import {
   ElPopover,
   ElInputNumber
 } from 'element-plus';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, h } from 'vue';
 import moment from 'moment';
 import usePropertyFilters from '../hooks/usePropertyFilters';
 
@@ -24,46 +24,40 @@ export default {
     <form id="property-home-filter-form" class="property-filter-form home-filter" @submit.prevent="handleSubmit">
       <div class="filter-row">
         <!-- Локация -->
-        <div v-if="activeFilters.includes('location')" class="input-group__com location-group" data-name-icon="location_on">
-          <div class="input-with-icon">
-            <span class="icon material-symbols-outlined">location_on</span>
-            <el-autocomplete
+        <el-autocomplete
+              v-if="activeFilters.includes('location')"
               v-model="locationInput"
               :fetch-suggestions="querySearch"
               placeholder="Город или регион"
-              class="location-autocomplete input__com"
+              class="location-autocomplete"
               @select="localHandleLocationSelect"
               clearable
-            >
-              <template #default="{ item }">
-                <span>{{ item.name }}</span>
-              </template>
-              <template #empty>
-                <span>Ничего не найдено</span>
-              </template>
-            </el-autocomplete>
-          </div>
-        </div>
-
+          >
+            <template #prefix>
+              <span class="icon material-symbols-outlined">location_on</span>
+            </template>
+            <template #default="{ item }">
+              <span>{{ item.name }}</span>
+            </template>
+            <template #empty>
+              <span>Ничего не найдено</span>
+            </template>
+        </el-autocomplete>
+        <div class="line"></div>
         <!-- Даты (Date Range) -->
-        <div v-if="activeFilters.includes('checkin_date') && activeFilters.includes('checkout_date')" class="input-group__com date-group">
-          <div class="input-with-icon">
-            <span class="icon material-symbols-outlined">date_range</span>
-            <el-date-picker
-              v-model="dateRange"
-              type="daterange"
-              range-separator=" - "
-              start-placeholder="Заезд"
-              end-placeholder="Выезд"
-              format="D MMM"
-              value-format="YYYY-MM-DD"
-              :disabled-date="disabledCheckinDate"
-              class="input__com"
-              @change="handleDateChange"
-            />
-          </div>
-        </div>
-
+        <el-date-picker
+            v-if="activeFilters.includes('checkin_date') && activeFilters.includes('checkout_date')"
+            v-model="dateRange"
+            type="daterange"
+            range-separator="-"
+            start-placeholder="Заезд"
+            end-placeholder="Выезд"
+            format="D MMM"
+            value-format="YYYY-MM-DD"
+            :disabled-date="disabledCheckinDate"
+            @change="handleDateChange"
+            :prefix-icon="DateRangeIcon"/>
+        <div class="line"></div>
         <!-- Гости -->
         <div v-if="activeFilters.includes('adults') || activeFilters.includes('children')" class="input-group__com guests-group">
           <el-popover
@@ -75,12 +69,12 @@ export default {
             <template #reference>
               <div class="input-with-icon">
                 <span class="icon material-symbols-outlined">group</span>
-                <input 
+                <input
                   type="text" 
                   readonly 
                   :value="guestsDisplayText" 
-                  class="input__com guests-placeholder js-guests-val" 
-                  placeholder="Гости"
+                  class="input__com guests-placeholder" 
+                  :placeholder="guestsDisplayText"
                 >
               </div>
             </template>
@@ -101,7 +95,6 @@ export default {
                   />
                 </div>
               </div>
-              
               <div v-if="activeFilters.includes('children')" class="guest-control">
                 <div class="flex-label">
                   <span class="guest-label">Дети</span>
@@ -156,6 +149,10 @@ export default {
   },
 
   setup(props) {
+    const DateRangeIcon = () => h('span', {
+      class: 'icon material-symbols-outlined',
+      style: 'font-size: 24px;'
+    }, 'date_range')
     // Переиспользуем хук для autocomplete и валидации дат
     const {
       querySearch,
@@ -212,7 +209,6 @@ export default {
 
     function updateGuestsDisplay() {
       const total = adults.value + children.value;
-      
       if (total > 0) {
         // Показываем детальную информацию: "2 взрослых, 1 ребенок"
         const parts = [];
@@ -226,18 +222,20 @@ export default {
           const childrenObj = declension(['детей', 'ребенок', 'ребенка'], children.value);
           parts.push(`${children.value} ${childrenObj.text}`);
         }
-        
         guestsDisplayText.value = parts.join(', ');
       } else {
         guestsDisplayText.value = 'Гости';
       }
+      console.log('updateGuestsDisplay вызван, adults =', adults.value);
     }
 
-    // Автоматически обновляем текст при изменении гостей
-    watch([adults, children], () => {
-      updateGuestsDisplay();
-    });
+    const guestsPopover = () => {}
 
+    // Автоматически обновляем текст при изменении гостей
+    // watch([adults, children], () => {
+    //   updateGuestsDisplay();
+    // });
+    watch([adults, children], updateGuestsDisplay, { immediate: true });
     // Отправка формы
     function handleSubmit() {
       const params = new URLSearchParams();
@@ -285,7 +283,9 @@ export default {
       disabledCheckinDate,
       handleDateChange,
       updateGuestsDisplay,
-      handleSubmit
+      handleSubmit,
+      DateRangeIcon,
+      guestsPopover
     };
   }
 };

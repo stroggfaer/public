@@ -5,8 +5,9 @@ import HomePropertyFilter from './src/components/HomePropertyFilter.js';
 import useProperty from './src/hooks/useProperty.js';
 import usePropertyFilters from './src/hooks/usePropertyFilters';
 import GoogleMap from './src/components/GoogleMap.js';
+import ElementPlus from 'element-plus'
 // Локализация для русского языка
-import ru from 'element-plus/dist/locale/ru.mjs';
+import ru from 'element-plus/es/locale/lang/ru';
 import moment from 'moment';
 import 'moment/locale/ru';
 moment.locale('ru');
@@ -31,9 +32,9 @@ export function createAppModule(options = {}) {
   };
   
   // Настройка русской локализации для ElementPlus
-  app.use(ElConfigProvider, {
+  app.use(ElementPlus, {
     locale: ru,
-  });
+  })
   
   // Регистрация компонентов Element Plus глобально
   app.component('ElButton', ElButton);
