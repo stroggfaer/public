@@ -35,17 +35,6 @@ export function createAppModule(options = {}) {
   app.use(ElementPlus, {
     locale: ru,
   })
-  
-  // Регистрация компонентов Element Plus глобально
-  app.component('ElButton', ElButton);
-  app.component('ElDialog', ElDialog);
-  app.component('ElForm', ElForm);
-  app.component('ElFormItem', ElFormItem);
-  app.component('ElInput', ElInput);
-  app.component('ElInputNumber', ElInputNumber);
-  app.component('ElDatePicker', ElDatePicker);
-  app.component('ElAutocomplete', ElAutocomplete);
-  app.component('ElPopover', ElPopover);
 
   // Глобальная регистрация moment
   app.provide('moment', moment);

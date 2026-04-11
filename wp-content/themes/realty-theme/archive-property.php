@@ -9,8 +9,12 @@
 $map_zoom = get_option('realty_map_zoom', 6);
 $map_center_lat = get_option('realty_default_lat', 55.7558);
 $map_center_lng = get_option('realty_default_lng', 37.6173);
-
-get_header(); ?>
+// Меняем слот ставка
+add_filter('realty_header_slot', function ($content) {
+    return '<div class="main-search-form-container">'.property_filter_render_home_form().'</div>';
+});
+get_header();
+?>
 
 <div id="primary" class="content-area">
     <main id="main" class="site-main-map" role="main">

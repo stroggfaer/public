@@ -4,6 +4,7 @@ $settings = [];
 if ($pods && $pods->exists()) {
     $settings = $pods->fetch();
 }
+$slot_center = apply_filters('realty_header_slot', '');
  ?>
 <header id="masthead" class="site-header">
     <?php if(is_active_sidebar( 'top-header-custom-widget' )): ?>
@@ -22,22 +23,23 @@ if ($pods && $pods->exists()) {
                     <div class="desc"><?php bloginfo( 'description' );?></div>
                 </div>
             </a>
-<!--            <div class="search-form__header">-->
-<!--                --><?php //get_search_form(); ?>
-<!--            </div>-->
-            <nav class="main-navigation">
-                <?php
-                wp_nav_menu([
-                        'container' => false,
-                        'menu_class' => 'menu',
-                        'menu'=> 'header_top_menu',
-                        'theme_location' => 'header_top_menu',
-                ]);
-                ?>
-            </nav>
+            <?php if(!empty($slot_center)): ?>
+                 <?php echo $slot_center ?>
+            <?php else: ?>
+                <nav class="main-navigation">
+                    <?php
+                    wp_nav_menu([
+                            'container' => false,
+                            'menu_class' => 'menu',
+                            'menu'=> 'header_top_menu',
+                            'theme_location' => 'header_top_menu',
+                    ]);
+                    ?>
+                </nav>
+            <?php endif; ?>
             <div class="actions">
-                 <button class="button__com">Subscribe</button>
-                 <a href="#" class="button__com link">Sign Up</a>
+                 <button class="button__com">Вход</button>
+                 <a href="#" class="button__com link">Регистрация</a>
             </div>
         </div>
     </div>

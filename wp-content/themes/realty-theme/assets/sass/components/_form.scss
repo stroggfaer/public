@@ -176,9 +176,6 @@ input[type="submit"] {
   }
 }
 
-
-
-
 .input-group__com.guests-group {
   .guests-placeholder {
     cursor: pointer;
@@ -237,48 +234,7 @@ input[type="submit"] {
     }
 
     .guest-input {
-      display: flex;
-      align-items: center;
-      gap: 15px;
 
-      button {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        border: 1px solid #ccc;
-        background-color: #fff;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 20px;
-        padding: 0;
-        line-height: 1;
-
-        &.guest-decrease {
-          color: $color-dark-grey;
-          border-color: $color-readonly-grey;
-        }
-
-        &.guest-increase {
-          color: $color-black;
-          border-color: $color-black;
-        }
-
-        &:hover {
-          opacity: 0.8;
-        }
-      }
-
-      input {
-        width: 30px;
-        text-align: center;
-        border: none;
-        font-size: 18px;
-        font-weight: bold;
-        padding: 0;
-        background: transparent;
-      }
     }
   }
 }
@@ -381,6 +337,77 @@ input[type="submit"] {
 }
 
 // new el
-.el-input-group__com {
+.el-input-group__com {}
 
+// шапка
+header.site-header {
+  .main-search-form-container {
+     border: 1px solid $color-grey;
+     height: 50px;
+     padding: 4px 12px;
+     max-width: 50%;
+     --el-input-com-height: 28px;
+
+     .material-symbols-outlined {
+        font-size: 20px !important;
+     }
+     .property-filter-form {
+       height: 40px;
+       align-items: center;
+        .filter-row {
+         .input-group__com {
+           .input-with-icon {
+             .input__com {
+               height: var(--el-input-com-height);
+               font-size: 14px;
+             }
+           }
+         }
+       }
+       // new
+       .el-autocomplete {
+         max-width: 200px;
+         .el-input__wrapper {
+           padding-left: 0;
+         }
+         .el-input__inner {
+           height: var(--el-input-com-height);
+           font-size: 14px;
+         }
+       }
+       .el-date-editor--daterange {
+         height: var(--el-input-com-height);
+         max-width: 190px;
+         .el-input__wrapper {
+           box-shadow: unset;
+         }
+         .el-range-input {
+           height: var(--el-input-com-height);
+           font-size: 14px;
+         }
+       }
+       .el-input .el-input__icon,.el-date-editor .el-range__close-icon {
+         font-size: 16px;
+       }
+       .button__com {
+         .material-symbols-outlined {
+           font-size: 18px;
+         }
+         padding: 8px;
+         border-radius: 100px;
+         min-height: var(--el-input-com-height);
+         min-width: var(--el-input-com-height);
+         .text-b {
+           display: none;
+         }
+       }
+       .line {
+         height: 20px;
+       }
+       .el-input__wrapper {
+         padding-left: 6px;
+         padding-right: 6px;
+       }
+     }
+  }
 }

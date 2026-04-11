@@ -1,5 +1,6 @@
 <div class="property-archive-filters">
     <?php  $filters = get_current_filters_data(); ?>
+    <?php if(false): ?>
     <div class="active-filters-notification" data-has-filters="true">
         <strong>Результаты фильтрации:</strong>
         <span class="active-filters-list">
@@ -13,6 +14,7 @@
             <?php endforeach; ?>
         </span>
     </div>
+    <?php endif; ?>
     <div class="property-filter-wrapper">
         <?php echo property_filter_render_form('archive'); ?>
     </div>

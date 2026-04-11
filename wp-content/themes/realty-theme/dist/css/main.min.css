@@ -783,6 +783,9 @@ a.border:hover {
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
 }
 .site-header .col-flex .main-navigation {
   margin: 0 auto;
@@ -1916,56 +1919,6 @@ input[type=submit]:hover {
   color: #969696;
   line-height: 20px;
 }
-.guest-controls .guest-control .guest-input {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-  gap: 15px;
-}
-.guest-controls .guest-control .guest-input button {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  cursor: pointer;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-  font-size: 20px;
-  padding: 0;
-  line-height: 1;
-}
-.guest-controls .guest-control .guest-input button.guest-decrease {
-  color: #969696;
-  border-color: #D8D8DA;
-}
-.guest-controls .guest-control .guest-input button.guest-increase {
-  color: rgb(19, 22, 22);
-  border-color: rgb(19, 22, 22);
-}
-.guest-controls .guest-control .guest-input button:hover {
-  opacity: 0.8;
-}
-.guest-controls .guest-control .guest-input input {
-  width: 30px;
-  text-align: center;
-  border: none;
-  font-size: 18px;
-  font-weight: bold;
-  padding: 0;
-  background: transparent;
-}
-
 .input-group__com {
   -webkit-box-flex: 1;
       -ms-flex: 1;
@@ -2073,6 +2026,71 @@ input[type=submit]:hover {
   -webkit-box-shadow: none;
           box-shadow: none;
   cursor: auto;
+}
+
+header.site-header .main-search-form-container {
+  border: 1px solid #B8B8B8;
+  height: 50px;
+  padding: 4px 12px;
+  max-width: 50%;
+  --el-input-com-height: 28px;
+}
+header.site-header .main-search-form-container .material-symbols-outlined {
+  font-size: 20px !important;
+}
+header.site-header .main-search-form-container .property-filter-form {
+  height: 40px;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+header.site-header .main-search-form-container .property-filter-form .filter-row .input-group__com .input-with-icon .input__com {
+  height: var(--el-input-com-height);
+  font-size: 14px;
+}
+header.site-header .main-search-form-container .property-filter-form .el-autocomplete {
+  max-width: 200px;
+}
+header.site-header .main-search-form-container .property-filter-form .el-autocomplete .el-input__wrapper {
+  padding-left: 0;
+}
+header.site-header .main-search-form-container .property-filter-form .el-autocomplete .el-input__inner {
+  height: var(--el-input-com-height);
+  font-size: 14px;
+}
+header.site-header .main-search-form-container .property-filter-form .el-date-editor--daterange {
+  height: var(--el-input-com-height);
+  max-width: 190px;
+}
+header.site-header .main-search-form-container .property-filter-form .el-date-editor--daterange .el-input__wrapper {
+  -webkit-box-shadow: unset;
+          box-shadow: unset;
+}
+header.site-header .main-search-form-container .property-filter-form .el-date-editor--daterange .el-range-input {
+  height: var(--el-input-com-height);
+  font-size: 14px;
+}
+header.site-header .main-search-form-container .property-filter-form .el-input .el-input__icon, header.site-header .main-search-form-container .property-filter-form .el-date-editor .el-range__close-icon {
+  font-size: 16px;
+}
+header.site-header .main-search-form-container .property-filter-form .button__com .material-symbols-outlined {
+  font-size: 18px;
+}
+header.site-header .main-search-form-container .property-filter-form .button__com {
+  padding: 8px;
+  border-radius: 100px;
+  min-height: var(--el-input-com-height);
+  min-width: var(--el-input-com-height);
+}
+header.site-header .main-search-form-container .property-filter-form .button__com .text-b {
+  display: none;
+}
+header.site-header .main-search-form-container .property-filter-form .line {
+  height: 20px;
+}
+header.site-header .main-search-form-container .property-filter-form .el-input__wrapper {
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
 .property-detail {

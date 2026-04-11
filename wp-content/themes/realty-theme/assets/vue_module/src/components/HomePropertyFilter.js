@@ -1,24 +1,8 @@
-import {
-  ElInput,
-  ElButton,
-  ElAutocomplete,
-  ElDatePicker,
-  ElPopover,
-  ElInputNumber
-} from 'element-plus';
 import { ref, onMounted, watch, h } from 'vue';
 import moment from 'moment';
 import usePropertyFilters from '../hooks/usePropertyFilters';
 
 export default {
-  components: {
-    ElInput,
-    ElButton,
-    ElAutocomplete,
-    ElDatePicker,
-    ElPopover,
-    ElInputNumber
-  },
 
   template: `
     <form id="property-home-filter-form" class="property-filter-form home-filter" @submit.prevent="handleSubmit">
@@ -56,7 +40,7 @@ export default {
             value-format="YYYY-MM-DD"
             :disabled-date="disabledCheckinDate"
             @change="handleDateChange"
-            :prefix-icon="DateRangeIcon"/>
+            :prefix-icon="{ render: DateRangeIcon }"/>
         <div class="line"></div>
         <!-- Гости -->
         <div v-if="activeFilters.includes('adults') || activeFilters.includes('children')" class="input-group__com guests-group">
@@ -91,7 +75,6 @@ export default {
                     :min="config.guests.adults.min"
                     :max="config.guests.adults.max"
                     :controls="true"
-                    controls-position="right"
                   />
                 </div>
               </div>
@@ -106,7 +89,6 @@ export default {
                     :min="config.guests.children.min"
                     :max="config.guests.children.max"
                     :controls="true"
-                    controls-position="right"
                   />
                 </div>
               </div>
@@ -118,7 +100,7 @@ export default {
       <div class="filter-actions">
         <button type="submit" class="button__com lg">
           <span class="icon material-symbols-outlined">search</span>
-          Искать
+          <span class="text-b">Искать</span>
         </button>
       </div>
     </form>
@@ -158,7 +140,8 @@ export default {
       querySearch,
       handleLocationSelect,
       disabledCheckinDate,
-      disabledCheckoutDate
+      disabledCheckoutDate,
+      filters
     } = usePropertyFilters({
       config: props.config,
       context: 'home',
@@ -231,17 +214,40 @@ export default {
 
     const guestsPopover = () => {}
 
+    const initFormData = (newVal) => {
+      locationInput.value = newVal.locationInput;
+      locationSlug.value = newVal.locationSlug;
+      checkinDate.value = newVal.checkin_date;
+      checkoutDate.value = newVal.checkout_date;
+      adults.value = newVal.adults;
+      children.value = newVal.children;
+
+      // Синхронизируем dateRange для ElDatePicker
+      if (newVal.checkin_date && newVal.checkout_date) {
+        dateRange.value = [newVal.checkin_date, newVal.checkout_date];
+      } else {
+        dateRange.value = [];
+      }
+    }
+
     // Автоматически обновляем текст при изменении гостей
-    // watch([adults, children], () => {
-    //   updateGuestsDisplay();
-    // });
-    watch([adults, children], updateGuestsDisplay, { immediate: true });
+    watch([adults, children], () => {
+      updateGuestsDisplay();
+    });
+
+    watch(filters, (newVal) => {
+      initFormData(newVal);
+    }, { immediate: true });
+
     // Отправка формы
     function handleSubmit() {
       const params = new URLSearchParams();
       
+      if (locationInput.value) {
+        params.append('location', locationInput.value);
+      }
       if (locationSlug.value) {
-        params.append('location', locationSlug.value);
+        params.append('location_slug', locationSlug.value);
       }
       
       if (checkinDate.value) {
