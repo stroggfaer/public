@@ -2614,6 +2614,9 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   display: flex;
   height: 100%;
 }
+.site-main-map .property-layout .breadcrumb__com {
+  padding-top: 0px;
+}
 .site-main-map .property-layout .page-header {
   margin-bottom: 24px;
 }

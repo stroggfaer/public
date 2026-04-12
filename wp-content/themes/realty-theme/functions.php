@@ -230,6 +230,16 @@ function get_property_search_errors() {
     return array();
 }
 
+// Функция для вывода хлебных крошек
+function custom_breadcrumbs($current_page = '') {
+    echo '<nav class="breadcrumb__com" aria-label="breadcrumb">';
+    echo '<a href="' . esc_url(home_url('/')) . '">' . esc_html__('Главная', 'naked') . '</a> <span>/</span> ';
+    if (!empty($current_page)) {
+        echo '<span class="breadcrumb_name">' . esc_html($current_page) . '</span>';
+    }
+    echo '</nav>';
+}
+
 // AJAX обработчик для автозаполнения локаций
 add_action('wp_ajax_get_locations_autocomplete', 'get_locations_autocomplete_callback');
 add_action('wp_ajax_nopriv_get_locations_autocomplete', 'get_locations_autocomplete_callback');

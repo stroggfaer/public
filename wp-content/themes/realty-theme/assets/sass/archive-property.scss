@@ -27,6 +27,9 @@
   .property-layout {
     display: flex;
     height: 100%;
+    .breadcrumb__com {
+       padding-top: 0px;
+    }
     .page-header {
       margin-bottom: 24px;
     }
