@@ -151,7 +151,7 @@ function realty_characteristics_page_content() {
                                 <?php
                                 $type_ui = get_term_meta( $current_group_id, 'type_ui', true );
                                 if ( $type_ui ) {
-                                    echo ' (UI: ' . esc_html( $type_ui ) . ')';
+                                    //echo ' (UI: ' . esc_html( $type_ui ) . ')';
                                 }
                                 ?>
                             </span>
@@ -181,6 +181,10 @@ function realty_characteristics_page_content() {
                         ?>
                         
                         <?php if ( ! empty( $characteristics ) ) : ?>
+                            <?php
+                            // Получаем type_ui группы для отображения в таблице
+                            $group_type_ui = get_term_meta( $current_group_id, 'type_ui', true );
+                            ?>
                             <table class="wp-list-table widefat fixed striped characteristics-table">
                                 <thead>
                                     <tr>
@@ -189,6 +193,7 @@ function realty_characteristics_page_content() {
                                         <th class="col-name"><?php esc_html_e( 'Название', 'realty-theme' ); ?></th>
                                         <th class="col-label"><?php esc_html_e( 'Лейбл', 'realty-theme' ); ?></th>
                                         <th class="col-value"><?php esc_html_e( 'Значение', 'realty-theme' ); ?></th>
+                                        <th class="col-filter-ui"><?php esc_html_e( 'Фильтр UI', 'realty-theme' ); ?></th>
                                         <th class="col-style"><?php esc_html_e( 'Стиль', 'realty-theme' ); ?></th>
                                         <th class="col-actions"><?php esc_html_e( 'Действия', 'realty-theme' ); ?></th>
                                     </tr>
@@ -232,6 +237,9 @@ function realty_characteristics_page_content() {
                                             </td>
                                             <td class="col-value">
                                                 <?php echo esc_html( $value ?: '—' ); ?>
+                                            </td>
+                                            <td class="col-filter-ui">
+                                                <span class="filter-ui-badge"><?php echo esc_html( $group_type_ui ?: '—' ); ?></span>
                                             </td>
                                             <td class="col-style">
                                                 <span class="style-badge style-<?php echo esc_attr( $style ); ?>">
@@ -592,7 +600,7 @@ add_action( 'admin_enqueue_scripts', 'realty_enqueue_characteristics_admin_asset
  */
 function realty_ajax_save_characteristic_group() {
     // Проверка nonce
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'characteristic_group_nonce' ) ) {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'characteristic_save_nonce' ) ) {
         wp_send_json_error( __( 'Ошибка безопасности. Обновите страницу.', 'realty-theme' ) );
     }
     

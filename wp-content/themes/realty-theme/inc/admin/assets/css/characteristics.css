@@ -92,6 +92,16 @@
 .style-prohibited { background: #ffe5e5; color: #d63638; }
 .style-text { background: #f5f5f5; color: #666; }
 
+.filter-ui-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
 /* Modal Styles */
 .characteristics-modal {
     position: fixed;
