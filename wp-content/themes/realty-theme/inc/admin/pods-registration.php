@@ -18,6 +18,11 @@ function register_property_cpt_and_taxonomies() {
     add_action( 'init', 'register_property_location_taxonomy', 0 );
     add_action( 'init', 'register_property_type_taxonomy', 0 );
     
+    // Регистрация CPT характеристик и таксономии групп
+    add_action( 'init', 'register_characteristic_cpt', 0 );
+    add_action( 'init', 'setup_characteristic_groups_taxonomy', 0 );
+    add_action( 'init', 'register_characteristic_meta_fields', 10 );
+    
     // Если Pods активен, дополнительно настраиваем через Pods
     if ( class_exists( 'Pods_Init' ) ) {
         add_action( 'init', 'setup_property_pods', 12 );
@@ -367,6 +372,237 @@ function add_default_property_types() {
             wp_insert_term( $term, 'property_type' );
         }
     }
+}
+
+/**
+ * Регистрация CPT characteristic для справочника характеристик недвижимости
+ * 
+ * Иерархический CPT с поддержкой post_parent для вложенности
+ */
+function register_characteristic_cpt() {
+    $labels = array(
+        'name'                  => 'Характеристики',
+        'singular_name'         => 'Характеристика',
+        'menu_name'             => 'Характеристики',
+        'name_admin_bar'        => 'Характеристика',
+        'archives'              => 'Архив характеристик',
+        'attributes'            => 'Атрибуты характеристики',
+        'parent_item_colon'     => 'Родительская характеристика:',
+        'all_items'             => 'Все характеристики',
+        'add_new_item'          => 'Добавить новую характеристику',
+        'add_new'               => 'Добавить новую',
+        'new_item'              => 'Новая характеристика',
+        'edit_item'             => 'Редактировать характеристику',
+        'update_item'           => 'Обновить характеристику',
+        'view_item'             => 'Просмотреть характеристику',
+        'view_items'            => 'Просмотреть характеристики',
+        'search_items'          => 'Искать характеристики',
+        'not_found'             => 'Не найдено',
+        'not_found_in_trash'    => 'Не найдено в корзине',
+        'items_list'            => 'Список характеристик',
+        'items_list_navigation' => 'Навигация по списку характеристик',
+        'filter_items_list'     => 'Фильтровать список характеристик',
+    );
+    
+    $args = array(
+        'label'                 => 'Характеристика',
+        'description'           => 'Справочник характеристик недвижимости',
+        'labels'                => $labels,
+        'supports'              => array( 'title', 'editor' ),
+        'taxonomies'            => array( 'char_group', 'char_subtype' ),
+        'hierarchical'          => true,
+        'public'                => false,
+        'show_ui'               => true,
+        'show_in_menu'          => false,
+        'menu_position'         => null,
+        'menu_icon'             => null,
+        'show_in_admin_bar'     => false,
+        'show_in_nav_menus'     => false,
+        'can_export'            => true,
+        'has_archive'           => false,
+        'exclude_from_search'   => true,
+        'publicly_queryable'    => false,
+        'rewrite'               => false,
+        'capability_type'       => 'post',
+        'show_in_rest'          => false,
+    );
+    
+    register_post_type( 'characteristic', $args );
+}
+
+/**
+ * Регистрация таксономии char_group для группировки характеристик
+ * 
+ * Иерархическая таксономия для организации характеристик по группам
+ */
+function setup_characteristic_groups_taxonomy() {
+    $labels = array(
+        'name'                       => 'Группы характеристик',
+        'singular_name'              => 'Группа характеристик',
+        'menu_name'                  => 'Группы характеристик',
+        'all_items'                  => 'Все группы характеристик',
+        'parent_item'                => 'Родительская группа',
+        'parent_item_colon'          => 'Родительская группа:',
+        'new_item_name'              => 'Новое название группы',
+        'add_new_item'               => 'Добавить новую группу',
+        'edit_item'                  => 'Редактировать группу',
+        'update_item'                => 'Обновить группу',
+        'view_item'                  => 'Просмотреть группу',
+        'separate_items_with_commas' => 'Разделить группы запятыми',
+        'add_or_remove_items'        => 'Добавить или удалить группы',
+        'choose_from_most_used'      => 'Выбрать из часто используемых групп',
+        'popular_items'              => 'Популярные группы',
+        'search_items'               => 'Поиск групп',
+        'not_found'                  => 'Не найдено',
+        'no_terms'                   => 'Нет групп',
+        'items_list'                 => 'Список групп',
+        'items_list_navigation'      => 'Навигация по списку групп',
+    );
+
+    $args = array(
+        'labels'                     => $labels,
+        'hierarchical'               => true,
+        'public'                     => false,
+        'show_ui'                    => true,
+        'show_admin_column'          => true,
+        'show_in_nav_menus'          => false,
+        'show_tagcloud'              => false,
+        'rewrite'                    => false,
+        'show_in_rest'               => false,
+    );
+
+    register_taxonomy( 'char_group', array( 'characteristic' ), $args );
+}
+
+/**
+ * Регистрация meta полей для CPT characteristic
+ * 
+ * Все поля с санитизацией и валидацией согласно WordPress standards
+ */
+function register_characteristic_meta_fields() {
+    // icon - название Material Symbol или ID media
+    register_meta( 'post', 'icon', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => false,
+    ) );
+    
+    // style - стиль отображения (circle|standard|prohibited|text)
+    register_meta( 'post', 'style', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => false,
+    ) );
+    
+    // label - лейбл характеристики
+    register_meta( 'post', 'label', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => false,
+    ) );
+    
+    // hint - хинт/подпись
+    register_meta( 'post', 'hint', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => false,
+    ) );
+    
+    // value - дополнительное значение
+    register_meta( 'post', 'value', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => false,
+    ) );
+    
+    // sort_order - порядок сортировки
+    register_meta( 'post', 'sort_order', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+        'show_in_rest'      => false,
+    ) );
+    
+    // icon_type - тип иконки (material_symbol|upload)
+    register_meta( 'post', 'icon_type', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => false,
+    ) );
+    
+    // media_id - ID вложения для загруженных иконок
+    register_meta( 'post', 'media_id', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+        'show_in_rest'      => false,
+    ) );
+    
+    // show_in_filter - показывать ли в фильтре на фронте
+    register_meta( 'post', 'show_in_filter', array(
+        'object_subtype'    => 'characteristic',
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+        'show_in_rest'      => false,
+    ) );
+    
+    // Term meta для таксономии char_group
+    register_term_meta( 'char_group', 'type_ui', array(
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    
+    register_term_meta( 'char_group', 'display_style', array(
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+    
+    register_term_meta( 'char_group', 'description_full', array(
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_textarea_field',
+    ) );
+    
+    register_term_meta( 'char_group', 'active', array(
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+    ) );
+    
+    register_term_meta( 'char_group', 'sort_order', array(
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+    ) );
+    
+    register_term_meta( 'char_group', 'use_in_filters', array(
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+    ) );
+    
+    register_term_meta( 'char_group', 'show_in_archive', array(
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+    ) );
 }
 
 // Вызываем функцию регистрации

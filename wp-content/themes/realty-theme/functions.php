@@ -140,6 +140,8 @@ $propertyFeature->init();
 require get_template_directory() . '/inc/admin/admin-function.php';
 // Подключаем файл с регистрацией CPT и таксономий
 require get_template_directory() . '/inc/admin/pods-registration.php';
+// Подключаем страницу управления справочником характеристик
+require get_template_directory() . '/inc/admin/settings/characteristics-settings.php';
 // Подключаем универсальную страницу настроек
 require get_template_directory() . '/inc/admin/settings/index-settings.php';
 
