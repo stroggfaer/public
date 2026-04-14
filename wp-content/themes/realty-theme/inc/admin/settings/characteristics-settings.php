@@ -291,6 +291,7 @@ function realty_characteristics_page_content() {
                 </div>
                 <div class="modal-body">
                     <form id="group-form">
+                        <?php wp_nonce_field( 'characteristic_save_nonce', 'characteristic_nonce' ); ?>
                         <input type="hidden" id="group-id" name="group_id" value="">
                         
                         <table class="form-table">
@@ -376,6 +377,7 @@ function realty_characteristics_page_content() {
                 </div>
                 <div class="modal-body">
                     <form id="characteristic-form">
+                        <?php wp_nonce_field( 'characteristic_save_nonce', 'characteristic_nonce' ); ?>
                         <input type="hidden" id="characteristic-id" name="characteristic_id" value="">
                         <input type="hidden" id="characteristic-group-id" name="group_id" value="<?php echo esc_attr( $current_group_id ); ?>">
                         
@@ -865,7 +867,7 @@ function realty_ajax_save_characteristic() {
     $char_sort_order = isset( $_POST['char_sort_order'] ) ? absint( $_POST['char_sort_order'] ) : 0;
     $char_show_filter = isset( $_POST['char_show_in_filter'] ) ? absint( $_POST['char_show_in_filter'] ) : 0;
     $char_status     = isset( $_POST['char_active'] ) ? sanitize_text_field( $_POST['char_active'] ) : 'publish';
-    
+
     // Валидация обязательных полей
     if ( empty( $char_title ) ) {
         wp_send_json_error( __( 'Название характеристики обязательно!', 'realty-theme' ) );
@@ -873,6 +875,22 @@ function realty_ajax_save_characteristic() {
     
     if ( ! $group_id ) {
         wp_send_json_error( __( 'Группа не выбрана.', 'realty-theme' ) );
+    }
+    
+    // Валидация parent характеристики
+    if ( $char_parent > 0 ) {
+        $parent = get_post( $char_parent );
+        if ( ! $parent || $parent->post_type !== 'characteristic' ) {
+            wp_send_json_error( __( 'Родительская характеристика не найдена.', 'realty-theme' ) );
+        }
+        $parent_groups = get_the_terms( $char_parent, 'char_group' );
+        if ( is_wp_error( $parent_groups ) || empty( $parent_groups ) ) {
+            wp_send_json_error( __( 'Родительская характеристика не привязана к группе.', 'realty-theme' ) );
+        }
+        $parent_group_id = $parent_groups[0]->term_id;
+        if ( $parent_group_id != $group_id ) {
+            wp_send_json_error( __( 'Родительская характеристика должна принадлежать той же группе.', 'realty-theme' ) );
+        }
     }
     
     // Валидация стиля
@@ -1030,6 +1048,12 @@ function realty_ajax_get_characteristic_media_url() {
     
     if ( ! $media_id ) {
         wp_send_json_error( __( 'ID медиа-файла не указан.', 'realty-theme' ) );
+    }
+    
+    // Валидация что это реальный медиа-файл
+    $attachment = get_post( $media_id );
+    if ( ! $attachment || $attachment->post_type !== 'attachment' ) {
+        wp_send_json_error( __( 'Медиа-файл не найден.', 'realty-theme' ) );
     }
     
     // Получаем URL

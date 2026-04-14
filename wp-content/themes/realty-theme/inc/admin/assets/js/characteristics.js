@@ -263,13 +263,13 @@
             $('#characteristic-modal-title').text(this.strings.addCharacteristic);
 
             $('input[name="char_icon_type"][value="material_symbol"]').prop('checked', true);
-            this.toggleIconType('material_symbol');
             $('#icon-preview-box').html('<span class="material-symbols-outlined" style="font-size: 32px;">help</span>');
             $('#media-preview-box').html('<p class="description">' + this.strings.noFile + '</p>');
-
+            $('#char-media-id').val('');
             this.inheritStyleFromGroup();
-            this.updateFieldVisibility($('#char-style').val());
-
+            var styleType = $('#char-style').val();
+            this.updateFieldVisibility(styleType);
+            this.toggleIconType('material_symbol');
             this.openModal('#characteristic-modal');
         },
 
@@ -294,16 +294,19 @@
 
         updateFieldVisibility: function(style) {
             $('.char-field-label, .char-field-hint, .char-field-value, .char-field-icon-type').hide();
-
+            $('#material-symbol-row').hide();
             switch(style) {
                 case 'circle':
                     $('.char-field-hint, .char-field-value, .char-field-icon-type').show();
+                    $('#material-symbol-row').show();
                     break;
                 case 'standard':
                     $('.char-field-value, .char-field-icon-type').show();
+                    $('#material-symbol-row').show();
                     break;
                 case 'prohibited':
                     $('.char-field-hint, .char-field-value, .char-field-icon-type').show();
+                    $('#material-symbol-row').show();
                     break;
                 case 'text':
                     $('.char-field-label, .char-field-hint, .char-field-value').show();
@@ -330,7 +333,7 @@
                     $('#char-hint').val(char.hint || '');
                     $('#char-value').val(char.value || '');
 
-                    self.inheritStyleFromGroup();
+                    $('#char-style').val(char.style || 'standard');
 
                     $('#char-icon-type').val(char.icon_type || 'material_symbol');
                     $('#char-icon').val(char.icon || '');
@@ -342,15 +345,19 @@
 
                     if (char.icon_type === 'upload' && char.media_id) {
                         $('input[name="char_icon_type"][value="upload"]').prop('checked', true);
-                        self.toggleIconType('upload');
-                        self.updateMediaPreview(char.media_id);
+                        $('#char-media-id').val(char.media_id);
                     } else {
                         $('input[name="char_icon_type"][value="material_symbol"]').prop('checked', true);
-                        self.toggleIconType('material_symbol');
-                        self.updateIconPreview(char.icon || 'help');
                     }
 
-                    self.updateFieldVisibility($('#char-style').val());
+                    self.updateFieldVisibility(char.style || 'standard');
+                    self.toggleIconType($('input[name="char_icon_type"]:checked').val());
+                    
+                    if (char.icon_type === 'upload' && char.media_id) {
+                        self.updateMediaPreview(char.media_id);
+                    } else {
+                        self.updateIconPreview(char.icon || 'help');
+                    }
 
                     self.openModal('#characteristic-modal');
                 } else {
@@ -360,6 +367,12 @@
         },
 
         toggleIconType: function(type) {
+            var style = $('#char-style').val();
+            if (style === 'text') {
+                $('#material-symbol-row').hide();
+                $('#media-upload-row').hide();
+                return;
+            }
             if (type === 'material_symbol') {
                 $('#material-symbol-row').show();
                 $('#media-upload-row').hide();
@@ -401,8 +414,8 @@
                 }
             });
 
-            mediaUploader.on('select', function() {
-                var attachment = mediaUploader.state().get('selection').first().toJSON();
+            this.mediaUploader.on('select', function() {
+                var attachment = self.mediaUploader.state().get('selection').first().toJSON();
 
                 if (attachment.filesize > 1048576) {
                     alert(self.strings.fileTooBig);
@@ -413,7 +426,7 @@
                 self.updateMediaPreview(attachment.id);
             });
 
-            mediaUploader.open();
+            this.mediaUploader.open();
         },
 
         updateMediaPreview: function(mediaId) {
@@ -421,8 +434,11 @@
 
             if (!mediaId) {
                 $('#media-preview-box').html('<p class="description">' + this.strings.noFile + '</p>');
+                $('#char-media-id').val('');
                 return;
             }
+
+            $('#char-media-id').val(mediaId);
 
             $.post(ajaxurl, {
                 action: 'characteristic_get_media_url',
