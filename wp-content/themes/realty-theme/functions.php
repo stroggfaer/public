@@ -142,6 +142,8 @@ require get_template_directory() . '/inc/admin/admin-function.php';
 require get_template_directory() . '/inc/admin/pods-registration.php';
 // Подключаем страницу управления справочником характеристик
 require get_template_directory() . '/inc/admin/settings/characteristics-settings.php';
+// Метабокс характеристик
+require get_template_directory() . '/inc/admin/settings/property-characteristics-metabox.php';
 // Подключаем универсальную страницу настроек
 require get_template_directory() . '/inc/admin/settings/index-settings.php';
 

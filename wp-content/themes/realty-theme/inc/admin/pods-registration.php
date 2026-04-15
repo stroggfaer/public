@@ -38,7 +38,7 @@ function setup_property_pods() {
     
     if ( empty( $pod_exists ) ) {
         // Создаем POD для объектов недвижимости
-        $pod_data = array(
+    $pod_data = array(
             'name' => 'property',
             'label' => 'Объекты недвижимости',
             'type' => 'post_type',
@@ -133,8 +133,7 @@ function setup_property_pods() {
                         'file_field_template' => 'rows',
                     )
                 ),
-
-            ),
+                ),
             'options' => array(
                 'public' => true,
                 'show_ui' => true,
@@ -607,3 +606,4 @@ function register_characteristic_meta_fields() {
 
 // Вызываем функцию регистрации
 register_property_cpt_and_taxonomies();
+
