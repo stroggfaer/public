@@ -618,7 +618,8 @@ function realty_enqueue_characteristics_admin_assets() {
         $init_script .= 'get: "' . wp_create_nonce( "characteristic_get_nonce" ) . '",';
         $init_script .= 'save: "' . wp_create_nonce( "characteristic_save_nonce" ) . '",';
         $init_script .= 'media: "' . wp_create_nonce( "characteristic_media_nonce" ) . '",';
-        $init_script .= 'delete_group: "' . wp_create_nonce( "characteristic_delete_group_nonce" ) . '"';
+        $init_script .= 'delete_group: "' . wp_create_nonce( "characteristic_delete_group_nonce" ) . '",';
+        $init_script .= 'delete_characteristic: "' . wp_create_nonce( "characteristic_delete_nonce" ) . '"';
         $init_script .= '});';
         $init_script .= '}';
         $init_script .= '});';
@@ -662,6 +663,12 @@ function realty_ajax_save_characteristic_group() {
     // Валидация обязательных полей
     if ( empty( $group_name ) ) {
         wp_send_json_error( __( 'Название группы обязательно!', 'realty-theme' ) );
+    }
+    
+    // Валидация уникальности названия
+    $existing_group = get_term_by( 'name', $group_name, 'char_group' );
+    if ( $existing_group && $existing_group->term_id !== $group_id ) {
+        wp_send_json_error( __( 'Группа с таким названием уже существует!', 'realty-theme' ) );
     }
     
     // Валидация type_ui
@@ -912,6 +919,29 @@ function realty_ajax_save_characteristic() {
     
     if ( ! $group_id ) {
         wp_send_json_error( __( 'Группа не выбрана.', 'realty-theme' ) );
+    }
+    
+    // Валидация уникальности названия в группе
+    $existing_char = new WP_Query( array(
+        'post_type'      => 'characteristic',
+        'posts_per_page' => 1,
+        'fields'         => 'ids',
+        'post_status'    => 'any',
+        's'              => $char_title,
+        'tax_query'      => array(
+            array(
+                'taxonomy' => 'char_group',
+                'field'    => 'term_id',
+                'terms'    => $group_id,
+            ),
+        ),
+    ) );
+    
+    if ( $existing_char->found_posts > 0 ) {
+        $found_post = $existing_char->posts[0];
+        if ( $found_post !== $char_id ) {
+            wp_send_json_error( __( 'Характеристика с таким названием уже существует в этой группе!', 'realty-theme' ) );
+        }
     }
     
     // Валидация parent характеристики
@@ -1169,3 +1199,70 @@ function realty_ajax_save_characteristics_order() {
     }
 }
 add_action( 'wp_ajax_characteristic_save_order', 'realty_ajax_save_characteristics_order' );
+
+/**
+ * AJAX обработчик для удаления характеристики
+ * 
+ * Security: nonce + current_user_can
+ * Удаляет характеристику и все её дочерние характеристики
+ */
+function realty_ajax_delete_characteristic() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'characteristic_delete_nonce' ) ) {
+        wp_send_json_error( __( 'Ошибка безопасности. Обновите страницу.', 'realty-theme' ) );
+    }
+    
+    // Проверка прав
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( __( 'У вас недостаточно прав.', 'realty-theme' ) );
+    }
+    
+    $char_id = isset( $_POST['characteristic_id'] ) ? absint( $_POST['characteristic_id'] ) : 0;
+    
+    if ( ! $char_id ) {
+        wp_send_json_error( __( 'ID характеристики не указан.', 'realty-theme' ) );
+    }
+    
+    // Получаем характеристику
+    $characteristic = get_post( $char_id );
+    
+    if ( ! $characteristic || $characteristic->post_type !== 'characteristic' ) {
+        wp_send_json_error( __( 'Характеристика не найдена.', 'realty-theme' ) );
+    }
+    
+    try {
+        // Удаляем все дочерние характеристики
+        $children = get_posts( array(
+            'post_type'      => 'characteristic',
+            'post_parent'    => $char_id,
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'post_status'    => 'any',
+        ) );
+        
+        if ( ! empty( $children ) ) {
+            foreach ( $children as $child_id ) {
+                wp_delete_post( $child_id, true );
+            }
+        }
+        
+        // Удаляем саму характеристику
+        $result = wp_delete_post( $char_id, true );
+        
+        if ( ! $result ) {
+            wp_send_json_error( __( 'Не удалось удалить характеристику.', 'realty-theme' ) );
+        }
+        
+        // Успех
+        wp_send_json_success( array(
+            'message' => sprintf(
+                __( 'Характеристика "%s" удалена.', 'realty-theme' ),
+                $characteristic->post_title
+            ),
+        ) );
+        
+    } catch ( Exception $e ) {
+        wp_send_json_error( __( 'Ошибка при удалении: ', 'realty-theme' ) . $e->getMessage() );
+    }
+}
+add_action( 'wp_ajax_characteristic_delete', 'realty_ajax_delete_characteristic' );

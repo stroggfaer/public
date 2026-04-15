@@ -13,6 +13,7 @@
         nonceSave: '',
         nonceMedia: '',
         nonceDeleteGroup: '',
+        nonceDeleteCharacteristic: '',
         mediaUploader: null,
         strings: {
             addGroup: 'Добавить группу',
@@ -26,7 +27,9 @@
             errorSaving: 'Ошибка при сохранении',
             errorNetwork: 'Ошибка сети. Проверьте соединение.',
             groupNameRequired: 'Название группы обязательно!',
+            groupNameExists: 'Группа с таким названием уже существует!',
             titleRequired: 'Название обязательно!',
+            titleExists: 'Характеристика с таким названием уже существует в этой группе!',
             styleRequired: 'Выберите стиль отображения!',
             deleteConfirm: 'Вы уверены, что хотите удалить характеристику',
             deleteGroupConfirm: 'Вы уверены, что хотите удалить группу',
@@ -44,6 +47,7 @@
             this.nonceSave = nonces.save;
             this.nonceMedia = nonces.media;
             this.nonceDeleteGroup = nonces.delete_group;
+            this.nonceDeleteCharacteristic = nonces.delete_characteristic;
 
             if (strings) {
                 this.strings = $.extend({}, this.strings, strings);
@@ -103,11 +107,12 @@
             });
 
             // Delete characteristic
-            $('.delete-characteristic-btn').on('click', function() {
+            $('.delete-characteristic-btn').on('click', function(e) {
+                e.preventDefault();
                 var charId = $(this).data('characteristic-id');
                 var charName = $(this).data('characteristic-name');
                 if (confirm(self.strings.deleteConfirm + ' "' + charName + '"?')) {
-                    alert('Удаление будет реализовано в следующих фазах');
+                    self.deleteCharacteristic(charId, $(this));
                 }
             });
 
@@ -199,6 +204,25 @@
             var groupName = $('#group-name').val().trim();
             if (!groupName) {
                 alert(this.strings.groupNameRequired);
+                $('#group-name').focus();
+                return;
+            }
+
+            var groupId = $('#group-id').val();
+            var isDuplicate = false;
+
+            // Проверка уникальности названия группы
+            $('.group-item').each(function() {
+                var itemName = $(this).find('a').text().trim();
+                var itemId = $(this).data('group-id');
+                if (itemName === groupName && itemId != groupId) {
+                    isDuplicate = true;
+                    return false;
+                }
+            });
+
+            if (isDuplicate) {
+                alert(this.strings.groupNameExists);
                 $('#group-name').focus();
                 return;
             }
@@ -479,6 +503,25 @@
                 return;
             }
 
+            var charId = $('#characteristic-id').val();
+            var isDuplicate = false;
+
+            // Проверка уникальности названия характеристики в таблице
+            $('#characteristics-sortable .characteristic-row').each(function() {
+                var rowTitle = $(this).find('.col-name strong').text().trim();
+                var rowId = $(this).data('characteristic-id');
+                if (rowTitle === title && rowId != charId) {
+                    isDuplicate = true;
+                    return false;
+                }
+            });
+
+            if (isDuplicate) {
+                alert(this.strings.titleExists);
+                $('#char-title').focus();
+                return;
+            }
+
             var iconType = $('input[name="char_icon_type"]:checked').val();
             var data = {
                 action: 'characteristic_save',
@@ -535,6 +578,28 @@
                     // Reload to restore original order
                     window.location.reload();
                 }
+            });
+        },
+
+        deleteCharacteristic: function(charId, $btn) {
+            var self = this;
+
+            $btn.prop('disabled', true);
+
+            $.post(ajaxurl, {
+                action: 'characteristic_delete',
+                nonce: this.nonceDeleteCharacteristic,
+                characteristic_id: charId
+            }, function(response) {
+                if (response.success) {
+                    window.location.reload();
+                } else {
+                    alert(response.data || self.strings.errorSaving);
+                    $btn.prop('disabled', false);
+                }
+            }).fail(function() {
+                alert(self.strings.errorNetwork);
+                $btn.prop('disabled', false);
             });
         }
     };
