@@ -198,6 +198,69 @@
     color: #333;
 }
 
+/* Sortable Styles */
+.characteristics-drag-handle {
+    cursor: move;
+    color: #999;
+}
+
+.characteristics-drag-handle:hover {
+    color: #333;
+}
+
+.sortable-placeholder {
+    background: #f0f8ff;
+    border: 2px dashed #0073aa;
+    height: 50px;
+    margin: 5px 0;
+}
+
+#characteristics-sortable .characteristic-row {
+    cursor: move;
+}
+
+#characteristics-sortable .characteristic-row.ui-sortable-helper {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Pagination Styles */
+.tablenav {
+    margin: 20px 0;
+    clear: both;
+}
+
+.tablenav-pages {
+    float: right;
+}
+
+.tablenav-pages .pagination-links {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.tablenav-pages .pagination-links a,
+.tablenav-pages .pagination-links span {
+    display: inline-block;
+    min-width: 20px;
+    padding: 3px 5px;
+    margin: 0 2px;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #0073aa;
+    border-radius: 3px;
+}
+
+.tablenav-pages .pagination-links a:hover,
+.tablenav-pages .pagination-links span.current {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
 .media-preview-box img {
     max-width: 100px;
     max-height: 100px;

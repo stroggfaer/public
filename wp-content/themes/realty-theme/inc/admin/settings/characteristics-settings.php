@@ -162,11 +162,18 @@ function realty_characteristics_page_content() {
                             <?php esc_html_e( 'Добавить характеристику', 'realty-theme' ); ?>
                         </button>
                         
+                        <input type="hidden" id="current-group-id" value="<?php echo esc_attr( $current_group_id ); ?>">
+                        
                         <?php
+                        // Пагинация
+                        $paged = isset( $_GET['char_paged'] ) ? absint( $_GET['char_paged'] ) : 1;
+                        $posts_per_page = 50;
+                        
                         // Получаем характеристики этой группы
-                        $characteristics = get_posts( array(
+                        $characteristics_args = array(
                             'post_type'      => 'characteristic',
-                            'posts_per_page' => -1,
+                            'posts_per_page' => $posts_per_page,
+                            'paged'          => $paged,
                             'orderby'        => 'meta_value_num',
                             'meta_key'       => 'sort_order',
                             'order'          => 'ASC',
@@ -177,8 +184,30 @@ function realty_characteristics_page_content() {
                                     'terms'    => $current_group_id,
                                 ),
                             ),
-                        ) );
+                        );
+                        
+                        $characteristics_query = new WP_Query( $characteristics_args );
+                        $characteristics = $characteristics_query->posts;
+                        $total_pages = $characteristics_query->max_num_pages;
                         ?>
+                        
+                        <?php if ( $total_pages > 1 ) : ?>
+                            <div class="tablenav top">
+                                <div class="tablenav-pages">
+                                    <?php
+                                    $pagination_args = array(
+                                        'base'      => add_query_arg( 'char_paged', '%#%' ),
+                                        'format'    => '',
+                                        'prev_text' => __('&laquo;'),
+                                        'next_text' => __('&raquo;'),
+                                        'total'     => $total_pages,
+                                        'current'   => $paged,
+                                    );
+                                    echo paginate_links( $pagination_args );
+                                    ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         
                         <?php if ( ! empty( $characteristics ) ) : ?>
                             <?php
@@ -264,6 +293,14 @@ function realty_characteristics_page_content() {
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
+                            
+                            <?php if ( $total_pages > 1 ) : ?>
+                                <div class="tablenav bottom">
+                                    <div class="tablenav-pages">
+                                        <?php echo paginate_links( $pagination_args ); ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         <?php else : ?>
                             <div class="no-characteristics-notice">
                                 <p><?php esc_html_e( 'В этой группе пока нет характеристик.', 'realty-theme' ); ?></p>
@@ -1068,3 +1105,67 @@ function realty_ajax_get_characteristic_media_url() {
     ) );
 }
 add_action( 'wp_ajax_characteristic_get_media_url', 'realty_ajax_get_characteristic_media_url' );
+
+/**
+ * AJAX обработчик для сохранения порядка характеристик
+ * 
+ * Security: nonce + current_user_can
+ * Обновляет sort_order для всех характеристик в группе на основе нового порядка
+ */
+function realty_ajax_save_characteristics_order() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'characteristic_save_nonce' ) ) {
+        wp_send_json_error( __( 'Ошибка безопасности. Обновите страницу.', 'realty-theme' ) );
+    }
+    
+    // Проверка прав
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( __( 'У вас недостаточно прав.', 'realty-theme' ) );
+    }
+    
+    $order = isset( $_POST['order'] ) ? $_POST['order'] : array();
+    $group_id = isset( $_POST['group_id'] ) ? absint( $_POST['group_id'] ) : 0;
+    
+    if ( empty( $order ) || ! is_array( $order ) || ! $group_id ) {
+        wp_send_json_error( __( 'Неверные данные порядка.', 'realty-theme' ) );
+    }
+    
+    try {
+        // Получаем все характеристики группы в текущем порядке
+        $all_chars = get_posts( array(
+            'post_type'      => 'characteristic',
+            'posts_per_page' => -1,
+            'orderby'        => 'meta_value_num',
+            'meta_key'       => 'sort_order',
+            'order'          => 'ASC',
+            'fields'         => 'ids',
+            'tax_query'      => array(
+                array(
+                    'taxonomy' => 'char_group',
+                    'field'    => 'term_id',
+                    'terms'    => $group_id,
+                ),
+            ),
+        ) );
+        
+        if ( empty( $all_chars ) ) {
+            wp_send_json_error( __( 'Характеристики не найдены.', 'realty-theme' ) );
+        }
+        
+        // Создаем новый порядок: характеристики из $order в начале, затем остальные
+        $new_order = array_unique( array_merge( $order, $all_chars ) );
+        
+        // Обновляем sort_order для всех характеристик
+        foreach ( $new_order as $index => $char_id ) {
+            update_post_meta( $char_id, 'sort_order', $index );
+        }
+        
+        wp_send_json_success( array(
+            'message' => __( 'Порядок характеристик сохранен', 'realty-theme' ),
+        ) );
+        
+    } catch ( Exception $e ) {
+        wp_send_json_error( __( 'Ошибка при сохранении порядка: ', 'realty-theme' ) . $e->getMessage() );
+    }
+}
+add_action( 'wp_ajax_characteristic_save_order', 'realty_ajax_save_characteristics_order' );

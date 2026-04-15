@@ -121,6 +121,15 @@
             $('#save-group-btn').on('click', function() {
                 self.saveGroup();
             });
+
+            // Initialize sortable for characteristics
+            $('#characteristics-sortable').sortable({
+                handle: '.characteristics-drag-handle',
+                placeholder: 'sortable-placeholder',
+                update: function(event, ui) {
+                    self.saveCharacteristicsOrder();
+                }
+            });
         },
 
         openModal: function(modalId) {
@@ -503,6 +512,29 @@
             }).fail(function() {
                 alert(self.strings.errorNetwork);
                 $btn.prop('disabled', false).text(self.strings.save);
+            });
+        },
+
+        saveCharacteristicsOrder: function() {
+            var self = this;
+            var order = [];
+
+            $('#characteristics-sortable .characteristic-row').each(function(index) {
+                var charId = $(this).data('characteristic-id');
+                order.push(charId);
+            });
+
+            $.post(ajaxurl, {
+                action: 'characteristic_save_order',
+                nonce: this.nonceSave,
+                order: order,
+                group_id: $('#current-group-id').val()
+            }, function(response) {
+                if (!response.success) {
+                    alert(response.data || self.strings.errorSaving);
+                    // Reload to restore original order
+                    window.location.reload();
+                }
             });
         }
     };
