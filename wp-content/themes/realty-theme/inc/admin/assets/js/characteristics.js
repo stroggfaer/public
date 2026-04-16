@@ -377,7 +377,16 @@
                     $('#char-hint').val(char.hint || '');
                     $('#char-value').val(char.value || '');
 
-                    $('#char-style').val(char.style || 'standard');
+                    var charStyle = char.style || 'standard';
+                    $('#char-style').val(charStyle);
+
+                    var styleLabels = {
+                        'circle': 'Circle — Круглая иконка с лейблом',
+                        'standard': 'Standard — Стандартная иконка и текст',
+                        'prohibited': 'Prohibited — Зачеркнутый (запрет)',
+                        'text': 'Text — Только текст'
+                    };
+                    $('#char-style-display').val(styleLabels[charStyle] || charStyle);
 
                     $('#char-icon-type').val(char.icon_type || 'material_symbol');
                     $('#char-icon').val(char.icon || '');
@@ -393,7 +402,7 @@
                         $('input[name="char_icon_type"][value="material_symbol"]').prop('checked', true);
                     }
 
-                    self.updateFieldVisibility(char.style || 'standard');
+                    self.updateFieldVisibility(charStyle);
                     self.toggleIconType($('input[name="char_icon_type"]:checked').val());
                     
                     if (char.icon_type === 'upload' && char.media_id) {
