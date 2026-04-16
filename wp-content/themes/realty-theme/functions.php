@@ -244,6 +244,80 @@ function custom_breadcrumbs($current_page = '') {
     echo '</nav>';
 }
 
+// REST API эндпоинт для характеристик недвижимости
+add_action('rest_api_init', function() {
+    register_rest_route('property/v1', '/characteristics/(?P<id>\d+)', [
+        'methods' => 'GET',
+        'callback' => 'realty_get_property_characteristics_api',
+        'permission_callback' => '__return_true',
+    ]);
+});
+
+function realty_get_property_characteristics_api($request) {
+    $property_id = $request->get_param('id');
+
+    $characteristics = get_post_meta($property_id, 'property_characteristics', true);
+    if (!is_array($characteristics)) {
+        return new WP_REST_Response(['groups' => []], 200);
+    }
+
+    usort($characteristics, fn($a, $b) => ($a['order'] ?? 0) - ($b['order'] ?? 0));
+
+    $groups_data = [];
+
+    foreach ($characteristics as $item) {
+        $char_id = absint($item['characteristic_id'] ?? 0);
+        if (!$char_id) continue;
+
+        $char = get_post($char_id);
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        $terms = get_the_terms($char_id, 'char_group');
+        $group_id = !empty($terms) ? $terms[0]->term_id : 0;
+
+        if ($group_id) {
+            $group = $terms[0];
+            $display_style = get_term_meta($group_id, 'display_style', true) ?: 'standard';
+            $type_ui = get_term_meta($group_id, 'type_ui', true) ?: 'checkbox';
+
+            if (!isset($groups_data[$group_id])) {
+                $groups_data[$group_id] = [
+                    'id' => $group_id,
+                    'name' => $group->name,
+                    'slug' => $group->slug,
+                    'description' => $group->description,
+                    'display_style' => $display_style,
+                    'type_ui' => $type_ui,
+                    'active' => get_term_meta($group_id, 'active', true) ?: 1,
+                    'sort_order' => get_term_meta($group_id, 'sort_order', true) ?: 0,
+                    'use_in_filters' => get_term_meta($group_id, 'use_in_filters', true) ?: 1,
+                    'show_in_archive' => get_term_meta($group_id, 'show_in_archive', true) ?: 0,
+                    'characteristics' => [],
+                ];
+            }
+
+            $groups_data[$group_id]['characteristics'][] = [
+                'id' => $char_id,
+                'title' => $char->post_title,
+                'content' => $char->post_content,
+                'icon' => get_post_meta($char_id, 'icon', true),
+                'icon_type' => get_post_meta($char_id, 'icon_type', true) ?: 'material_symbol',
+                'media_id' => get_post_meta($char_id, 'media_id', true),
+                'label' => get_post_meta($char_id, 'label', true),
+                'value' => get_post_meta($char_id, 'value', true),
+                'hint' => get_post_meta($char_id, 'hint', true),
+                'style' => get_term_meta($group_id, 'display_style', true) ?: 'standard',
+                'sort_order' => $item['order'] ?? 0,
+                'active' => $char->post_status === 'publish' ? 1 : 0,
+            ];
+        }
+    }
+
+    $groups = array_values($groups_data);
+
+    return new WP_REST_Response(['groups' => $groups, 'total' => count($characteristics)], 200);
+}
+
 // AJAX обработчик для автозаполнения локаций
 add_action('wp_ajax_get_locations_autocomplete', 'get_locations_autocomplete_callback');
 add_action('wp_ajax_nopriv_get_locations_autocomplete', 'get_locations_autocomplete_callback');

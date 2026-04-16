@@ -178,3 +178,78 @@ function declension($words, $number) {
         return [$number, $words[2]];
     }
 }
+
+/**
+ * Получить характеристики недвижимости для фронтенда
+ *
+ * @param int       $property_id   ID поста недвижимости
+ * @param string    $group_style Фильтр по стилю группы (circle|standard|prohibited|text)
+ * @return array Массив сгруппированных характеристик
+ */
+function realty_get_property_characteristics($property_id, $group_style = null) {
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+    if (!is_array($saved) || empty($saved)) {
+        return [];
+    }
+
+    usort($saved, function($a, $b) {
+        return ($a['order'] ?? 0) - ($b['order'] ?? 0);
+    });
+
+    $result = [];
+
+    foreach ($saved as $item) {
+        $char_id = isset($item['characteristic_id']) ? absint($item['characteristic_id']) : 0;
+        if (!$char_id) continue;
+
+        $char = get_post($char_id);
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        $terms = get_the_terms($char_id, 'char_group');
+        $group_id = !empty($terms) ? $terms[0]->term_id : 0;
+
+        $display_style = $group_id ? get_term_meta($group_id, 'display_style', true) : 'standard';
+
+        if ($group_style && $display_style !== $group_style) continue;
+
+        $active = $group_id ? get_term_meta($group_id, 'active', true) : 1;
+        if (!$active) continue;
+
+        $result[] = [
+            'characteristic_id' => $char_id,
+            'group_id' => $group_id,
+            'group_name' => !empty($terms) ? $terms[0]->name : '',
+            'display_style' => $display_style,
+            'title' => $char->post_title,
+            'icon' => get_post_meta($char_id, 'icon', true),
+            'icon_type' => get_post_meta($char_id, 'icon_type', true),
+            'media_id' => get_post_meta($char_id, 'media_id', true),
+            'label' => get_post_meta($char_id, 'label', true),
+            'value' => get_post_meta($char_id, 'value', true),
+            'hint' => get_post_meta($char_id, 'hint', true),
+            'order' => $item['order'] ?? 0,
+        ];
+    }
+
+    return $result;
+}
+
+/**
+ * Рендер иконки характеристики
+ *
+ * @param array $char_data Массив данных характеристики
+ * @return string HTML иконки
+ */
+function realty_render_characteristic_icon($char_data) {
+    $icon_type = $char_data['icon_type'] ?? 'material_symbol';
+
+    if ($icon_type === 'upload' && !empty($char_data['media_id'])) {
+        $url = wp_get_attachment_url($char_data['media_id']);
+        if ($url) {
+            return '<img src="' . esc_url($url) . '" alt="">';
+        }
+    }
+
+    $icon = $char_data['icon'] ?? 'help';
+    return '<span class="material-symbols-outlined">' . esc_html($icon) . '</span>';
+}

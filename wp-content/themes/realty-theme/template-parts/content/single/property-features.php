@@ -12,47 +12,25 @@ $pod = $args['pod'] ?? null;
 if (!$pod) {
     return;
 }
-$floor = $pod->field('floor'); // Этаж:
-$rooms = $pod->field('rooms'); // Количество комнат
-$area = $pod->field('area'); // Площадь
 
+$property_id = $pod->id();
+$features = realty_get_property_characteristics($property_id, 'circle');
+
+if (empty($features)) {
+    return;
+}
 ?>
 <div class="property-features-title">Квартира</div>
 <div class="section-property property-features">
+    <?php foreach ($features as $feature): ?>
     <div class="feature-item__com">
         <div class="icon-circle">
-            <span class="material-symbols-outlined">group</span>
+            <?php echo realty_render_characteristic_icon($feature); ?>
         </div>
         <div class="feature-text">
-            <span class="label">GUESTS</span>
-            <span class="value">Up to 4</span>
+            <span class="label"><?php echo esc_html($feature['label'] ?: $feature['title']); ?></span>
+            <span class="value"><?php echo esc_html($feature['value']); ?></span>
         </div>
     </div>
-    <div class="feature-item__com">
-        <div class="icon-circle">
-            <span class="material-symbols-outlined">bed</span>
-        </div>
-        <div class="feature-text">
-            <span class="label">BEDROOMS</span>
-            <span class="value">2 Queen</span>
-        </div>
-    </div>
-    <div class="feature-item__com">
-        <div class="icon-circle">
-            <span class="material-symbols-outlined">bathtub</span>
-        </div>
-        <div class="feature-text">
-            <span class="label">BATHS</span>
-            <span class="value">1.5 Baths</span>
-        </div>
-    </div>
-    <div class="feature-item__com">
-        <div class="icon-circle">
-            <span class="material-symbols-outlined">wifi</span>
-        </div>
-        <div class="feature-text">
-            <span class="label">FIBER</span>
-            <span class="value">500 Mbps</span>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>

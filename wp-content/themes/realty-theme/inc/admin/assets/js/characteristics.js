@@ -14,6 +14,7 @@
         nonceMedia: '',
         nonceDeleteGroup: '',
         nonceDeleteCharacteristic: '',
+        nonceClone: '',
         mediaUploader: null,
         strings: {
             addGroup: 'Добавить группу',
@@ -27,13 +28,12 @@
             errorSaving: 'Ошибка при сохранении',
             errorNetwork: 'Ошибка сети. Проверьте соединение.',
             groupNameRequired: 'Название группы обязательно!',
-            groupNameExists: 'Группа с таким названием уже существует!',
             titleRequired: 'Название обязательно!',
-            titleExists: 'Характеристика с таким названием уже существует в этой группе!',
             styleRequired: 'Выберите стиль отображения!',
             deleteConfirm: 'Вы уверены, что хотите удалить характеристику',
             deleteGroupConfirm: 'Вы уверены, что хотите удалить группу',
             deleteGroupWarning: '\n\nВсе характеристики в этой группе будут отвязаны.',
+            cloneSuccess: 'Характеристика склонирована',
             noFile: 'Файл не выбран',
             enterIcon: 'Введите название иконки',
             fileTooBig: 'Файл слишком большой. Максимальный размер: 1MB',
@@ -48,6 +48,7 @@
             this.nonceMedia = nonces.media;
             this.nonceDeleteGroup = nonces.delete_group;
             this.nonceDeleteCharacteristic = nonces.delete_characteristic;
+            this.nonceClone = nonces.clone || nonces.save;
 
             if (strings) {
                 this.strings = $.extend({}, this.strings, strings);
@@ -114,6 +115,12 @@
                 if (confirm(self.strings.deleteConfirm + ' "' + charName + '"?')) {
                     self.deleteCharacteristic(charId, $(this));
                 }
+            });
+
+            // Clone characteristic
+            $('.clone-characteristic-btn').on('click', function(e) {
+                e.preventDefault();
+                self.cloneCharacteristic($(this).data('characteristic-id'));
             });
 
             // Delete group
@@ -208,25 +215,6 @@
                 return;
             }
 
-            var groupId = $('#group-id').val();
-            var isDuplicate = false;
-
-            // Проверка уникальности названия группы
-            $('.group-item').each(function() {
-                var itemName = $(this).find('a').text().trim();
-                var itemId = $(this).data('group-id');
-                if (itemName === groupName && itemId != groupId) {
-                    isDuplicate = true;
-                    return false;
-                }
-            });
-
-            if (isDuplicate) {
-                alert(this.strings.groupNameExists);
-                $('#group-name').focus();
-                return;
-            }
-
             var data = {
                 action: 'characteristic_save_group',
                 nonce: this.nonceSave,
@@ -291,6 +279,9 @@
         },
 
         openAddCharacteristicModal: function() {
+            var self = this;
+            var groupId = $('#characteristic-group-id').val();
+
             $('#characteristic-form')[0].reset();
             $('#characteristic-id').val('');
             $('#characteristic-modal-title').text(this.strings.addCharacteristic);
@@ -303,6 +294,25 @@
             var styleType = $('#char-style').val();
             this.updateFieldVisibility(styleType);
             this.toggleIconType('material_symbol');
+
+            // Устанавливаем состояние чекбокса "Отображать в фильтре" на основе группы
+            $.post(ajaxurl, {
+                action: 'characteristic_get_group',
+                nonce: this.nonceGetGroup,
+                group_id: groupId
+            }, function(response) {
+                if (response.success) {
+                    var group = response.data;
+                    var useInFilters = group.use_in_filters == 1;
+                    // При создании новой характеристики: если use_in_filters включен - чекбокс включен и активен
+                    $('#char-show-in-filter').prop('checked', useInFilters);
+                    $('#char-show-in-filter').prop('disabled', !useInFilters);
+                } else {
+                    $('#char-show-in-filter').prop('checked', false);
+                    $('#char-show-in-filter').prop('disabled', true);
+                }
+            });
+
             this.openModal('#characteristic-modal');
         },
 
@@ -349,6 +359,7 @@
 
         editCharacteristic: function(charId) {
             var self = this;
+            var groupId = $('#characteristic-group-id').val();
 
             $.post(ajaxurl, {
                 action: 'characteristic_get',
@@ -373,7 +384,6 @@
                     $('#char-media-id').val(char.media_id || '');
                     $('#char-parent').val(char.post_parent || 0);
                     $('#char-sort-order').val(char.sort_order || 0);
-                    $('#char-show-in-filter').prop('checked', char.show_in_filter == 1);
                     $('#char-active').prop('checked', char.post_status === 'publish');
 
                     if (char.icon_type === 'upload' && char.media_id) {
@@ -391,6 +401,23 @@
                     } else {
                         self.updateIconPreview(char.icon || 'help');
                     }
+
+                    // Получаем use_in_filters из группы для управления чекбоксом
+                    $.post(ajaxurl, {
+                        action: 'characteristic_get_group',
+                        nonce: self.nonceGetGroup,
+                        group_id: groupId
+                    }, function(groupResponse) {
+                        if (groupResponse.success) {
+                            var group = groupResponse.data;
+                            var useInFilters = group.use_in_filters == 1;
+                            $('#char-show-in-filter').prop('checked', char.show_in_filter == 1);
+                            $('#char-show-in-filter').prop('disabled', !useInFilters);
+                        } else {
+                            $('#char-show-in-filter').prop('checked', char.show_in_filter == 1);
+                            $('#char-show-in-filter').prop('disabled', true);
+                        }
+                    });
 
                     self.openModal('#characteristic-modal');
                 } else {
@@ -503,25 +530,6 @@
                 return;
             }
 
-            var charId = $('#characteristic-id').val();
-            var isDuplicate = false;
-
-            // Проверка уникальности названия характеристики в таблице
-            $('#characteristics-sortable .characteristic-row').each(function() {
-                var rowTitle = $(this).find('.col-name strong').text().trim();
-                var rowId = $(this).data('characteristic-id');
-                if (rowTitle === title && rowId != charId) {
-                    isDuplicate = true;
-                    return false;
-                }
-            });
-
-            if (isDuplicate) {
-                alert(this.strings.titleExists);
-                $('#char-title').focus();
-                return;
-            }
-
             var iconType = $('input[name="char_icon_type"]:checked').val();
             var data = {
                 action: 'characteristic_save',
@@ -600,6 +608,24 @@
             }).fail(function() {
                 alert(self.strings.errorNetwork);
                 $btn.prop('disabled', false);
+            });
+        },
+
+        cloneCharacteristic: function(charId) {
+            var self = this;
+
+            $.post(ajaxurl, {
+                action: 'characteristic_clone',
+                nonce: this.nonceClone,
+                characteristic_id: charId
+            }, function(response) {
+                if (response.success) {
+                    window.location.reload();
+                } else {
+                    alert(response.data || self.strings.errorSaving);
+                }
+            }).fail(function() {
+                alert(self.strings.errorNetwork);
             });
         }
     };

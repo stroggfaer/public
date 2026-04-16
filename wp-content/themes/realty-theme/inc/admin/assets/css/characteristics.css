@@ -199,12 +199,12 @@
 }
 
 /* Sortable Styles */
-.characteristics-drag-handle {
+.dashicons.dashicons-menu.characteristics-drag-handle {
     cursor: move;
     color: #999;
 }
 
-.characteristics-drag-handle:hover {
+.dashicons.dashicons-menu.characteristics-drag-handle:hover {
     color: #333;
 }
 
@@ -213,10 +213,6 @@
     border: 2px dashed #0073aa;
     height: 50px;
     margin: 5px 0;
-}
-
-#characteristics-sortable .characteristic-row {
-    cursor: move;
 }
 
 #characteristics-sortable .characteristic-row.ui-sortable-helper {
@@ -273,4 +269,26 @@
 
 #upload-media-btn {
     align-self: flex-start;
+}
+
+/* Disabled checkbox style */
+#char-show-in-filter:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Drag handle fix */
+.dashicons.dashicons-menu.characteristics-drag-handle,
+.characteristics-drag-handle.ui-sortable-handle {
+    cursor: move;
+}
+
+/* Actions column width */
+.characteristics-table .col-actions {
+    width: 217px;
+}
+
+/* Actions links hover */
+.characteristics-table .col-actions .button-link:hover {
+    text-decoration: underline;
 }
