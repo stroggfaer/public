@@ -167,7 +167,7 @@ function realty_characteristics_page_content() {
                         <?php
                         // Пагинация
                         $paged = isset( $_GET['char_paged'] ) ? absint( $_GET['char_paged'] ) : 1;
-                        $posts_per_page = 50;
+                        $posts_per_page = 10;
                         
                         // Получаем характеристики этой группы
                         $characteristics_args = array(
@@ -217,6 +217,7 @@ function realty_characteristics_page_content() {
                             <table class="wp-list-table widefat fixed striped characteristics-table">
                                 <thead>
                                     <tr>
+                                        <th class="col-id"><?php esc_html_e( 'ID', 'realty-theme' ); ?></th>
                                         <th class="col-order"><?php esc_html_e( 'Порядок', 'realty-theme' ); ?></th>
                                         <th class="col-icon"><?php esc_html_e( 'Иконка', 'realty-theme' ); ?></th>
                                         <th class="col-name"><?php esc_html_e( 'Название', 'realty-theme' ); ?></th>
@@ -238,6 +239,9 @@ function realty_characteristics_page_content() {
                                         $sort_order = get_post_meta( $char->ID, 'sort_order', true );
                                         ?>
                                         <tr class="characteristic-row" data-characteristic-id="<?php echo esc_attr( $char->ID ); ?>">
+                                            <td class="col-id">
+                                                <?php echo esc_html( $char->ID ); ?>
+                                            </td>
                                             <td class="col-order">
                                                 <span class="dashicons dashicons-menu characteristics-drag-handle"></span>
                                                 <?php echo esc_html( $sort_order ?: '—' ); ?>
@@ -604,7 +608,7 @@ function realty_enqueue_characteristics_admin_assets() {
             'realty-characteristics-admin',
             get_template_directory_uri() . '/inc/admin/assets/css/characteristics.css',
             array(),
-            '1.0.0'
+            filemtime( get_template_directory() . '/inc/admin/assets/css/characteristics.css' )
         );
 
         // Characteristic Settings JS
@@ -612,7 +616,7 @@ function realty_enqueue_characteristics_admin_assets() {
             'realty-characteristics-admin',
             get_template_directory_uri() . '/inc/admin/assets/js/characteristics.js',
             array( 'jquery' ),
-            '1.0.0',
+            filemtime( get_template_directory() . '/inc/admin/assets/js/characteristics.js' ),
             true
         );
 
