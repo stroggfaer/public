@@ -12,40 +12,46 @@ $pod = $args['pod'] ?? null;
 if (!$pod) {
     return;
 }
+
+$property_id = $pod->id();
+$all_chars = realty_get_property_characteristics($property_id);
+
+$text_chars = [];
+$prohibited_chars = [];
+$group_name = '';
+foreach ($all_chars as $char) {
+    $style = $char['display_style'] ?? 'standard';
+    if ($style === 'text') {
+        $text_chars[] = $char;
+        $group_name = $char['group_name'] ?? '';
+    } elseif ($style === 'prohibited') {
+        $prohibited_chars[] = $char;
+    }
+}
+
 ?>
 
 <div class="section-property property-rules">
-    <h3 class="title">Правила размещения</h3>
-    <div class="characteristics-grid__com">
-        <div class="characteristic-item">
-            <div class="label-text">Заселение:</div>
-            <div class="desc">после 15:00 > Выезд: до 12:00</div>
+    <?php if (!empty($text_chars)): ?>
+        <h3 class="title"><?php echo $group_name?></h3>
+        <div class="characteristics-grid__com">
+            <?php foreach ($text_chars as $char): ?>
+            <div class="characteristic-item">
+                <div class="label-text"><?php echo esc_html($char['label']); ?></div>
+                <div class="desc"><?php echo esc_html($char['title']); ?></div>
+            </div>
+            <?php endforeach; ?>
         </div>
-        <div class="characteristic-item">
-            <div class="label-text">Политика отмены:</div>
-            <div class="desc">Умеренная</div>
+    <?php endif; ?>
+
+    <?php if (!empty($prohibited_chars)): ?>
+        <div class="characteristics-grid__com">
+            <?php foreach ($prohibited_chars as $char): ?>
+            <div class="characteristic-item">
+                <?php echo realty_render_characteristic_icon($char, 'diagonal-strike'); ?>
+                <span class="label"><?php echo esc_html($char['title']); ?></span>
+            </div>
+            <?php endforeach; ?>
         </div>
-        <div class="characteristic-item">
-            <div class="label-text">Доступ к объекту:</div>
-            <div class="desc">Передача ключей через ключной сейф</div>
-        </div>
-    </div>
-    <div class="characteristics-grid__com">
-        <div class="characteristic-item">
-            <span class="material-symbols-outlined diagonal-strike">celebration</span>
-            <span class="label">Нельзя проводить вечеринки</span>
-        </div>
-        <div class="characteristic-item">
-            <span class="material-symbols-outlined diagonal-strike">pets</span>
-            <span class="label">С животными нельзя</span>
-        </div>
-        <div class="characteristic-item">
-            <span class="material-symbols-outlined diagonal-strike">child_care</span>
-            <span class="label">Подходит для проживания с детьми младше 3 лет</span>
-        </div>
-        <div class="characteristic-item">
-            <span class="material-symbols-outlined diagonal-strike">bolt</span>
-            <span class="label">Мгновенное бронирование</span>
-        </div>
-    </div>
+    <?php endif; ?>
 </div>

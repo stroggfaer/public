@@ -240,8 +240,8 @@ function realty_get_property_characteristics($property_id, $group_style = null) 
  * @param array $char_data Массив данных характеристики
  * @return string HTML иконки
  */
-function realty_render_characteristic_icon($char_data) {
-    $icon_type = $char_data['icon_type'] ?? 'material_symbol';
+function realty_render_characteristic_icon($char_data, $className = '') {
+    $icon_type = $char_data['icon_type'] ?? 'material_symbol"';
 
     if ($icon_type === 'upload' && !empty($char_data['media_id'])) {
         $url = wp_get_attachment_url($char_data['media_id']);
@@ -249,7 +249,6 @@ function realty_render_characteristic_icon($char_data) {
             return '<img src="' . esc_url($url) . '" alt="">';
         }
     }
-
     $icon = $char_data['icon'] ?? 'help';
-    return '<span class="material-symbols-outlined">' . esc_html($icon) . '</span>';
+    return '<span class="material-symbols-outlined '.$className.'">' . esc_html($icon) . '</span>';
 }

@@ -14,7 +14,7 @@ if (!$pod) {
 }
 
 $property_id = $pod->id();
-$characteristics = realty_get_property_characteristics($property_id);
+$characteristics = realty_get_property_characteristics($property_id, 'standard');
 
 if (empty($characteristics)) {
     return;
@@ -45,8 +45,8 @@ $has_more = $all_count > $limit;
         <?php if ($index >= $limit) break; ?>
         <div class="characteristic-item">
             <?php echo realty_render_characteristic_icon($char); ?>
-            <span class="label"><?php echo esc_html($char['label'] ?: $char['title']); ?></span>
-            <span class="value"><?php echo esc_html($char['value'] ?: $char['hint']); ?></span>
+            <span class="label"><?php echo esc_html($char['title']); ?></span>
+            <span class="value"><?php echo esc_html($char['hint']); ?></span>
         </div>
         <?php endforeach; ?>
     </div>
