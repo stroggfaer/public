@@ -281,9 +281,37 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
         'type' => 'flat',     // flat | all | one
         'limit' => 20,
         'group_key' => null,
+        'system_temp' => null,
         'cache' => !(is_admin() || wp_doing_ajax() || (defined('REST_REQUEST') && REST_REQUEST)),
         'cache_ttl' => 300,
     ]);
+
+    $system_temp = $options['system_temp'];
+    $allowed_group_ids = [];
+
+    if ($system_temp) {
+        $system_temp_groups = get_terms([
+            'taxonomy' => 'char_group',
+            'meta_key' => 'group_system_template',
+            'meta_value' => $system_temp,
+            'hide_empty' => false,
+        ]);
+        if (!is_wp_error($system_temp_groups) && !empty($system_temp_groups)) {
+            $allowed_group_ids = array_column($system_temp_groups, 'term_id');
+            
+            // Для type='one' устанавливаем group_key из группы
+            if ($options['type'] === 'one') {
+                $group_term = get_term($allowed_group_ids[0], 'char_group');
+                if ($group_term && !is_wp_error($group_term)) {
+                    $group_meta = get_term_meta($group_term->term_id);
+                    $options['group_key'] = $group_meta['group_key'][0] ?? $group_term->slug;
+                }
+            }
+        }
+        if (empty($allowed_group_ids)) {
+            return [];
+        }
+    }
 
     $cache_key = 'realty_chars_' . $property_id . '_' . md5(serialize([$group_style, $options]));
 
@@ -341,6 +369,11 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
         $group_id = $term ? $term->term_id : 0;
         $group_name = $term ? $term->name : '';
 
+        // Проверка system_temp: фильтрация по group_system_template
+        if (!empty($allowed_group_ids) && !in_array($group_id, $allowed_group_ids, true)) {
+            continue;
+        }
+
         // TERM META
         if ($group_id && !isset($term_meta_cache[$group_id])) {
             $term_meta_cache[$group_id] = get_term_meta($group_id);
@@ -386,6 +419,7 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
                 'group_name' => $group_name,
                 'display_style' => $display_style,
                 'group_key' => $group_key,
+                'system_temp' => $system_temp,
                 'total' => (int)$options['limit'],
                 'characteristics' => []
             ];
@@ -405,10 +439,12 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
     }
 
     // ===== RESULT =====
+    $active_key = ($options['type'] === 'one' && $system_temp) ? $options['group_key'] : ($options['system_temp'] ?? $options['group_key']);
+    
     if ($options['type'] === 'all') {
         $result = array_values($groups);
-    } elseif ($options['type'] === 'one' && $options['group_key']) {
-        $result = $groups[$options['group_key']] ?? [];
+    } elseif ($options['type'] === 'one' && $active_key) {
+        $result = $groups[$active_key] ?? [];
     }
 
     // ===== SAVE CACHE =====
