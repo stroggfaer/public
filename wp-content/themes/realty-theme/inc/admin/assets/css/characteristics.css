@@ -42,6 +42,29 @@
     text-decoration: none;
     color: #333;
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.group-key-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #e0e0e0;
+    color: #555;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.group-system-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #d1e7dd;
+    color: #0f5132;
+    border-radius: 3px;
+    font-family: monospace;
 }
 
 .group-item:hover {

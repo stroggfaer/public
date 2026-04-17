@@ -65,6 +65,19 @@
                 self.openAddGroupModal();
             });
 
+            // Generate group key from name
+            $('#generate-group-key-btn').on('click', function(e) {
+                e.preventDefault();
+                self.generateGroupKeyFromName();
+            });
+
+            // Auto-generate group key when name changes (if key is empty)
+            $('#group-name').on('input', function() {
+                if (!$('#group-key').val().trim()) {
+                    self.generateGroupKeyFromName();
+                }
+            });
+
             // Edit group button
             $('.edit-group-btn').on('click', function(e) {
                 e.preventDefault();
@@ -161,6 +174,7 @@
             $('#group-modal-title').text(this.strings.addGroup);
             $('#group-form')[0].reset();
             $('#group-id').val('');
+            $('#group-key').val('');
             $('#group-display-style').prop('disabled', false);
             $('#group-style-warning').hide();
             this.openModal('#group-modal');
@@ -180,6 +194,7 @@
                     $('#group-modal-title').text(self.strings.editGroup);
                     $('#group-id').val(group.term_id);
                     $('#group-name').val(group.name);
+                    $('#group-key').val(group.group_key || '');
                     $('#group-description').val(group.description || '');
                     $('#group-type-ui').val(group.type_ui || 'checkbox');
                     $('#group-display-style').val(group.display_style || 'standard');
@@ -215,11 +230,18 @@
                 return;
             }
 
+            var groupKey = $('#group-key').val().trim();
+            if (!groupKey) {
+                groupKey = this.generateKeyFromName(groupName);
+                $('#group-key').val(groupKey);
+            }
+
             var data = {
                 action: 'characteristic_save_group',
                 nonce: this.nonceSave,
                 group_id: $('#group-id').val(),
                 group_name: groupName,
+                group_key: groupKey,
                 group_description: $('#group-description').val(),
                 group_type_ui: $('#group-type-ui').val(),
                 group_display_style: $('#group-display-style').val(),
@@ -462,6 +484,34 @@
             var div = document.createElement('div');
             div.appendChild(document.createTextNode(text));
             return div.innerHTML;
+        },
+
+        generateKeyFromName: function(name) {
+            var key = name.toLowerCase()
+                .replace(/[^a-z0-9а-яё]/gi, '_')
+                .replace(/_+/g, '_')
+                .replace(/^_|_$/g, '');
+            
+            var translitMap = {
+                'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+                'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+                'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+                'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '',
+                'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+            };
+            
+            Object.keys(translitMap).forEach(function(cyrillic) {
+                key = key.replace(new RegExp(cyrillic, 'g'), translitMap[cyrillic]);
+            });
+            
+            return key;
+        },
+
+        generateGroupKeyFromName: function() {
+            var name = $('#group-name').val().trim();
+            if (name) {
+                $('#group-key').val(this.generateKeyFromName(name));
+            }
         },
 
         openMediaUploader: function() {

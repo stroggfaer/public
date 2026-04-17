@@ -106,12 +106,19 @@ function realty_characteristics_page_content() {
                 <ul class="characteristics-groups-list">
                     <?php if ( ! empty( $groups ) && ! is_wp_error( $groups ) ) : ?>
                         <?php foreach ( $groups as $group ) : ?>
-                            <?php $display_style = get_term_meta( $group->term_id, 'display_style', true ) ?: 'standard'; ?>
+                            <?php 
+                            $display_style = get_term_meta( $group->term_id, 'display_style', true ) ?: 'standard';
+                            $group_key = get_term_meta( $group->term_id, 'group_key', true );
+                            ?>
                             <li class="group-item <?php echo ( $group->term_id === $current_group_id ) ? 'active' : ''; ?>" 
                                 data-group-id="<?php echo esc_attr( $group->term_id ); ?>"
-                                data-display-style="<?php echo esc_attr( $display_style ); ?>">
+                                data-display-style="<?php echo esc_attr( $display_style ); ?>"
+                                data-group-key="<?php echo esc_attr( $group_key ); ?>">
                                 <a href="<?php echo esc_url( add_query_arg( 'group_id', $group->term_id ) ); ?>">
                                     <?php echo esc_html( $group->name ); ?>
+                                    <?php if ( $group_key ) : ?>
+                                        <span class="group-key-badge"><?php echo esc_html( $group_key ); ?></span>
+                                    <?php endif; ?>
                                 </a>
                                 <span class="group-actions">
                                     <button type="button" class="button-link edit-group-btn" 
@@ -347,6 +354,14 @@ function realty_characteristics_page_content() {
                                 <td>
                                     <input type="text" id="group-name" name="group_name" class="regular-text" required>
                                     <p class="description"><?php esc_html_e( 'Обязательное поле', 'realty-theme' ); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label for="group-key"><?php esc_html_e( 'Ключ группы (group_key)', 'realty-theme' ); ?></label></th>
+                                <td>
+                                    <input type="text" id="group-key" name="group_key" class="regular-text" pattern="[a-z0-9_]+" placeholder="kvartira">
+                                    <p class="description"><?php esc_html_e( 'Уникальный ключ для программного доступа (латиница, цифры, подчёркивание). Генерируется автоматически из названия.', 'realty-theme' ); ?></p>
+                                    <button type="button" class="button" id="generate-group-key-btn"><?php esc_html_e( 'Сгенерировать', 'realty-theme' ); ?></button>
                                 </td>
                             </tr>
                             <tr>
@@ -663,6 +678,7 @@ function realty_ajax_save_characteristic_group() {
     // Санитизация входных данных
     $group_id          = isset( $_POST['group_id'] ) ? absint( $_POST['group_id'] ) : 0;
     $group_name        = isset( $_POST['group_name'] ) ? sanitize_text_field( $_POST['group_name'] ) : '';
+    $group_key         = isset( $_POST['group_key'] ) ? sanitize_key( $_POST['group_key'] ) : '';
     $group_description = isset( $_POST['group_description'] ) ? sanitize_textarea_field( $_POST['group_description'] ) : '';
     $group_type_ui     = isset( $_POST['group_type_ui'] ) ? sanitize_text_field( $_POST['group_type_ui'] ) : 'checkbox';
     $group_display_style = isset( $_POST['group_display_style'] ) ? sanitize_text_field( $_POST['group_display_style'] ) : 'standard';
@@ -674,6 +690,58 @@ function realty_ajax_save_characteristic_group() {
     // Валидация обязательных полей
     if ( empty( $group_name ) ) {
         wp_send_json_error( __( 'Название группы обязательно!', 'realty-theme' ) );
+    }
+    
+    // Автогенерация group_key если пустой
+    if ( empty( $group_key ) ) {
+        $group_key = sanitize_title( $group_name );
+        $group_key = preg_replace( '/[^a-z0-9_]/', '', $group_key );
+        $group_key = strtolower( $group_key );
+    }
+    
+    // Валидация group_key (только латиница, цифры, подчёркивание)
+    if ( ! preg_match( '/^[a-z0-9_]+$/', $group_key ) ) {
+        $group_key = preg_replace( '/[^a-z0-9_]/', '', $group_key );
+        $group_key = strtolower( $group_key );
+    }
+    
+    // Проверка уникальности group_key
+    $existing_groups = get_terms( array(
+        'taxonomy'   => 'char_group',
+        'hide_empty' => false,
+        'fields'     => 'ids',
+    ) );
+    
+    $group_key_exists = false;
+    foreach ( $existing_groups as $existing_id ) {
+        if ( $existing_id === $group_id ) {
+            continue;
+        }
+        $existing_key = get_term_meta( $existing_id, 'group_key', true );
+        if ( $existing_key === $group_key ) {
+            $group_key_exists = true;
+            break;
+        }
+    }
+    
+    if ( $group_key_exists ) {
+        $original_key = $group_key;
+        $counter = 1;
+        while ( $group_key_exists ) {
+            $group_key = $original_key . '_' . $counter;
+            $group_key_exists = false;
+            foreach ( $existing_groups as $existing_id ) {
+                if ( $existing_id === $group_id ) {
+                    continue;
+                }
+                $existing_key = get_term_meta( $existing_id, 'group_key', true );
+                if ( $existing_key === $group_key ) {
+                    $group_key_exists = true;
+                    break;
+                }
+            }
+            $counter++;
+        }
     }
     
     // Валидация type_ui
@@ -727,12 +795,14 @@ function realty_ajax_save_characteristic_group() {
         update_term_meta( $term_id, 'use_in_filters', $group_use_filters );
         update_term_meta( $term_id, 'show_in_archive', $group_show_archive );
         update_term_meta( $term_id, 'description_full', $group_description );
+        update_term_meta( $term_id, 'group_key', $group_key );
         
         // Успех
         wp_send_json_success( array(
             'message'  => $group_id > 0 ? __( 'Группа обновлена', 'realty-theme' ) : __( 'Группа создана', 'realty-theme' ),
             'term_id'  => $term_id,
             'group_name' => $group_name,
+            'group_key' => $group_key,
         ) );
         
     } catch ( Exception $e ) {
@@ -786,6 +856,7 @@ function realty_ajax_get_characteristic_group() {
         'term_id'          => $group->term_id,
         'name'             => $group->name,
         'slug'             => $group->slug,
+        'group_key'        => get_term_meta( $group_id, 'group_key', true ),
         'description'      => $group->description,
         'type_ui'          => get_term_meta( $group_id, 'type_ui', true ),
         'display_style'   => get_term_meta( $group_id, 'display_style', true ),

@@ -184,9 +184,10 @@ function declension($words, $number) {
  *
  * @param int       $property_id   ID поста недвижимости
  * @param string    $group_style Фильтр по стилю группы (circle|standard|prohibited|text)
+ * @param bool      $grouped     Вернуть сгруппированным по группам
  * @return array Массив сгруппированных характеристик
  */
-function realty_get_property_characteristics($property_id, $group_style = null) {
+function realty_get_property_characteristicsOld($property_id, $group_style = null, $grouped = false) {
     $saved = get_post_meta($property_id, 'property_characteristics', true);
     if (!is_array($saved) || empty($saved)) {
         return [];
@@ -215,7 +216,7 @@ function realty_get_property_characteristics($property_id, $group_style = null) 
         $active = $group_id ? get_term_meta($group_id, 'active', true) : 1;
         if (!$active) continue;
 
-        $result[] = [
+        $char_data = [
             'characteristic_id' => $char_id,
             'group_id' => $group_id,
             'group_name' => !empty($terms) ? $terms[0]->name : '',
@@ -229,6 +230,190 @@ function realty_get_property_characteristics($property_id, $group_style = null) 
             'hint' => get_post_meta($char_id, 'hint', true),
             'order' => $item['order'] ?? 0,
         ];
+
+        if ($grouped) {
+            if (!isset($result[$group_id])) {
+                $result[$group_id] = [
+                    'group_id' => $group_id,
+                    'group_name' => !empty($terms) ? $terms[0]->name : '',
+                    'display_style' => $display_style,
+                    'characteristics' => []
+                ];
+            }
+            $result[$group_id]['characteristics'][] = $char_data;
+        } else {
+            $result[] = $char_data;
+        }
+    }
+
+    return $grouped ? array_values($result) : $result;
+}
+/**
+ * Получить характеристики недвижимости для фронтенда
+ *
+ * Функция возвращает характеристики объекта недвижимости в разных форматах:
+ * - плоский массив (по умолчанию)
+ * - сгруппированный по группам
+ * - конкретную группу по ключу
+ *
+ * Поддерживает лимит, фильтрацию по стилю группы и кэширование.
+ *
+ * @param int         $property_id   ID поста недвижимости
+ * @param string|null $group_style   Фильтр по стилю группы (circle|standard|prohibited|text) или null
+ * @param array       $options       Дополнительные параметры:
+ *                                  - type (string)      Тип вывода:
+ *                                      flat (по умолчанию) — плоский массив
+ *                                      all               — все группы
+ *                                      one               — одна группа по ключу
+ *                                  - limit (int)        Лимит характеристик (по умолчанию 20)
+ *                                  - group_key (string) Ключ группы (slug) для type=one
+ *                                  - cache (bool)       Использовать кэш (по умолчанию: !is_admin())
+ *                                  - cache_ttl (int)    Время жизни кэша в секундах (по умолчанию 300)
+ *
+ * @return array Возвращает:
+ *               - flat: плоский массив характеристик
+ *               - all: массив групп с вложенными характеристиками
+ *               - one: массив одной группы или пустой массив
+ */
+function realty_get_property_characteristics($property_id, $group_style = null, $options = []) {
+
+    $options = wp_parse_args($options, [
+        'type' => 'flat',     // flat | all | one
+        'limit' => 20,
+        'group_key' => null,
+        'cache' => !(is_admin() || wp_doing_ajax() || (defined('REST_REQUEST') && REST_REQUEST)),
+        'cache_ttl' => 300,
+    ]);
+
+    $cache_key = 'realty_chars_' . $property_id . '_' . md5(serialize([$group_style, $options]));
+
+    if ($options['cache']) {
+        $cached = wp_cache_get($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+    }
+
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+    if (!is_array($saved) || empty($saved)) {
+        return [];
+    }
+
+    usort($saved, function($a, $b) {
+        return ($a['order'] ?? 0) - ($b['order'] ?? 0);
+    });
+
+    $saved = array_slice($saved, 0, (int)$options['limit']);
+
+    $result = [];
+    $groups = [];
+
+    $post_cache = [];
+    $meta_cache = [];
+    $term_cache = [];
+    $term_meta_cache = [];
+
+    foreach ($saved as $item) {
+
+        $char_id = isset($item['characteristic_id']) ? absint($item['characteristic_id']) : 0;
+        if (!$char_id) continue;
+
+        // POST
+        if (!isset($post_cache[$char_id])) {
+            $post_cache[$char_id] = get_post($char_id);
+        }
+        $char = $post_cache[$char_id];
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        // META
+        if (!isset($meta_cache[$char_id])) {
+            $meta_cache[$char_id] = get_post_meta($char_id);
+        }
+        $meta = $meta_cache[$char_id];
+
+        // TERMS
+        if (!isset($term_cache[$char_id])) {
+            $terms = get_the_terms($char_id, 'char_group');
+            $term_cache[$char_id] = (!is_wp_error($terms) && !empty($terms)) ? $terms[0] : null;
+        }
+
+        $term = $term_cache[$char_id];
+        $group_id = $term ? $term->term_id : 0;
+        $group_name = $term ? $term->name : '';
+
+        // TERM META
+        if ($group_id && !isset($term_meta_cache[$group_id])) {
+            $term_meta_cache[$group_id] = get_term_meta($group_id);
+        }
+
+        $term_meta = $group_id ? $term_meta_cache[$group_id] : [];
+
+        $group_key = !empty($term_meta['group_key'][0]) ? $term_meta['group_key'][0] : ($term ? $term->slug : '');
+        $display_style = $term_meta['display_style'][0] ?? 'standard';
+        $active = $term_meta['active'][0] ?? 1;
+
+        if ($group_style && $display_style !== $group_style) continue;
+        if (!$active) continue;
+
+        // CHARACTERISTIC
+        $char_data = [
+            'characteristic_id' => $char_id,
+            'group_id' => $group_id,
+            'group_name' => $group_name,
+            'group_key' => $group_key,
+            'display_style' => $display_style,
+            'title' => $char->post_title,
+            'icon' => $meta['icon'][0] ?? '',
+            'icon_type' => $meta['icon_type'][0] ?? '',
+            'media_id' => $meta['media_id'][0] ?? 0,
+            'label' => $meta['label'][0] ?? '',
+            'value' => $meta['value'][0] ?? '',
+            'hint' => $meta['hint'][0] ?? '',
+            'order' => $item['order'] ?? 0,
+        ];
+
+        // ===== FLAT =====
+        if ($options['type'] === 'flat') {
+            $char_data['total'] = (int)$options['limit'];
+            $result[] = $char_data;
+            continue;
+        }
+
+        // ===== GROUPED =====
+        if (!isset($groups[$group_key])) {
+            $groups[$group_key] = [
+                'group_id' => $group_id,
+                'group_name' => $group_name,
+                'display_style' => $display_style,
+                'group_key' => $group_key,
+                'total' => (int)$options['limit'],
+                'characteristics' => []
+            ];
+        }
+
+        $groups[$group_key]['characteristics'][] = [
+            'characteristic_id' => $char_id,
+            'title' => $char->post_title,
+            'icon' => $meta['icon'][0] ?? '',
+            'icon_type' => $meta['icon_type'][0] ?? '',
+            'media_id' => $meta['media_id'][0] ?? 0,
+            'label' => $meta['label'][0] ?? '',
+            'value' => $meta['value'][0] ?? '',
+            'hint' => $meta['hint'][0] ?? '',
+            'order' => $item['order'] ?? 0,
+        ];
+    }
+
+    // ===== RESULT =====
+    if ($options['type'] === 'all') {
+        $result = array_values($groups);
+    } elseif ($options['type'] === 'one' && $options['group_key']) {
+        $result = $groups[$options['group_key']] ?? [];
+    }
+
+    // ===== SAVE CACHE =====
+    if ($options['cache']) {
+        wp_cache_set($cache_key, $result, '', (int)$options['cache_ttl']);
     }
 
     return $result;
