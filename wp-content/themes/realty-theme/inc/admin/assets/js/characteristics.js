@@ -177,6 +177,7 @@
             $('#group-key').val('');
             $('#group-display-style').prop('disabled', false);
             $('#group-style-warning').hide();
+            $('#group-system-template').prop('disabled', false);
             this.openModal('#group-modal');
         },
 
@@ -201,8 +202,17 @@
                     $('#group-sort-order').val(group.sort_order || 0);
                     $('#group-active').prop('checked', group.active == 1);
                     $('#group-use-in-filters').prop('checked', group.use_in_filters == 1);
-                    $('#group-show-in-archive').prop('checked', group.show_in_archive == 1);
-
+$('#group-show-in-archive').prop('checked', group.show_in_archive == 1);
+                    
+                    $('#group-system-template').val(group.group_system_template || '');
+                    
+                    // Если при редактировании уже выбран шаблон - задизаблить
+                    if (group.group_system_template) {
+                       // $('#group-system-template').prop('disabled', true);
+                    } else {
+                        $('#group-system-template').prop('disabled', false);
+                    }
+                    
                     if (group.has_characteristics) {
                         $('#group-display-style').prop('disabled', true);
                         $('#group-style-warning').show();
@@ -248,7 +258,8 @@
                 group_sort_order: $('#group-sort-order').val(),
                 group_active: $('#group-active').is(':checked') ? 1 : 0,
                 group_use_in_filters: $('#group-use-in-filters').is(':checked') ? 1 : 0,
-                group_show_in_archive: $('#group-show-in-archive').is(':checked') ? 1 : 0
+                group_show_in_archive: $('#group-show-in-archive').is(':checked') ? 1 : 0,
+                group_system_template: $('#group-system-template').val()
             };
 
             $btn.prop('disabled', true).text(this.strings.saving);

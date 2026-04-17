@@ -116,9 +116,6 @@ function realty_characteristics_page_content() {
                                 data-group-key="<?php echo esc_attr( $group_key ); ?>">
                                 <a href="<?php echo esc_url( add_query_arg( 'group_id', $group->term_id ) ); ?>">
                                     <?php echo esc_html( $group->name ); ?>
-                                    <?php if ( $group_key ) : ?>
-                                        <span class="group-key-badge"><?php echo esc_html( $group_key ); ?></span>
-                                    <?php endif; ?>
                                 </a>
                                 <span class="group-actions">
                                     <button type="button" class="button-link edit-group-btn" 
@@ -359,9 +356,22 @@ function realty_characteristics_page_content() {
                             <tr>
                                 <th><label for="group-key"><?php esc_html_e( 'Ключ группы (group_key)', 'realty-theme' ); ?></label></th>
                                 <td>
-                                    <input type="text" id="group-key" name="group_key" class="regular-text" pattern="[a-z0-9_]+" placeholder="kvartira">
-                                    <p class="description"><?php esc_html_e( 'Уникальный ключ для программного доступа (латиница, цифры, подчёркивание). Генерируется автоматически из названия.', 'realty-theme' ); ?></p>
+                                    <input type="text" id="group-key" name="group_key" class="regular-text" pattern="[a-z0-9_]+" placeholder="group key">
+                                    <p class="description"><?php esc_html_e( 'Уникальный ключ. Генерируется автоматически из названия.', 'realty-theme' ); ?></p>
                                     <button type="button" class="button" id="generate-group-key-btn"><?php esc_html_e( 'Сгенерировать', 'realty-theme' ); ?></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><label for="group-system-template"><?php esc_html_e( 'Системный шаблон', 'realty-theme' ); ?></label></th>
+                                <td>
+                                    <select id="group-system-template" name="group_system_template">
+                                        <?php foreach ( SYSTEM_CHARACTERISTIC_GROUP_OPTIONS as $option ) : ?>
+                                            <option value="<?php echo esc_attr( $option['value'] ); ?>">
+                                                <?php echo esc_html( $option['label'] ); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <p class="description"><?php esc_html_e( 'Системный шаблон для вывода группы на шаблоне сайта', 'realty-theme' ); ?></p>
                                 </td>
                             </tr>
                             <tr>
@@ -686,6 +696,7 @@ function realty_ajax_save_characteristic_group() {
     $group_active      = isset( $_POST['group_active'] ) ? absint( $_POST['group_active'] ) : 1;
     $group_use_filters = isset( $_POST['group_use_in_filters'] ) ? absint( $_POST['group_use_in_filters'] ) : 1;
     $group_show_archive = isset( $_POST['group_show_in_archive'] ) ? absint( $_POST['group_show_in_archive'] ) : 0;
+    $group_system_template = isset( $_POST['group_system_template'] ) ? sanitize_text_field( $_POST['group_system_template'] ) : '';
     
     // Валидация обязательных полей
     if ( empty( $group_name ) ) {
@@ -744,6 +755,36 @@ function realty_ajax_save_characteristic_group() {
         }
     }
     
+    // Валидация system_template
+    $allowed_system_templates = array( '', 'system_apartment', 'system_popular_services', 'system_rules', 'system_accommodations' );
+    if ( ! in_array( $group_system_template, $allowed_system_templates, true ) ) {
+        $group_system_template = '';
+    }
+    
+    // Проверка уникальности group_system_template
+    if ( ! empty( $group_system_template ) ) {
+        $existing_with_template = get_terms( array(
+            'taxonomy'   => 'char_group',
+            'hide_empty' => false,
+            'fields'     => 'ids',
+            'meta_query' => array(
+                array(
+                    'key'     => 'group_system_template',
+                    'value'   => $group_system_template,
+                    'compare' => '=',
+                ),
+            ),
+        ) );
+        
+        if ( ! empty( $existing_with_template ) ) {
+            foreach ( $existing_with_template as $existing_id ) {
+                if ( $existing_id !== $group_id ) {
+                    wp_send_json_error( __( 'Этот системный шаблон уже используется в другой группе. Выберите другой шаблон.', 'realty-theme' ) );
+                }
+            }
+        }
+    }
+    
     // Валидация type_ui
     $allowed_ui_types = array( 'checkbox', 'radio', 'select', 'multi_select', 'chips', 'switch' );
     if ( ! in_array( $group_type_ui, $allowed_ui_types, true ) ) {
@@ -796,6 +837,7 @@ function realty_ajax_save_characteristic_group() {
         update_term_meta( $term_id, 'show_in_archive', $group_show_archive );
         update_term_meta( $term_id, 'description_full', $group_description );
         update_term_meta( $term_id, 'group_key', $group_key );
+        update_term_meta( $term_id, 'group_system_template', $group_system_template );
         
         // Успех
         wp_send_json_success( array(
@@ -864,6 +906,7 @@ function realty_ajax_get_characteristic_group() {
         'sort_order'       => get_term_meta( $group_id, 'sort_order', true ),
         'use_in_filters'  => get_term_meta( $group_id, 'use_in_filters', true ),
         'show_in_archive'  => get_term_meta( $group_id, 'show_in_archive', true ),
+        'group_system_template' => get_term_meta( $group_id, 'group_system_template', true ),
         'has_characteristics' => ! empty( $has_characteristics ),
     );
     
