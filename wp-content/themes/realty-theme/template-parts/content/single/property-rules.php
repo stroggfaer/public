@@ -24,6 +24,10 @@ $options = [
 $property_id = $pod->id();
 $rules = realty_get_property_characteristics($property_id,'text', $optionsRules);
 $system_accommodations = realty_get_property_characteristics($property_id,'prohibited', $options);
+
+
+
+
 ?>
 
 <div class="section-property property-rules">

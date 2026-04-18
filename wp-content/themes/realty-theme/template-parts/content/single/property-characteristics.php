@@ -14,12 +14,15 @@ if (!$pod) {
 }
 // options
 $options = [
+        'per_page' => 12,
         'type' => 'all',
         'system_temp' => 'system_popular_services',
 ];
 $property_id = $pod->id();
 
-$group_characteristics = realty_get_property_characteristics($property_id, 'standard', $options);
+
+$property = realty_get_property_characteristics($property_id, 'standard', $options);
+$group_characteristics = $property['data'];
 
 if (empty($group_characteristics)) {
     return;
@@ -38,10 +41,18 @@ if (empty($group_characteristics)) {
                 </div>
             <?php endforeach; ?>
         </div>
-        <div class="action">
-            <a href="#" class="bold border all" data-property-id="<?php echo esc_attr($group['group_id']); ?>">
-                Показать все (<?php echo esc_html($group['total']); ?>)
-            </a>
-        </div>
+        <?php $counts = esc_html($property['meta']['total'] - count($group['characteristics'])); ?>
+        <?php if ($counts > 0): ?>
+            <div class="action">
+                <a
+                        href="#"
+                        class="bold border all js-modal-characteristics"
+                        data-property-id="<?php echo esc_attr($group['group_id']); ?>"
+                        data-property-last-count="<?php echo $counts; ?>"
+                >
+                    Показать все (<?php echo $counts; ?>)
+                </a>
+            </div>
+        <?php endif; ?>
     <?php endforeach; ?>
 </div>

@@ -123,6 +123,9 @@ function enqueue_property_filter_scripts() {
     }
 }
 
+// Подключаем API для фронтенда
+require get_template_directory() . '/inc/api/api_front.php';
+
 // Подключаем базовый класс темы
 require get_template_directory() . '/inc/core/RealtyCore.php';
 
@@ -233,7 +236,7 @@ function get_property_search_errors() {
         delete_transient('property_search_errors'); // Удаляем после получения
         return $errors;
     }
-    return array();
+return array();
 }
 
 // Функция для вывода хлебных крошек
@@ -244,129 +247,4 @@ function custom_breadcrumbs($current_page = '') {
         echo '<span class="breadcrumb_name">' . esc_html($current_page) . '</span>';
     }
     echo '</nav>';
-}
-
-// REST API эндпоинт для характеристик недвижимости
-add_action('rest_api_init', function() {
-    register_rest_route('property/v1', '/characteristics/(?P<id>\d+)', [
-        'methods' => 'GET',
-        'callback' => 'realty_get_property_characteristics_api',
-        'permission_callback' => '__return_true',
-    ]);
-});
-
-function realty_get_property_characteristics_api($request) {
-    $property_id = $request->get_param('id');
-
-    $characteristics = get_post_meta($property_id, 'property_characteristics', true);
-    if (!is_array($characteristics)) {
-        return new WP_REST_Response(['groups' => []], 200);
-    }
-
-    usort($characteristics, fn($a, $b) => ($a['order'] ?? 0) - ($b['order'] ?? 0));
-
-    $groups_data = [];
-
-    foreach ($characteristics as $item) {
-        $char_id = absint($item['characteristic_id'] ?? 0);
-        if (!$char_id) continue;
-
-        $char = get_post($char_id);
-        if (!$char || $char->post_status !== 'publish') continue;
-
-        $terms = get_the_terms($char_id, 'char_group');
-        $group_id = !empty($terms) ? $terms[0]->term_id : 0;
-
-        if ($group_id) {
-            $group = $terms[0];
-            $display_style = get_term_meta($group_id, 'display_style', true) ?: 'standard';
-            $type_ui = get_term_meta($group_id, 'type_ui', true) ?: 'checkbox';
-
-            if (!isset($groups_data[$group_id])) {
-                $groups_data[$group_id] = [
-                    'id' => $group_id,
-                    'name' => $group->name,
-                    'slug' => $group->slug,
-                    'description' => $group->description,
-                    'display_style' => $display_style,
-                    'type_ui' => $type_ui,
-                    'active' => get_term_meta($group_id, 'active', true) ?: 1,
-                    'sort_order' => get_term_meta($group_id, 'sort_order', true) ?: 0,
-                    'use_in_filters' => get_term_meta($group_id, 'use_in_filters', true) ?: 1,
-                    'show_in_archive' => get_term_meta($group_id, 'show_in_archive', true) ?: 0,
-                    'characteristics' => [],
-                ];
-            }
-
-            $groups_data[$group_id]['characteristics'][] = [
-                'id' => $char_id,
-                'title' => $char->post_title,
-                'content' => $char->post_content,
-                'icon' => get_post_meta($char_id, 'icon', true),
-                'icon_type' => get_post_meta($char_id, 'icon_type', true) ?: 'material_symbol',
-                'media_id' => get_post_meta($char_id, 'media_id', true),
-                'label' => get_post_meta($char_id, 'label', true),
-                'value' => get_post_meta($char_id, 'value', true),
-                'hint' => get_post_meta($char_id, 'hint', true),
-                'style' => get_term_meta($group_id, 'display_style', true) ?: 'standard',
-                'sort_order' => $item['order'] ?? 0,
-                'active' => $char->post_status === 'publish' ? 1 : 0,
-            ];
-        }
-    }
-
-    $groups = array_values($groups_data);
-
-    return new WP_REST_Response(['groups' => $groups, 'total' => count($characteristics)], 200);
-}
-
-// AJAX обработчик для автозаполнения локаций
-add_action('wp_ajax_get_locations_autocomplete', 'get_locations_autocomplete_callback');
-add_action('wp_ajax_nopriv_get_locations_autocomplete', 'get_locations_autocomplete_callback');
-
-function get_locations_autocomplete_callback() {
-    // Проверяем nonce
-    if (!wp_verify_nonce($_POST['nonce'], 'property_filter_nonce')) {
-        wp_die('Security check failed');
-    }
-    
-    $term = sanitize_text_field($_POST['term']);
-    
-    // Получаем термы из таксономии location
-    $locations = get_terms(array(
-        'taxonomy' => 'location',
-        'hide_empty' => false,
-        'search' => $term, // Ищем по любому совпадению в названии
-        'number' => 15 // Увеличиваем количество результатов для лучшего выбора
-    ));
-    
-    $results = array();
-    if (!is_wp_error($locations)) {
-        foreach ($locations as $location) {
-            $results[] = array(
-                'name' => $location->name,
-                'slug' => $location->slug
-            );
-        }
-        
-        
-        // Сортируем результаты: сначала те, которые начинаются с введенного термина
-        usort($results, function($a, $b) use ($term) {
-            $a_starts_with = stripos($a['name'], $term) === 0;
-            $b_starts_with = stripos($b['name'], $term) === 0;
-            
-            // Если оба начинаются с термина или оба нет - сортируем по алфавиту
-            if ($a_starts_with == $b_starts_with) {
-                return strcasecmp($a['name'], $b['name']);
-            }
-            
-            // Те, что начинаются с термина, идут первыми
-            return $a_starts_with ? -1 : 1;
-        });
-        
-        // Ограничиваем количество результатов до 10 после сортировки
-        $results = array_slice($results, 0, 10);
-    }
-    
-    wp_send_json_success($results);
 }

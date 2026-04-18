@@ -10,7 +10,7 @@ get_header();
 ?>
 
 <div class="col-full">
-    <div class="property-detail">
+    <div class="property-detail" data-property-id="<?php echo get_the_ID(); ?>">
         <?php
         // Loop through the post
         while (have_posts()) :
@@ -68,6 +68,77 @@ get_header();
             </div>
         <?php endwhile; ?>
     </div>
+    <!--Global detail vue-->
+    <div id="vue-property-detail">
+        <el-dialog 
+            v-model="dialogParams.isVisible" 
+            title="Популярные услуги и удобства"
+            width="600px"
+            :close-on-click-modal="true"
+            destroy-on-close
+        >
+            <div class="characteristics-grid__com" v-loading="characteristics.loading">
+                <div class="characteristic-item" v-for="item in characteristics.data">
+                    <span class="material-symbols-outlined">{{item.icon}}</span>
+                    <span class="label">{{item.title}}</span>
+                    <span class="value">{{item.value}}</span>
+                </div>
+                <div v-if="!characteristics.loading && !characteristics.data?.length" class="characteristics-empty">
+                    Нет данных
+                </div>
+            </div>
+            <template #footer>
+                <el-button @click="onDialogClose">Закрыть</el-button>
+            </template>
+        </el-dialog>
+    </div>
+    <!--./Global detail vue-->
+    <!-- Vue Google detail Script -->
+    <?php $current_property_id = get_the_ID(); ?>
+    <script type="module">
+        (function() {
+            const { createAppModule, useProperty, useModal, ElDialog } = window.VueAppModule;
+            const { ref, onMounted, reactive, nextTick, computed } = Vue;
+            const {
+                characteristics,
+                fetchCharacteristics,
+                openCharacteristicsModal,
+                dialogParams,
+                onDialogClose,
+            } = useProperty();
+            const AppPropertyDetail = createAppModule({
+                setup() {
+                    const initClickHandler = () => {
+                        if (typeof jQuery === 'undefined') {
+                            console.error('jQuery не загружен!');
+                            return;
+                        }
+                        jQuery(document).on('click', '.js-modal-characteristics', async function(e) {
+                            e.preventDefault();
+                            const groupId = jQuery(this).data('property-id');
+                            const lastCount = jQuery(this).data('property-last-count');
+                            const propertyId = jQuery('.property-detail').data('property-id') || <?php echo $current_property_id; ?>;
+                            openCharacteristicsModal(propertyId, {group_id: groupId, 'last_count': lastCount});
+                        });
+                    };
+
+                    onMounted(() => {
+                        nextTick(initClickHandler);
+                    });
+
+                    return {
+                        dialogParams,
+                        onDialogClose,
+                        characteristics,
+                        fetchCharacteristics
+                    };
+                }
+            });
+            
+            AppPropertyDetail.component('el-dialog', ElDialog);
+            AppPropertyDetail.mount('#vue-property-detail');
+        })();
+    </script>
 </div>
 
 <?php get_footer(); ?>

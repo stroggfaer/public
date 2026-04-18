@@ -178,76 +178,6 @@ function declension($words, $number) {
         return [$number, $words[2]];
     }
 }
-
-/**
- * Получить характеристики недвижимости для фронтенда
- *
- * @param int       $property_id   ID поста недвижимости
- * @param string    $group_style Фильтр по стилю группы (circle|standard|prohibited|text)
- * @param bool      $grouped     Вернуть сгруппированным по группам
- * @return array Массив сгруппированных характеристик
- */
-function realty_get_property_characteristicsOld($property_id, $group_style = null, $grouped = false) {
-    $saved = get_post_meta($property_id, 'property_characteristics', true);
-    if (!is_array($saved) || empty($saved)) {
-        return [];
-    }
-
-    usort($saved, function($a, $b) {
-        return ($a['order'] ?? 0) - ($b['order'] ?? 0);
-    });
-
-    $result = [];
-
-    foreach ($saved as $item) {
-        $char_id = isset($item['characteristic_id']) ? absint($item['characteristic_id']) : 0;
-        if (!$char_id) continue;
-
-        $char = get_post($char_id);
-        if (!$char || $char->post_status !== 'publish') continue;
-
-        $terms = get_the_terms($char_id, 'char_group');
-        $group_id = !empty($terms) ? $terms[0]->term_id : 0;
-
-        $display_style = $group_id ? get_term_meta($group_id, 'display_style', true) : 'standard';
-
-        if ($group_style && $display_style !== $group_style) continue;
-
-        $active = $group_id ? get_term_meta($group_id, 'active', true) : 1;
-        if (!$active) continue;
-
-        $char_data = [
-            'characteristic_id' => $char_id,
-            'group_id' => $group_id,
-            'group_name' => !empty($terms) ? $terms[0]->name : '',
-            'display_style' => $display_style,
-            'title' => $char->post_title,
-            'icon' => get_post_meta($char_id, 'icon', true),
-            'icon_type' => get_post_meta($char_id, 'icon_type', true),
-            'media_id' => get_post_meta($char_id, 'media_id', true),
-            'label' => get_post_meta($char_id, 'label', true),
-            'value' => get_post_meta($char_id, 'value', true),
-            'hint' => get_post_meta($char_id, 'hint', true),
-            'order' => $item['order'] ?? 0,
-        ];
-
-        if ($grouped) {
-            if (!isset($result[$group_id])) {
-                $result[$group_id] = [
-                    'group_id' => $group_id,
-                    'group_name' => !empty($terms) ? $terms[0]->name : '',
-                    'display_style' => $display_style,
-                    'characteristics' => []
-                ];
-            }
-            $result[$group_id]['characteristics'][] = $char_data;
-        } else {
-            $result[] = $char_data;
-        }
-    }
-
-    return $grouped ? array_values($result) : $result;
-}
 /**
  * Получить характеристики недвижимости для фронтенда
  *
@@ -275,7 +205,458 @@ function realty_get_property_characteristicsOld($property_id, $group_style = nul
  *               - all: массив групп с вложенными характеристиками
  *               - one: массив одной группы или пустой массив
  */
-function realty_get_property_characteristics($property_id, $group_style = null, $options = []) {
+function realty_get_property_characteristicsOld($property_id, $group_style = null, $options = []) {
+
+    $options = wp_parse_args($options, [
+        'type'        => 'flat', // flat | all | one
+        'limit'       => 12,
+        'group_key'   => null,
+        'system_temp' => null,
+    ]);
+
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+
+    if (!is_array($saved) || empty($saved)) {
+        return [];
+    }
+
+    // сортировка
+    usort($saved, fn($a, $b) => ($a['order'] ?? 0) - ($b['order'] ?? 0));
+
+    // ===== SYSTEM TEMP =====
+    $allowed_group_ids = [];
+
+    if (!empty($options['system_temp'])) {
+        $terms = get_terms([
+            'taxonomy'   => 'char_group',
+            'meta_key'   => 'group_system_template',
+            'meta_value' => $options['system_temp'],
+            'hide_empty' => false,
+        ]);
+
+        if (!is_wp_error($terms)) {
+            $allowed_group_ids = array_column($terms, 'term_id');
+        }
+    }
+
+    $groups = [];
+    $flat   = [];
+
+    // кеши (чтобы не дергать WP 100 раз)
+    $post_cache = [];
+    $term_cache = [];
+    $term_meta_cache = [];
+
+    // ===== ОСНОВНОЙ ПРОХОД =====
+    foreach ($saved as $item) {
+
+        $char_id = (int)($item['characteristic_id'] ?? 0);
+        if (!$char_id) continue;
+
+        // POST
+        if (!isset($post_cache[$char_id])) {
+            $post_cache[$char_id] = get_post($char_id);
+        }
+
+        $char = $post_cache[$char_id];
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        // TERMS
+        if (!isset($term_cache[$char_id])) {
+            $terms = get_the_terms($char_id, 'char_group');
+            $term_cache[$char_id] = (!empty($terms) && !is_wp_error($terms)) ? $terms[0] : null;
+        }
+
+        $term = $term_cache[$char_id];
+        $group_id = $term ? $term->term_id : 0;
+
+        // system filter
+        if (!empty($allowed_group_ids) && !in_array($group_id, $allowed_group_ids, true)) {
+            continue;
+        }
+
+        // TERM META
+        if ($group_id && !isset($term_meta_cache[$group_id])) {
+            $term_meta_cache[$group_id] = get_term_meta($group_id);
+        }
+
+        $term_meta = $group_id ? $term_meta_cache[$group_id] : [];
+
+        $group_key     = $term_meta['group_key'][0] ?? ($term->slug ?? 'default');
+        $group_name    = $term->name ?? '';
+        $display_style = $term_meta['display_style'][0] ?? 'standard';
+        $active        = $term_meta['active'][0] ?? 1;
+
+        // фильтры
+        if ($group_style && $display_style !== $group_style) continue;
+        if (!$active) continue;
+        if ($options['group_key'] && $options['group_key'] !== $group_key) continue;
+
+        // DATA
+        $char_data = [
+            'characteristic_id' => $char_id,
+            'group_id'          => $group_id,
+            'group_name'        => $group_name,
+            'group_key'         => $group_key,
+            'display_style'     => $display_style,
+            'title'             => $char->post_title,
+            'icon'              => get_post_meta($char_id, 'icon', true),
+            'icon_type'         => get_post_meta($char_id, 'icon_type', true),
+            'media_id'          => get_post_meta($char_id, 'media_id', true),
+            'label'             => get_post_meta($char_id, 'label', true),
+            'value'             => get_post_meta($char_id, 'value', true),
+            'hint'              => get_post_meta($char_id, 'hint', true),
+            'order'             => $item['order'] ?? 0,
+        ];
+
+        // ===== FLAT =====
+        if ($options['type'] === 'flat') {
+            $flat[] = $char_data;
+            continue;
+        }
+
+        // ===== GROUP =====
+        if (!isset($groups[$group_key])) {
+            $groups[$group_key] = [
+                'group_id' => $group_id,
+                'group_name' => $group_name,
+                'group_key' => $group_key,
+                'display_style' => $display_style,
+                'total' => 0, // считаем ниже
+                'characteristics' => []
+            ];
+        }
+
+        $groups[$group_key]['characteristics'][] = $char_data;
+        $groups[$group_key]['total']++; // считаем ДО limit
+    }
+
+    // ===== LIMIT (ПОСЛЕ ФИЛЬТРАЦИИ!) =====
+    if ($options['type'] === 'flat') {
+        $flat = array_slice($flat, 0, (int)$options['limit']);
+        return $flat;
+    }
+
+    // GROUP LIMIT
+    foreach ($groups as &$group) {
+        $group['characteristics'] = array_slice(
+            $group['characteristics'],
+            0,
+            (int)$options['limit']
+        );
+    }
+    unset($group);
+
+    // ===== OUTPUT =====
+    if ($options['type'] === 'one') {
+        $key = $options['group_key'] ?? '';
+        return $groups[$key] ?? [];
+    }
+
+    return array_values($groups);
+}
+function realty_get_property_characteristicsddd($property_id, $group_style = null, $options = []) {
+
+    $options = wp_parse_args($options, [
+        'type'        => 'flat', // flat | all | one
+        'limit'       => 12,
+        'group_key'   => null,
+        'system_temp' => null,
+    ]);
+
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+
+    if (!is_array($saved) || empty($saved)) {
+        return [];
+    }
+
+    usort($saved, fn($a, $b) => ($a['order'] ?? 0) - ($b['order'] ?? 0));
+
+    // ===== SYSTEM TEMP =====
+    $allowed_group_ids = [];
+
+    if (!empty($options['system_temp'])) {
+        $terms = get_terms([
+            'taxonomy'   => 'char_group',
+            'meta_key'   => 'group_system_template',
+            'meta_value' => $options['system_temp'],
+            'hide_empty' => false,
+        ]);
+
+        if (!is_wp_error($terms)) {
+            $allowed_group_ids = array_column($terms, 'term_id');
+        }
+    }
+
+    $groups = [];
+    $flat   = [];
+
+    $post_cache = [];
+    $term_cache = [];
+    $term_meta_cache = [];
+
+    foreach ($saved as $item) {
+
+        $char_id = (int)($item['characteristic_id'] ?? 0);
+        if (!$char_id) continue;
+
+        if (!isset($post_cache[$char_id])) {
+            $post_cache[$char_id] = get_post($char_id);
+        }
+
+        $char = $post_cache[$char_id];
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        if (!isset($term_cache[$char_id])) {
+            $terms = get_the_terms($char_id, 'char_group');
+            $term_cache[$char_id] = (!empty($terms) && !is_wp_error($terms)) ? $terms[0] : null;
+        }
+
+        $term = $term_cache[$char_id];
+        $group_id = $term ? $term->term_id : 0;
+
+        if (!empty($allowed_group_ids) && !in_array($group_id, $allowed_group_ids, true)) {
+            continue;
+        }
+
+        if ($group_id && !isset($term_meta_cache[$group_id])) {
+            $term_meta_cache[$group_id] = get_term_meta($group_id);
+        }
+
+        $term_meta = $group_id ? $term_meta_cache[$group_id] : [];
+
+        $group_key     = $term_meta['group_key'][0] ?? ($term->slug ?? 'default');
+        $group_name    = $term->name ?? '';
+        $display_style = $term_meta['display_style'][0] ?? 'standard';
+        $active        = $term_meta['active'][0] ?? 1;
+
+        if ($group_style && $display_style !== $group_style) continue;
+        if (!$active) continue;
+        if ($options['group_key'] && $options['group_key'] !== $group_key) continue;
+
+        $char_data = [
+            'characteristic_id' => $char_id,
+            'group_id'          => $group_id,
+            'group_name'        => $group_name,
+            'group_key'         => $group_key,
+            'display_style'     => $display_style,
+            'title'             => $char->post_title,
+            'icon'              => get_post_meta($char_id, 'icon', true),
+            'icon_type'         => get_post_meta($char_id, 'icon_type', true),
+            'media_id'          => get_post_meta($char_id, 'media_id', true),
+            'label'             => get_post_meta($char_id, 'label', true),
+            'value'             => get_post_meta($char_id, 'value', true),
+            'hint'              => get_post_meta($char_id, 'hint', true),
+            'order'             => $item['order'] ?? 0,
+        ];
+
+        if ($options['type'] === 'flat') {
+            $flat[] = $char_data;
+            continue;
+        }
+
+        if (!isset($groups[$group_key])) {
+            $groups[$group_key] = [
+                'group_id' => $group_id,
+                'group_name' => $group_name,
+                'group_key' => $group_key,
+                'display_style' => $display_style,
+                'total' => 0,
+                'characteristics' => []
+            ];
+        }
+
+        $groups[$group_key]['characteristics'][] = $char_data;
+        $groups[$group_key]['total']++;
+    }
+
+    // ===== LIMIT (ТОЛЬКО ДЛЯ ВЫВОДА) =====
+    if ($options['type'] === 'flat') {
+        return $options['limit']
+            ? array_slice($flat, 0, (int)$options['limit'])
+            : $flat;
+    }
+
+    foreach ($groups as &$group) {
+        if ($options['limit']) {
+            $group['characteristics'] = array_slice(
+                $group['characteristics'],
+                0,
+                (int)$options['limit']
+            );
+        }
+    }
+    unset($group);
+
+    if ($options['type'] === 'one') {
+        return $groups[$options['group_key']] ?? [];
+    }
+
+    return array_values($groups);
+}
+
+/**
+ * Получить характеристики недвижимости для фронтенда
+ *
+ * @param int         $property_id   ID поста недвижимости
+ * @param string|null $group_style   Фильтр по стилю группы
+ * @param array       $options       Параметры: type, limit, group_key, system_temp, page, per_page, last_count
+ *
+ * @return array Схема: [data => [], meta => [...], filters => []]
+ */
+/**
+ * Получить характеристики недвижимости (логика)
+ * * @param int         $property_id
+ * @param string|null $group_style
+ * @param array       $options
+ * @return array      Схема: [data, meta, filters]
+ */
+/**
+ * Получить характеристики недвижимости (логика)
+ */
+function realty_get_property_characteristicsщдв($property_id, $group_style = null, $options = []) {
+    $options = wp_parse_args($options, [
+        'type'        => 'flat', // flat | all | one
+        'group_key'   => null,
+        'group_id'    => null,
+        'system_temp' => null,
+        'last_count'  => 0,    // Если > 0, игнорируем page/per_page
+        'page'        => 1,
+        'per_page'    => 12,
+    ]);
+
+    $response = [
+        'data'    => [],
+        'meta'    => [
+            'current_page' => (int)$options['page'],
+            'page_count'   => 0,
+            'per_page'     => (int)$options['per_page'],
+            'total'        => 0,
+        ],
+        'filters' => [],
+    ];
+
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+    if (!is_array($saved) || empty($saved)) return $response;
+
+    // 1. Сортировка исходных данных
+    usort($saved, fn($a, $b) => ($a['order'] ?? 0) - ($b['order'] ?? 0));
+
+    // 2. Получаем разрешенные группы по шаблону (если есть)
+    $allowed_group_ids = [];
+    if (!empty($options['system_temp'])) {
+        $terms = get_terms([
+            'taxonomy'   => 'char_group',
+            'meta_key'   => 'group_system_template',
+            'meta_value' => $options['system_temp'],
+            'hide_empty' => false,
+        ]);
+        if (!is_wp_error($terms)) $allowed_group_ids = array_column($terms, 'term_id');
+    }
+
+    $all_filtered_chars = [];
+    $available_filters  = [];
+
+    // 3. Сбор всех данных БЕЗ лимитов
+    foreach ($saved as $item) {
+        $char_id = (int)($item['characteristic_id'] ?? 0);
+        $char = get_post($char_id);
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        $terms = get_the_terms($char_id, 'char_group');
+        $term  = (!empty($terms) && !is_wp_error($terms)) ? $terms[0] : null;
+        $group_id = $term ? $term->term_id : 0;
+
+        // Фильтрация
+        if (!empty($allowed_group_ids) && !in_array($group_id, $allowed_group_ids, true)) continue;
+        if (!empty($options['group_id']) && (int)$options['group_id'] !== $group_id) continue;
+
+        $term_meta = $group_id ? get_term_meta($group_id) : [];
+        $g_key     = $term_meta['group_key'][0] ?? ($term->slug ?? 'default');
+        $g_style   = $term_meta['display_style'][0] ?? 'standard';
+        $g_active  = (int)($term_meta['active'][0] ?? 1);
+
+        if (!$g_active) continue;
+        if ($group_style && $g_style !== $group_style) continue;
+        if ($options['type'] === 'one' && $options['group_key'] && $options['group_key'] !== $g_key) continue;
+
+        $char_data = [
+            'characteristic_id' => $char_id,
+            'group_id'          => $group_id,
+            'group_name'        => $term->name ?? '',
+            'group_key'         => $g_key,
+            'display_style'     => $g_style,
+            'title'             => $char->post_title,
+            'icon'              => get_post_meta($char_id, 'icon', true),
+            'icon_type'         => get_post_meta($char_id, 'icon_type', true),
+            'media_id'          => get_post_meta($char_id, 'media_id', true),
+            'label'             => get_post_meta($char_id, 'label', true),
+            'value'             => get_post_meta($char_id, 'value', true),
+            'hint'              => get_post_meta($char_id, 'hint', true),
+            'order'             => (int)($item['order'] ?? 0),
+        ];
+
+        $all_filtered_chars[] = $char_data;
+
+        if (!empty($term_meta['use_in_filters'][0]) && !isset($available_filters[$g_key])) {
+            $available_filters[$g_key] = [
+                'group_id'   => $group_id,
+                'group_name' => $term->name ?? '',
+                'group_key'  => $g_key,
+            ];
+        }
+    }
+
+    $total = count($all_filtered_chars);
+    $response['meta']['total']   = $total;
+    $response['filters']         = array_values($available_filters);
+
+    // 4. ГЛАВНОЕ: Логика среза (Slice)
+    $data_to_display = [];
+    $last_count = (int)$options['last_count'];
+
+    if ($last_count > 0) {
+        // РЕЖИМ MORE: игнорируем пагинацию, берем от N до конца
+        $data_to_display = array_slice($all_filtered_chars, $last_count);
+
+        $response['meta']['current_page'] = 1;
+        $response['meta']['page_count']   = 1;
+        $response['meta']['per_page']     = count($data_to_display);
+    } else {
+        // РЕЖИМ ПАГИНАЦИИ
+        $per_page = (int)$options['per_page'];
+        $page     = max(1, (int)$options['page']);
+        $offset   = ($page - 1) * $per_page;
+
+        $response['meta']['page_count'] = $per_page > 0 ? ceil($total / $per_page) : 1;
+        $data_to_display = ($per_page > 0) ? array_slice($all_filtered_chars, $offset, $per_page) : $all_filtered_chars;
+    }
+
+    // 5. Формирование финальной структуры (data)
+    if ($options['type'] === 'all') {
+        $grouped = [];
+        foreach ($data_to_display as $char) {
+            $key = $char['group_key'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'group_id'        => $char['group_id'],
+                    'group_name'      => $char['group_name'],
+                    'group_key'       => $char['group_key'],
+                    'display_style'   => $char['display_style'],
+                    'characteristics' => []
+                ];
+            }
+            $grouped[$key]['characteristics'][] = $char;
+        }
+        $response['data'] = array_values($grouped);
+    } else {
+        $response['data'] = $data_to_display;
+    }
+
+    return $response;
+}
+
+function realty_get_property_characteristicsЩДВ($property_id, $group_style = null, $options = []) {
 
     $options = wp_parse_args($options, [
         'type' => 'flat',     // flat | all | one
@@ -289,6 +670,7 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
     $system_temp = $options['system_temp'];
     $allowed_group_ids = [];
 
+    // ===== SYSTEM TEMPLATE =====
     if ($system_temp) {
         $system_temp_groups = get_terms([
             'taxonomy' => 'char_group',
@@ -296,10 +678,10 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
             'meta_value' => $system_temp,
             'hide_empty' => false,
         ]);
+
         if (!is_wp_error($system_temp_groups) && !empty($system_temp_groups)) {
             $allowed_group_ids = array_column($system_temp_groups, 'term_id');
-            
-            // Для type='one' устанавливаем group_key из группы
+
             if ($options['type'] === 'one') {
                 $group_term = get_term($allowed_group_ids[0], 'char_group');
                 if ($group_term && !is_wp_error($group_term)) {
@@ -308,11 +690,13 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
                 }
             }
         }
+
         if (empty($allowed_group_ids)) {
             return [];
         }
     }
 
+    // ===== CACHE =====
     $cache_key = 'realty_chars_' . $property_id . '_' . md5(serialize([$group_style, $options]));
 
     if ($options['cache']) {
@@ -323,43 +707,32 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
     }
 
     $saved = get_post_meta($property_id, 'property_characteristics', true);
+
     if (!is_array($saved) || empty($saved)) {
         return [];
     }
 
-    usort($saved, function($a, $b) {
-        return ($a['order'] ?? 0) - ($b['order'] ?? 0);
-    });
+    // сортировка
+    usort($saved, fn($a, $b) => ($a['order'] ?? 0) - ($b['order'] ?? 0));
 
-    $saved = array_slice($saved, 0, (int)$options['limit']);
-
-    $result = [];
-    $groups = [];
-
+    // ===== TOTAL ДО LIMIT =====
+    $group_totals = [];
     $post_cache = [];
-    $meta_cache = [];
     $term_cache = [];
     $term_meta_cache = [];
 
     foreach ($saved as $item) {
 
-        $char_id = isset($item['characteristic_id']) ? absint($item['characteristic_id']) : 0;
+        $char_id = absint($item['characteristic_id'] ?? 0);
         if (!$char_id) continue;
 
-        // POST
         if (!isset($post_cache[$char_id])) {
             $post_cache[$char_id] = get_post($char_id);
         }
+
         $char = $post_cache[$char_id];
         if (!$char || $char->post_status !== 'publish') continue;
 
-        // META
-        if (!isset($meta_cache[$char_id])) {
-            $meta_cache[$char_id] = get_post_meta($char_id);
-        }
-        $meta = $meta_cache[$char_id];
-
-        // TERMS
         if (!isset($term_cache[$char_id])) {
             $terms = get_the_terms($char_id, 'char_group');
             $term_cache[$char_id] = (!is_wp_error($terms) && !empty($terms)) ? $terms[0] : null;
@@ -367,28 +740,70 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
 
         $term = $term_cache[$char_id];
         $group_id = $term ? $term->term_id : 0;
-        $group_name = $term ? $term->name : '';
 
-        // Проверка system_temp: фильтрация по group_system_template
+        // system_temp filter
         if (!empty($allowed_group_ids) && !in_array($group_id, $allowed_group_ids, true)) {
             continue;
         }
 
-        // TERM META
         if ($group_id && !isset($term_meta_cache[$group_id])) {
             $term_meta_cache[$group_id] = get_term_meta($group_id);
         }
 
         $term_meta = $group_id ? $term_meta_cache[$group_id] : [];
 
-        $group_key = !empty($term_meta['group_key'][0]) ? $term_meta['group_key'][0] : ($term ? $term->slug : '');
+        $group_key = !empty($term_meta['group_key'][0])
+            ? $term_meta['group_key'][0]
+            : ($term ? $term->slug : 'default');
+
+        if (!isset($group_totals[$group_key])) {
+            $group_totals[$group_key] = 0;
+        }
+
+        $group_totals[$group_key]++;
+    }
+
+    // ===== LIMIT =====
+    $saved = array_slice($saved, 0, (int)$options['limit']);
+
+    $result = [];
+    $groups = [];
+    $meta_cache = [];
+
+    foreach ($saved as $item) {
+
+        $char_id = absint($item['characteristic_id'] ?? 0);
+        if (!$char_id) continue;
+
+        $char = $post_cache[$char_id] ?? get_post($char_id);
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        if (!isset($meta_cache[$char_id])) {
+            $meta_cache[$char_id] = get_post_meta($char_id);
+        }
+
+        $meta = $meta_cache[$char_id];
+
+        $term = $term_cache[$char_id] ?? null;
+        $group_id = $term ? $term->term_id : 0;
+        $group_name = $term ? $term->name : '';
+
+        if (!empty($allowed_group_ids) && !in_array($group_id, $allowed_group_ids, true)) {
+            continue;
+        }
+
+        $term_meta = $group_id ? ($term_meta_cache[$group_id] ?? get_term_meta($group_id)) : [];
+
+        $group_key = !empty($term_meta['group_key'][0])
+            ? $term_meta['group_key'][0]
+            : ($term ? $term->slug : 'default');
+
         $display_style = $term_meta['display_style'][0] ?? 'standard';
         $active = $term_meta['active'][0] ?? 1;
 
         if ($group_style && $display_style !== $group_style) continue;
         if (!$active) continue;
 
-        // CHARACTERISTIC
         $char_data = [
             'characteristic_id' => $char_id,
             'group_id' => $group_id,
@@ -407,12 +822,12 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
 
         // ===== FLAT =====
         if ($options['type'] === 'flat') {
-            $char_data['total'] = (int)$options['limit'];
+            $char_data['total'] = array_sum($group_totals);
             $result[] = $char_data;
             continue;
         }
 
-        // ===== GROUPED =====
+        // ===== GROUP =====
         if (!isset($groups[$group_key])) {
             $groups[$group_key] = [
                 'group_id' => $group_id,
@@ -420,7 +835,7 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
                 'display_style' => $display_style,
                 'group_key' => $group_key,
                 'system_temp' => $system_temp,
-                'total' => (int)$options['limit'],
+                'total' => $group_totals[$group_key] ?? 0,
                 'characteristics' => []
             ];
         }
@@ -439,20 +854,302 @@ function realty_get_property_characteristics($property_id, $group_style = null, 
     }
 
     // ===== RESULT =====
-    $active_key = ($options['type'] === 'one' && $system_temp) ? $options['group_key'] : ($options['system_temp'] ?? $options['group_key']);
-    
+    $active_key = ($options['type'] === 'one' && $system_temp)
+        ? $options['group_key']
+        : ($options['system_temp'] ?? $options['group_key']);
+
     if ($options['type'] === 'all') {
         $result = array_values($groups);
     } elseif ($options['type'] === 'one' && $active_key) {
         $result = $groups[$active_key] ?? [];
     }
 
-    // ===== SAVE CACHE =====
+    // ===== CACHE SAVE =====
     if ($options['cache']) {
         wp_cache_set($cache_key, $result, '', (int)$options['cache_ttl']);
     }
 
     return $result;
+}
+
+function realty_get_property_characteristicsв($property_id, $group_style = null, $options = []) {
+    $options = wp_parse_args($options, [
+        'type'        => 'flat',     // flat | all | one
+        'limit'       => 12,
+        'last_count'  => 0,          // Offset для AJAX
+        'page'        => 1,
+        'group_key'   => null,
+        'group_id'    => null,
+        'system_temp' => null,
+        'cache'       => !(is_admin() || wp_doing_ajax()),
+    ]);
+
+    // Инициализация консистентного ответа
+    $response = [
+        'data'    => [],
+        'meta'    => [
+            'current_page' => (int)$options['page'],
+            'page_count'   => 0,
+            'per_page'     => (int)$options['limit'],
+            'total'        => 0,
+            'last_count'   => (int)$options['last_count'],
+        ],
+        'filters' => [],
+    ];
+
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+    if (!is_array($saved) || empty($saved)) return $response;
+
+    // Сортировка по порядку
+    usort($saved, fn($a, $b) => (int)($a['order'] ?? 0) - (int)($b['order'] ?? 0));
+
+    // 1. Предварительная фильтрация (собираем только подходящие ID)
+    $filtered_pool = [];
+    $group_totals = [];
+    $available_filters = [];
+
+    foreach ($saved as $item) {
+        $char_id = absint($item['characteristic_id'] ?? 0);
+        if (!$char_id) continue;
+
+        $terms = get_the_terms($char_id, 'char_group');
+        $term = (!is_wp_error($terms) && !empty($terms)) ? $terms[0] : null;
+        $g_id = $term ? $term->term_id : 0;
+
+        // Фильтр по group_id (для AJAX)
+        if (!empty($options['group_id']) && (int)$options['group_id'] !== $g_id) continue;
+
+        $g_meta = $g_id ? get_term_meta($g_id) : [];
+        $g_key = $g_meta['group_key'][0] ?? ($term ? $term->slug : 'default');
+
+        // Фильтр по system_temp
+        if (!empty($options['system_temp'])) {
+            $is_allowed = get_term_meta($g_id, 'group_system_template', true) === $options['system_temp'];
+            if (!$is_allowed) continue;
+        }
+
+        $filtered_pool[] = array_merge($item, ['g_id' => $g_id, 'g_key' => $g_key]);
+
+        if (!isset($group_totals[$g_key])) $group_totals[$g_key] = 0;
+        $group_totals[$g_key]++;
+
+        if (!empty($g_meta['use_in_filters'][0])) {
+            $available_filters[$g_key] = [
+                'group_id' => $g_id,
+                'group_name' => $term->name,
+                'group_key' => $g_key
+            ];
+        }
+    }
+
+    $total_filtered = count($filtered_pool);
+    $response['meta']['total'] = $total_filtered;
+    $response['meta']['page_count'] = ceil($total_filtered / (int)$options['limit']);
+    $response['filters'] = array_values($available_filters);
+
+    $offset = (int)$options['last_count'] ?: (((int)$options['page'] - 1) * (int)$options['limit']);
+    $sliced_items = array_slice($filtered_pool, $offset, (int)$options['limit']);
+
+    $groups = [];
+    $flat_list = [];
+
+    foreach ($sliced_items as $item) {
+        $char_id = $item['characteristic_id'];
+        $char = get_post($char_id);
+        if (!$char || $char->post_status !== 'publish') continue;
+
+        $g_id = $item['g_id'];
+        $g_key = $item['g_key'];
+        $term = get_term($g_id, 'char_group');
+        $g_meta = get_term_meta($g_id);
+
+        $char_data = [
+            'characteristic_id' => $char_id,
+            'title'      => $char->post_title,
+            'group_name' => $term->name ?? '',
+            'group_key'  => $g_key,
+            'icon'       => get_post_meta($char_id, 'icon', true),
+            'value'      => get_post_meta($char_id, 'value', true),
+            'label'      => get_post_meta($char_id, 'label', true),
+            'order'      => $item['order']
+        ];
+
+        if ($options['type'] === 'flat') {
+            $flat_list[] = $char_data;
+        } else {
+            if (!isset($groups[$g_key])) {
+                $groups[$g_key] = [
+                    'group_id' => $g_id,
+                    'group_name' => $term->name ?? '',
+                    'group_key' => $g_key,
+                    'total' => $group_totals[$g_key],
+                    'characteristics' => []
+                ];
+            }
+            $groups[$g_key]['characteristics'][] = $char_data;
+        }
+    }
+
+    if ($options['type'] === 'all') {
+        $response['data'] = array_values($groups);
+    } elseif ($options['type'] === 'one') {
+        $active_key = $options['group_key'] ?: (isset($g_key) ? $g_key : null);
+        $response['data'] = $groups[$active_key] ?? (reset($groups) ?: []);
+    } else {
+        $response['data'] = $flat_list;
+    }
+
+    // ===== КОНСИСТЕНТНОСТЬ =====
+    // Если это AJAX, нам нужен весь объект с мета-данными
+    if (wp_doing_ajax() || $options['type'] === 'all') {
+        return $response;
+    }
+
+    if ($options['type'] === 'one') {
+        return $response['data'];
+    }
+
+    return $response;
+}
+function realty_get_property_characteristics($property_id, $group_style = null, $options = []) {
+    $options = wp_parse_args($options, [
+        'type'        => 'flat',     // flat | all | one
+        'limit'        => 12,        // Сколько записей вернуть
+        'last_count'  => 0,          // Смещение (сколько уже загружено)
+        'page'        => 1,
+        'group_key'   => null,
+        'group_id'    => null,
+        'system_temp' => null,
+        'cache'       => true,
+    ]);
+
+    $response = [
+        'data'    => [],
+        'meta'    => [
+            'current_page' => (int)$options['page'],
+            'page_count'   => 0,
+            'per_page'     => (int)$options['limit'],
+            'total'        => 0,
+            'last_count'   => (int)$options['last_count'],
+        ],
+        'filters' => [],
+    ];
+
+    $saved = get_post_meta($property_id, 'property_characteristics', true);
+    if (!is_array($saved) || empty($saved)) return $response;
+
+    // 1. Сортировка исходного массива
+    usort($saved, fn($a, $b) => (int)($a['order'] ?? 0) - (int)($b['order'] ?? 0));
+
+    $filtered_pool = [];
+    $group_totals = [];
+    $available_filters = [];
+
+    // Оптимизация: предзагрузка кэша метаданных для всех связанных постов
+    $all_char_ids = array_column($saved, 'characteristic_id');
+    update_meta_cache('post', $all_char_ids);
+
+    // 2. Фильтрация и сбор данных
+    foreach ($saved as $item) {
+        $char_id = absint($item['characteristic_id'] ?? 0);
+        if (!$char_id) continue;
+
+        $terms = get_the_terms($char_id, 'char_group');
+        $term = (!is_wp_error($terms) && !empty($terms)) ? $terms[0] : null;
+        $g_id = $term ? $term->term_id : 0;
+
+        // Фильтр по ID группы
+        if (!empty($options['group_id']) && (int)$options['group_id'] !== $g_id) continue;
+
+        $g_meta = $g_id ? get_term_meta($g_id) : [];
+        $g_key = $g_meta['group_key'][0] ?? ($term ? $term->slug : 'default');
+
+        // Фильтр по system_temp
+        if (!empty($options['system_temp'])) {
+            $g_temp = get_term_meta($g_id, 'group_system_template', true);
+            if ($g_temp !== $options['system_temp']) continue;
+        }
+
+        $char_post = get_post($char_id);
+        if (!$char_post || $char_post->post_status !== 'publish') continue;
+
+        $char_data = [
+            'characteristic_id' => $char_id,
+            'title'      => $char_post->post_title,
+            'group_name' => $term->name ?? '',
+            'group_key'  => $g_key,
+            'g_id'       => $g_id,
+            'icon'       => get_post_meta($char_id, 'icon', true),
+            'value'      => get_post_meta($char_id, 'value', true),
+            'label'      => get_post_meta($char_id, 'label', true),
+            'order'      => (int)$item['order']
+        ];
+
+        $filtered_pool[] = $char_data;
+
+        // Накопление мета-данных
+        $group_totals[$g_key] = ($group_totals[$g_key] ?? 0) + 1;
+        if (!empty($g_meta['use_in_filters'][0]) && !isset($available_filters[$g_key])) {
+            $available_filters[$g_key] = [
+                'group_id'   => $g_id,
+                'group_name' => $term->name,
+                'group_key'  => $g_key
+            ];
+        }
+    }
+
+    $total_filtered = count($filtered_pool);
+    $response['meta']['total'] = $total_filtered;
+    $response['meta']['page_count'] = ceil($total_filtered / (int)$options['limit']);
+    $response['filters'] = array_values($available_filters);
+
+    // 3. Логика среза (Pagination vs AJAX Last Count)
+    // Если есть last_count, берем строго следующую порцию размером в limit
+    if ((int)$options['last_count'] > 0) {
+        $offset = (int)$options['last_count'];
+        $limit  = (int)$options['limit'];
+    } else {
+        $offset = ((int)$options['page'] - 1) * (int)$options['limit'];
+        $limit  = (int)$options['limit'];
+    }
+
+    $sliced_items = array_slice($filtered_pool, $offset, $limit);
+
+    // 4. Группировка результата
+    if ($options['type'] === 'flat') {
+        $response['data'] = $sliced_items;
+    } else {
+        $groups = [];
+        foreach ($sliced_items as $item) {
+            $key = $item['group_key'];
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'group_id'   => $item['g_id'],
+                    'group_name' => $item['group_name'],
+                    'group_key'  => $key,
+                    'total'      => $group_totals[$key] ?? 0,
+                    'characteristics' => []
+                ];
+            }
+            unset($item['g_id']); // Чистим вспомогательные данные
+            $groups[$key]['characteristics'][] = $item;
+        }
+
+        if ($options['type'] === 'one') {
+            $active_key = $options['group_key'] ?: key($groups);
+            $response['data'] = $groups[$active_key] ?? (reset($groups) ?: []);
+        } else {
+            $response['data'] = array_values($groups);
+        }
+    }
+
+    // Возврат данных в зависимости от контекста
+    $is_rest = defined('REST_REQUEST') && REST_REQUEST;
+    if (wp_doing_ajax() || $is_rest || $options['type'] === 'all') {
+        return $response;
+    }
+
+    return ($options['type'] === 'one') ? $response['data'] : $response;
 }
 
 /**

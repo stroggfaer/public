@@ -24,11 +24,10 @@ $options = [
 ];
 
 $group = realty_get_property_characteristics($property_id, 'circle', $options);
+
 if (empty($group) || empty($group['characteristics'])) {
     return;
 }
-
-
 ?>
 
 <div class="property-features-title">
