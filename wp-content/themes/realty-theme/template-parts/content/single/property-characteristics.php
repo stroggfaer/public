@@ -12,51 +12,36 @@ $pod = $args['pod'] ?? null;
 if (!$pod) {
     return;
 }
-
+// options
+$options = [
+        'type' => 'all',
+        'system_temp' => 'system_popular_services',
+];
 $property_id = $pod->id();
-$characteristics = realty_get_property_characteristics($property_id, 'standard');
 
-if (empty($characteristics)) {
+$group_characteristics = realty_get_property_characteristics($property_id, 'standard', $options);
+
+if (empty($group_characteristics)) {
     return;
 }
 
-$grouped = [];
-foreach ($characteristics as $char) {
-    $gid = $char['group_id'];
-    if (!isset($grouped[$gid])) {
-        $grouped[$gid] = [
-            'name' => $char['group_name'],
-            'style' => $char['display_style'],
-            'items' => []
-        ];
-    }
-    $grouped[$gid]['items'][] = $char;
-}
-
-$limit = 8;
-$all_count = count($characteristics);
-$has_more = $all_count > $limit;
 ?>
 <div class="section-property property-key-characteristics">
-    <?php foreach ($grouped as $group): ?>
-    <h3 class="title"><?php echo esc_html($group['name']); ?></h3>
-    <div class="characteristics-grid__com">
-        <?php foreach ($group['items'] as $index => $char): ?>
-        <?php if ($index >= $limit) break; ?>
-        <div class="characteristic-item">
-            <?php echo realty_render_characteristic_icon($char); ?>
-            <span class="label"><?php echo esc_html($char['title']); ?></span>
-            <span class="value"><?php echo esc_html($char['hint']); ?></span>
+    <?php foreach ($group_characteristics as $group): ?>
+        <h3 class="title"><?php echo esc_html($group['group_name']); ?></h3>
+        <div class="characteristics-grid__com">
+            <?php foreach ($group['characteristics'] as $index => $characteristics): ?>
+                <div class="characteristic-item">
+                    <?php echo realty_render_characteristic_icon($characteristics); ?>
+                    <span class="label"><?php echo esc_html($characteristics['title']); ?></span>
+                    <span class="value"><?php echo esc_html($characteristics['value']); ?></span>
+                </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
-    </div>
+        <div class="action">
+            <a href="#" class="bold border all" data-property-id="<?php echo esc_attr($group['group_id']); ?>">
+                Показать все (<?php echo esc_html($group['total']); ?>)
+            </a>
+        </div>
     <?php endforeach; ?>
-    
-    <?php if ($has_more): ?>
-    <div class="action">
-        <a href="#" class="bold border all" data-property-id="<?php echo esc_attr($property_id); ?>">
-            Показать все (<?php echo esc_html($all_count); ?>)
-        </a>
-    </div>
-    <?php endif; ?>
 </div>

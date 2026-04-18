@@ -208,7 +208,7 @@ $('#group-show-in-archive').prop('checked', group.show_in_archive == 1);
                     
                     // Если при редактировании уже выбран шаблон - задизаблить
                     if (group.group_system_template) {
-                       // $('#group-system-template').prop('disabled', true);
+                        $('#group-system-template').prop('disabled', true);
                     } else {
                         $('#group-system-template').prop('disabled', false);
                     }
