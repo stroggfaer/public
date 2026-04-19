@@ -1,11 +1,9 @@
 // composables/useProperty.js
 import { reactive } from 'vue';
 import { ApiService } from '../services/api';
-import usePropertyFilters from "@assets/vue_module/src/hooks/usePropertyFilters";
 import useModal from "@assets/vue_module/src/hooks/useModal";
 
 export default function useProperty() {
-    usePropertyFilters();
     const { dialogParams, onDialogClose } = useModal();
 
     const dataGrid = reactive({

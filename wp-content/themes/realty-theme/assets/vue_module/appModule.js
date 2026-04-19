@@ -5,6 +5,7 @@ import HomePropertyFilter from './src/components/HomePropertyFilter.js';
 import useProperty from './src/hooks/useProperty.js';
 import usePropertyFilters from './src/hooks/usePropertyFilters';
 import useModal from './src/hooks/useModal.js';
+import { useGoogleMap } from './src/hooks/useGoogleMap.js';
 import GoogleMap from './src/components/GoogleMap.js';
 import ElementPlus from 'element-plus'
 // Локализация для русского языка
@@ -61,5 +62,6 @@ export {
   ApiService,
   useProperty,
   usePropertyFilters,
-  useModal
+  useModal,
+  useGoogleMap
 }

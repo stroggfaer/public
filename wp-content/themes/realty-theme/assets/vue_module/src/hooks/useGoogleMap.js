@@ -245,30 +245,19 @@ export function useGoogleMap(options = {}) {
         }
     }
 
-    // Lifecycle
-    onMounted(() => {
-        const checkGoogleMaps = setInterval(() => {
-            if (isGoogleMapsLoaded()) {
-                clearInterval(checkGoogleMaps);
-                initMap(coordinates.value);
-            }
-        }, 100);
-
-        setTimeout(() => {
-            clearInterval(checkGoogleMaps);
-            if (!isMapReady.value) {
-                isLoading.value = false;
-            }
-        }, 5000);
-
+    // Инициализация обработчиков событий (для вызова в onMounted компонента)
+    function initEventListeners() {
         document.addEventListener('click', handleCardClick);
-        jQuery(document).ajaxComplete(handleAjaxComplete);
-    });
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).ajaxComplete(handleAjaxComplete);
+        }
+    }
 
-    onUnmounted(() => {
+    // Очистка обработчиков событий (для вызова в onUnmounted компонента)
+    function cleanupEventListeners() {
         clearMarkers();
         document.removeEventListener('click', handleCardClick);
-    });
+    }
 
     // Watch за координатами
     watch(coordinates, (newCoords) => {
@@ -292,6 +281,8 @@ export function useGoogleMap(options = {}) {
         clearMarkers,
         updateCoordinates,
         panToProperty,
-        highlightPropertyCard
+        highlightPropertyCard,
+        initEventListeners,
+        cleanupEventListeners
     };
 }

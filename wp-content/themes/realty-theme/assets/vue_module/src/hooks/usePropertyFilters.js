@@ -1,5 +1,5 @@
 // composables/usePropertyFilters.js
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { ApiService } from '../services/api';
 import moment from 'moment';
 
@@ -8,8 +8,8 @@ function hasStore() {
 }
 
 export default function usePropertyFilters(params = {}) {
-    const useStore = hasStore();
-    const store = useStore ? Vuex.useStore() : null;
+    const hasStoreAvailable = hasStore();
+    const store = hasStoreAvailable ? Vuex.useStore() : null;
 
     const {
         config = {},
@@ -26,11 +26,11 @@ export default function usePropertyFilters(params = {}) {
 
     // ---------------- COMPUTED ----------------
     const filters = computed(() =>
-        useStore ? store.getters['propertyFilters/getFilters'] : {}
+        hasStoreAvailable ? store.getters['propertyFilters/getFilters'] : {}
     );
 
     const isLoading = computed(() =>
-        useStore ? store.getters['propertyFilters/getIsLoading'] : false
+        hasStoreAvailable ? store.getters['propertyFilters/getIsLoading'] : false
     );
 
     const safeStep = computed(() => {
@@ -47,7 +47,7 @@ export default function usePropertyFilters(params = {}) {
     const formatPriceTooltip = (val) => `${val} ₽`;
 
     const initFilters = computed(() =>
-        useStore ? store.getters['propertyFilters/getInit'] : null
+        hasStoreAvailable ? store.getters['propertyFilters/getInit'] : null
     );
 
     // ---------------- METHODS ----------------
@@ -86,7 +86,7 @@ export default function usePropertyFilters(params = {}) {
         return true;
     }
     function setFilter(key, value) {
-        if (useStore) {
+        if (hasStoreAvailable) {
             store.commit('propertyFilters/SET_FILTER', { key, value });
         }
     }
@@ -118,7 +118,7 @@ export default function usePropertyFilters(params = {}) {
     }
 
     function initFiltersFromStore() {
-        if (!useStore) return;
+        if (!hasStoreAvailable) return;
 
         const urlFilters = initFromURL();
 
@@ -128,8 +128,6 @@ export default function usePropertyFilters(params = {}) {
             store.dispatch('propertyFilters/initializeFilters', initialFilters);
         }
     }
-
-    onMounted(initFiltersFromStore);
 
     // ---------------- AUTOCOMPLETE ----------------
     let timeout = null;
@@ -181,14 +179,14 @@ export default function usePropertyFilters(params = {}) {
 
     // ---------------- API ----------------
     async function fetchProperties(params = {}) {
-        if (useStore) {
+        if (hasStoreAvailable) {
             store.commit('propertyFilters/SET_LOADING', true);
         }
         try {
             const f = filters.value;
 
             console.log('ajaxUrl nonce',ajaxUrl, nonce);
-            const meta = store.getters['propertyFilters/getMeta'];
+            const meta = hasStoreAvailable ? store.getters['propertyFilters/getMeta'] : {};
             // getMeta
             console.log('meta',meta);
             const res = await ApiService.post(ajaxUrl, {
@@ -206,7 +204,7 @@ export default function usePropertyFilters(params = {}) {
                 ...params
             });
 
-            if (res?.success && useStore) {
+            if (res?.success && hasStoreAvailable) {
                 store.commit('propertyFilters/SET_DATA', res.data.properties || []);
                 store.commit('propertyFilters/SET_META', res.data.meta || {});
                 
@@ -226,7 +224,7 @@ export default function usePropertyFilters(params = {}) {
             return res;
 
         } finally {
-            if (useStore) {
+            if (hasStoreAvailable) {
                 store.commit('propertyFilters/SET_LOADING', false);
             }
         }
@@ -248,7 +246,7 @@ export default function usePropertyFilters(params = {}) {
 
     // ---------------- RESET ----------------
     function reset() {
-        if (!useStore) return;
+        if (!hasStoreAvailable) return;
 
         const urlFilters = getFiltersFromURL();
 
@@ -294,5 +292,6 @@ export default function usePropertyFilters(params = {}) {
         disabledCheckoutDate,
         validate,
         initFilters,
+        initFiltersFromStore,
     };
 }

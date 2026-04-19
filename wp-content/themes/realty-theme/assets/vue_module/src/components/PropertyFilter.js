@@ -81,7 +81,8 @@ export default {
       reset,
       initFilters,
       validate,
-      fetchPropertiesRender
+      fetchPropertiesRender,
+      initFiltersFromStore
     } = usePropertyFilters({
       config: props.config,
       context: props.context,
@@ -147,6 +148,7 @@ export default {
     }
 
     onMounted(()=>{
+        initFiltersFromStore();
         store.commit('propertyFilters/SET_INIT', {
           config: props.config,
           initFilters: props.initFilters,
