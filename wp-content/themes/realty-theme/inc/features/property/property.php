@@ -113,9 +113,39 @@ class PropertyFeature {
         // Выполняем запрос
         $query = new WP_Query($args);
 
+        // Фильтрация по характеристикам (после основного запроса)
+        // Логика OR: объект должен иметь ХОТЯ БЫ ОДНУ из выбранных характеристик
+        $filtered_posts = $query->posts;
+        
+        if (!empty($params['characteristics']) && is_array($params['characteristics'])) {
+            $characteristics = array_map('intval', $params['characteristics']);
+            
+            $filtered_posts = array_filter($filtered_posts, function($post) use ($characteristics) {
+                $saved = get_post_meta($post->ID, 'property_characteristics', true);
+                
+                if (!is_array($saved) || empty($saved)) {
+                    return false;
+                }
+                
+                $property_char_ids = array_column($saved, 'characteristic_id');
+                $property_char_ids = array_map('intval', $property_char_ids);
+                
+                // ХОТЯ БЫ ОДНА характеристика должна совпадать
+                foreach ($characteristics as $char_id) {
+                    if (in_array($char_id, $property_char_ids, true)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            
+            // Пересчитываем после фильтрации
+            $filtered_posts = array_values($filtered_posts);
+        }
+
         // Подготавливаем координаты для карты
         $coordinates = [];
-        foreach ($query->posts as $post) {
+        foreach ($filtered_posts as $post) {
             $lat = get_post_meta($post->ID, 'latitude', true);
             $lng = get_post_meta($post->ID, 'longitude', true);
             if ($lat && $lng) {
@@ -129,9 +159,9 @@ class PropertyFeature {
         }
 
         return [
-            'posts' => $query->posts,
-            'total' => $query->found_posts,
-            'max_pages' => $query->max_num_pages,
+            'posts' => $filtered_posts,
+            'total' => count($filtered_posts),
+            'max_pages' => ceil(count($filtered_posts) / $params['posts_per_page']),
             'coordinates' => $coordinates,
         ];
     }
@@ -163,6 +193,7 @@ class PropertyFeature {
                 'price_min'     => 0,
                 'price_max'     => 0,
                 'paged'         => 1,
+                'characteristics' => [],
         ], $overrides);
 
         // 3. Локация — самая сложная часть, делаем аккуратно
@@ -209,8 +240,34 @@ class PropertyFeature {
             if (in_array($k, ['paged', 'adults', 'children', 'price_min', 'price_max'])) {
                 return $v > 0; // убираем нулевые числовые, если не нужны
             }
+            // Не удаляем массивы (characteristics)
+            if (is_array($v)) {
+                return true;
+            }
             return $v !== '';
         }, ARRAY_FILTER_USE_BOTH);
+
+        // 7. Обработка характеристик
+        if (isset($source['characteristics'])) {
+            $chars = $source['characteristics'];
+            
+            // Если пришла строка JSON, декодируем
+            if (is_string($chars)) {
+                $decoded = json_decode($chars, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $chars = $decoded;
+                }
+            }
+            
+            // Преобразуем в массив целых чисел
+            if (is_array($chars)) {
+                $chars = array_map('intval', array_filter($chars, 'is_numeric'));
+                // Сохраняем только если массив не пустой
+                if (!empty($chars)) {
+                    $filters['characteristics'] = $chars;
+                }
+            }
+        }
 
         return $filters;
     }
@@ -472,7 +529,8 @@ class PropertyFeature {
 
         $config = [
                 'price_range' => $price_range,
-                'guests' => ['adults'=> ['min'=>1,'max'=>10],'children' => ['min'=>0,'max'=>8]]
+                'guests' => ['adults'=> ['min'=>1,'max'=>10],'children' => ['min'=>0,'max'=>8]],
+                'filter_characteristics' => realty_get_filter_characteristics()
         ];
 
         $data = [

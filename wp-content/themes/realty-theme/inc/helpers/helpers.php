@@ -673,3 +673,86 @@ function realty_render_characteristic_icon($char_data, $className = '') {
     $icon = $char_data['icon'] ?? 'help';
     return '<span class="material-symbols-outlined '.$className.'">' . esc_html($icon) . '</span>';
 }
+
+/**
+ * Получить характеристики для фильтров
+ * 
+ * Возвращает группы характеристик с use_in_filters = 1 и active = 1
+ * отсортированные по sort_order
+ *
+ * @return array Массив групп с характеристиками
+ */
+function realty_get_filter_characteristics() {
+    // Получить группы с use_in_filters = 1 и active = 1
+    $groups = get_terms([
+        'taxonomy' => 'char_group',
+        'hide_empty' => false,
+        'meta_query' => [
+            'relation' => 'AND',
+            [
+                'key' => 'use_in_filters',
+                'value' => '1',
+                'compare' => '='
+            ],
+            [
+                'key' => 'active',
+                'value' => '1',
+                'compare' => '='
+            ]
+        ],
+        'meta_key' => 'sort_order',
+        'orderby' => 'meta_value_num',
+        'order' => 'ASC'
+    ]);
+
+    if (is_wp_error($groups) || empty($groups)) {
+        return [];
+    }
+
+    $result = [];
+
+    foreach ($groups as $group) {
+        // Получить характеристики для группы
+        $chars = get_posts([
+            'post_type' => 'characteristic',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'tax_query' => [
+                [
+                    'taxonomy' => 'char_group',
+                    'field' => 'term_id',
+                    'terms' => $group->term_id
+                ]
+            ]
+        ]);
+
+        if (empty($chars)) {
+            continue;
+        }
+
+        // Получить тип UI для группы
+        $type_ui = get_term_meta($group->term_id, 'type_ui', true) ?: 'checkbox';
+
+        $characteristics = [];
+        foreach ($chars as $char) {
+            $characteristics[] = [
+                'id' => $char->ID,
+                'title' => $char->post_title,
+                'icon' => get_post_meta($char->ID, 'icon', true),
+                'icon_type' => get_post_meta($char->ID, 'icon_type', true),
+            ];
+        }
+
+        $result[] = [
+            'group_id' => $group->term_id,
+            'group_name' => $group->name,
+            'group_key' => get_term_meta($group->term_id, 'group_key', true) ?: $group->slug,
+            'type_ui' => $type_ui,
+            'characteristics' => $characteristics
+        ];
+    }
+
+    return $result;
+}

@@ -10,6 +10,8 @@ function createDefaultFilters(overrides = {}) {
         checkout_date: moment().add(7, 'days').format('YYYY-MM-DD'),
         adults: 1,
         children: 0,
+        characteristics: [],
+        characteristics_logic: 'OR', // Всегда OR для фильтров
         ...overrides
     };
 }
@@ -21,7 +23,9 @@ const ALLOWED_KEYS = [
     'checkin_date',
     'checkout_date',
     'adults',
-    'children'
+    'children',
+    'characteristics',
+    'characteristics_logic'
 ];
 function normalizeFilters(input = {}) {
     const map = {
@@ -39,6 +43,20 @@ function normalizeFilters(input = {}) {
 
         if (['price_min', 'price_max', 'adults', 'children'].includes(newKey)) {
             value = Number(value);
+        }
+        
+        // Обработка массивов (characteristics)
+        if (newKey === 'characteristics') {
+            if (typeof value === 'string') {
+                try {
+                    value = JSON.parse(value);
+                } catch (e) {
+                    value = [];
+                }
+            }
+            if (!Array.isArray(value)) {
+                value = [];
+            }
         }
 
         result[newKey] = value;

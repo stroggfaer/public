@@ -189,6 +189,13 @@ export default function usePropertyFilters(params = {}) {
             const meta = hasStoreAvailable ? store.getters['propertyFilters/getMeta'] : {};
             // getMeta
             console.log('meta',meta);
+            
+            // Отладка: выводим фильтры перед отправкой
+            console.log('Sending filters:', {
+                characteristics: f.characteristics,
+                characteristics_logic: f.characteristics_logic
+            });
+            
             const res = await ApiService.post(ajaxUrl, {
                 action: 'filter_properties_custom',
                 nonce,
@@ -200,6 +207,7 @@ export default function usePropertyFilters(params = {}) {
                 checkout_date: f.checkout_date,
                 adults: f.adults,
                 children: f.children,
+                characteristics: f.characteristics || [],
                 page: 1,
                 ...params
             });
