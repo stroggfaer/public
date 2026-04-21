@@ -52,19 +52,29 @@ $initialResult = wp_json_encode($result, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
             });
 
             const loadMore = async () => {
-                if (isLoading.value || !hasMore.value) return;
+                if (isLoading.value || !hasMore.value) {
+                    console.log('[LoadMore] Blocked - isLoading:', isLoading.value, 'hasMore:', hasMore.value);
+                    return;
+                }
                 try {
                     const nextPage = meta.value.current_page + 1;
+                    console.log('[LoadMore] Loading page:', nextPage, 'Current meta:', meta.value);
                     const res = await fetchProperties({page: nextPage});
 
                     if (res?.success) {
+                        console.log('[LoadMore] Success! Received:', res.data);
                         const propertyList = document.querySelector('.properties-grid');
                         if (propertyList) {
                             propertyList.insertAdjacentHTML('beforeend', res.data.html || '');
+                            console.log('[LoadMore] HTML appended to grid');
+                        } else {
+                            console.error('[LoadMore] .properties-grid not found');
                         }
+                    } else {
+                        console.error('[LoadMore] Request failed:', res);
                     }
                 } catch (e) {
-                    console.error('Load more error:', e);
+                    console.error('[LoadMore] Error:', e);
                 }
             }
 

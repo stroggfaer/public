@@ -61,20 +61,27 @@ get_header();
 <!-- Vue Google Map Script -->
 <script type="module">
 (function() {
-    const { createAppModule, GoogleMap } = window.VueAppModule;
-    const { ref, onMounted } = Vue;
+    const { createAppModule, GoogleMap, useGoogleMap } = window.VueAppModule;
+    const { ref, onMounted, onUnmounted, watch } = Vue;
 
-    // Функция для извлечения координат из DOM (как в легаси)
+    // Функция для извлечения координат из DOM
     function getPropertyCoordinates() {
         const coordinates = [];
         jQuery('.property-card[data-lat][data-lng]').each(function() {
             const $card = jQuery(this);
-            coordinates.push({
-                id: $card.data('id'),
-                lat: $card.data('lat'),
-                lng: $card.data('lng'),
-                title: $card.find('.entry-title a').text().trim() || 'Объект недвижимости'
-            });
+            const lat = parseFloat($card.data('lat'));
+            const lng = parseFloat($card.data('lng'));
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                coordinates.push({
+                    id: $card.data('id'),
+                    lat: lat,
+                    lng: lng,
+                    title: $card.find('.entry-title a').text().trim() || 'Объект недвижимости',
+                    price: $card.find('.property-price').text().trim() || '',
+                    address: $card.find('.property-address').text().trim() || ''
+                });
+            }
         });
         return coordinates;
     }
@@ -87,11 +94,73 @@ get_header();
         setup() {
             const mapCoordinates = ref([]);
 
+            // Используем хук useGoogleMap для управления картой
+            const {
+                initMap,
+                updateCoordinates,
+                initEventListeners,
+                cleanupEventListeners,
+                isMapReady
+            } = useGoogleMap({
+                mapId: 'property-map',
+                defaultZoom: <?php echo esc_attr($map_zoom); ?>,
+                defaultCenter: { 
+                    lat: <?php echo esc_attr($map_center_lat); ?>, 
+                    lng: <?php echo esc_attr($map_center_lng); ?> 
+                }
+            });
+
             onMounted(() => {
+                console.log('[Vue GoogleMap] Component mounted');
+                
                 // Получаем координаты из DOM
                 mapCoordinates.value = getPropertyCoordinates();
                 console.log('[Vue GoogleMap] Initial coordinates:', mapCoordinates.value);
+
+                // Инициализируем карту с координатами
+                if (mapCoordinates.value.length > 0) {
+                    initMap(mapCoordinates.value);
+                } else {
+                    initMap([]);
+                }
+
+                // Инициализируем обработчики событий
+                initEventListeners();
+
+                // Слушаем AJAX события для обновления координат после фильтрации
+                jQuery(document).on('ajaxComplete', function(event, xhr, settings) {
+                    if (settings.data && settings.data.indexOf('action=filter_properties_custom') !== -1) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.success && response.data) {
+                                // Обновляем координаты из ответа или из DOM
+                                const newCoordinates = response.data.coordinates || getPropertyCoordinates();
+                                mapCoordinates.value = newCoordinates;
+                                console.log('[Vue GoogleMap] Updated coordinates after filter:', newCoordinates);
+                                
+                                if (isMapReady.value) {
+                                    updateCoordinates(newCoordinates);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('[Vue GoogleMap] Error parsing AJAX response:', e);
+                        }
+                    }
+                });
             });
+
+            onUnmounted(() => {
+                console.log('[Vue GoogleMap] Component unmounted');
+                cleanupEventListeners();
+            });
+
+            // Watch за изменениями координат
+            watch(mapCoordinates, (newCoords) => {
+                console.log('[Vue GoogleMap] Coordinates changed:', newCoords);
+                if (isMapReady.value && newCoords.length > 0) {
+                    updateCoordinates(newCoords);
+                }
+            }, { deep: true });
 
             return {
                 mapCoordinates
@@ -103,9 +172,9 @@ get_header();
     const container = document.getElementById('vue-property-map');
     if (container) {
         AppPropertyMap.mount('#vue-property-map');
-        console.log('[Vue GoogleMap] Mounted successfully');
+        console.log('[Vue GoogleMap] App mounted successfully');
     } else {
-        console.error('[Vue GoogleMap] Container not found');
+        console.error('[Vue GoogleMap] Container #vue-property-map not found');
     }
 })();
 </script>

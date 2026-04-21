@@ -1,4 +1,4 @@
-import { watch } from 'vue';
+import { watch, onMounted, onUnmounted } from 'vue';
 import { useGoogleMap } from '../hooks/useGoogleMap.js';
 
 /**
@@ -65,7 +65,9 @@ export default {
       isMapReady,
       coordinates,
       initMap,
-      updateCoordinates
+      updateCoordinates,
+      initEventListeners,
+      cleanupEventListeners
     } = useGoogleMap({
       mapId: props.mapId,
       defaultZoom: props.zoom,
@@ -77,9 +79,34 @@ export default {
     // Синхронизация координат
     coordinates.value = props.coordinates;
 
+    // Инициализация при монтировании
+    onMounted(() => {
+      console.log('[GoogleMap Component] Mounted with coordinates:', props.coordinates);
+      
+      // Инициализируем карту
+      if (props.isSingleProperty && props.singleLatitude && props.singleLongitude) {
+        initMap([], true, props.singleLatitude, props.singleLongitude);
+      } else {
+        initMap(props.coordinates);
+      }
+
+      // Инициализируем обработчики событий
+      initEventListeners();
+    });
+
+    // Очистка при размонтировании
+    onUnmounted(() => {
+      console.log('[GoogleMap Component] Unmounted');
+      cleanupEventListeners();
+    });
+
     // Watch за координатами
     watch(() => props.coordinates, (newCoords) => {
+      console.log('[GoogleMap Component] Coordinates prop changed:', newCoords);
       coordinates.value = newCoords;
+      if (isMapReady.value && newCoords && newCoords.length > 0) {
+        updateCoordinates(newCoords);
+      }
     }, { deep: true });
 
     return {
@@ -88,9 +115,7 @@ export default {
       infoWindows,
       isLoading,
       isMapReady,
-      mapId: props.mapId,
-      initMap,
-      updateCoordinates
+      mapId: props.mapId
     };
   }
 };

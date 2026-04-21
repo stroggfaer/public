@@ -119,7 +119,7 @@ function enqueue_property_filter_scripts() {
         }
         
         // Подключаем скрипт для работы с картами на странице архива и одиночной странице
-        wp_enqueue_script('google-maps-property', get_template_directory_uri() . '/js/google-maps-property.js', array('jquery'), null, true);
+       // wp_enqueue_script('google-maps-property', get_template_directory_uri() . '/js/google-maps-property.js', array('jquery'), null, true);
     }
 }
 

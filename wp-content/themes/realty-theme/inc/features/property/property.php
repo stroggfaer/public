@@ -113,14 +113,26 @@ class PropertyFeature {
         // Выполняем запрос
         $query = new WP_Query($args);
 
+        // Сохраняем общее количество найденных записей ДО фильтрации по характеристикам
+        $total_found = $query->found_posts;
+        
         // Фильтрация по характеристикам (после основного запроса)
         // Логика OR: объект должен иметь ХОТЯ БЫ ОДНУ из выбранных характеристик
         $filtered_posts = $query->posts;
+        $has_characteristics_filter = !empty($params['characteristics']) && is_array($params['characteristics']);
         
-        if (!empty($params['characteristics']) && is_array($params['characteristics'])) {
+        if ($has_characteristics_filter) {
             $characteristics = array_map('intval', $params['characteristics']);
             
-            $filtered_posts = array_filter($filtered_posts, function($post) use ($characteristics) {
+            // Если есть фильтр по характеристикам, нужно получить ВСЕ записи для правильного подсчета
+            // Создаем новый запрос без пагинации
+            $args_all = $args;
+            $args_all['posts_per_page'] = -1;
+            $args_all['paged'] = 1;
+            $query_all = new WP_Query($args_all);
+            
+            // Фильтруем ВСЕ записи
+            $all_filtered = array_filter($query_all->posts, function($post) use ($characteristics) {
                 $saved = get_post_meta($post->ID, 'property_characteristics', true);
                 
                 if (!is_array($saved) || empty($saved)) {
@@ -139,8 +151,14 @@ class PropertyFeature {
                 return false;
             });
             
-            // Пересчитываем после фильтрации
-            $filtered_posts = array_values($filtered_posts);
+            $all_filtered = array_values($all_filtered);
+            
+            // Обновляем total на основе отфильтрованных записей
+            $total_found = count($all_filtered);
+            
+            // Применяем пагинацию к отфильтрованным записям
+            $offset = ($params['paged'] - 1) * $params['posts_per_page'];
+            $filtered_posts = array_slice($all_filtered, $offset, $params['posts_per_page']);
         }
 
         // Подготавливаем координаты для карты
@@ -160,8 +178,8 @@ class PropertyFeature {
 
         return [
             'posts' => $filtered_posts,
-            'total' => count($filtered_posts),
-            'max_pages' => ceil(count($filtered_posts) / $params['posts_per_page']),
+            'total' => $total_found,
+            'max_pages' => ceil($total_found / $params['posts_per_page']),
             'coordinates' => $coordinates,
         ];
     }

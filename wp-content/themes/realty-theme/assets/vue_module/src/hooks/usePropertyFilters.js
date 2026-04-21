@@ -185,19 +185,24 @@ export default function usePropertyFilters(params = {}) {
         try {
             const f = filters.value;
 
-            console.log('ajaxUrl nonce',ajaxUrl, nonce);
+            console.log('[usePropertyFilters] ajaxUrl:', ajaxUrl, 'nonce:', nonce);
             const meta = hasStoreAvailable ? store.getters['propertyFilters/getMeta'] : {};
-            // getMeta
-            console.log('meta',meta);
+            console.log('[usePropertyFilters] Current meta:', meta);
             
             // Отладка: выводим фильтры перед отправкой
-            console.log('Sending filters:', {
+            console.log('[usePropertyFilters] Sending filters:', {
+                location: f.locationInput,
+                location_slug: f.locationSlug,
+                price_min: f.price_min,
+                price_max: f.price_max,
+                adults: f.adults,
+                children: f.children,
                 characteristics: f.characteristics,
-                characteristics_logic: f.characteristics_logic
+                page: params.page || 1
             });
             
             const res = await ApiService.post(ajaxUrl, {
-                action: 'filter_properties_custom',
+                action: 'property_filter', // Используем новый action
                 nonce,
                 location: f.locationInput,
                 location_slug: f.locationInput ? decodeURIComponent(f.locationSlug) : '',
@@ -208,13 +213,18 @@ export default function usePropertyFilters(params = {}) {
                 adults: f.adults,
                 children: f.children,
                 characteristics: f.characteristics || [],
-                page: 1,
+                page: params.page || 1,
+                per_page: params.per_page || 10,
                 ...params
             });
+
+            console.log('[usePropertyFilters] Response:', res);
 
             if (res?.success && hasStoreAvailable) {
                 store.commit('propertyFilters/SET_DATA', res.data.properties || []);
                 store.commit('propertyFilters/SET_META', res.data.meta || {});
+                
+                console.log('[usePropertyFilters] Meta updated:', res.data.meta);
                 
                 // Handle coordinates for map markers
                 const newCoordinates = res.data.coordinates || [];
@@ -227,10 +237,15 @@ export default function usePropertyFilters(params = {}) {
                     // Append coordinates for pagination
                     store.commit('propertyFilters/ADD_COORDINATES', newCoordinates);
                 }
+                
+                console.log('[usePropertyFilters] Coordinates updated, count:', newCoordinates.length);
             }
 
             return res;
 
+        } catch (error) {
+            console.error('[usePropertyFilters] Error:', error);
+            throw error;
         } finally {
             if (hasStoreAvailable) {
                 store.commit('propertyFilters/SET_LOADING', false);
