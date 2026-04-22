@@ -218,10 +218,32 @@ export default {
     
     // Для radio и select (одиночный выбор)
     const selectedRadioChar = ref({});
+    
+    // Для checkbox: показать/скрыть дополнительные элементы (лимит 10)
+    const expandedCheckboxGroups = ref({});
 
     // Первые 5 групп видимы, остальные в collapse
     const visibleGroups = computed(() => filterCharacteristics.value.slice(0, 5));
     const hiddenGroups = computed(() => filterCharacteristics.value.slice(5));
+    
+    // Функция для получения видимых характеристик в checkbox группе (лимит 10)
+    function getVisibleCharacteristics(group) {
+      if (group.type_ui !== 'checkbox' || !group.characteristics) {
+        return group.characteristics || [];
+      }
+      const isExpanded = expandedCheckboxGroups.value[group.group_id];
+      return isExpanded ? group.characteristics : group.characteristics.slice(0, 10);
+    }
+    
+    // Проверка, нужна ли кнопка "Показать еще"
+    function needsShowMoreButton(group) {
+      return group.type_ui === 'checkbox' && group.characteristics && group.characteristics.length > 10;
+    }
+    
+    // Переключение состояния "Показать еще" / "Скрыть"
+    function toggleShowMore(groupId) {
+      expandedCheckboxGroups.value[groupId] = !expandedCheckboxGroups.value[groupId];
+    }
 
     // Toggle для chips и switch
     function toggleCharacteristic(charId, value = null) {
@@ -345,6 +367,7 @@ export default {
       localPriceRangeValue.value = [localFilters.value.price_min, localFilters.value.price_max];
       selectedRadioChar.value = {};
       expandedGroups.value = [];
+      expandedCheckboxGroups.value = {}; // Сбрасываем состояние "Показать еще"
       
       // Обновляем store
       store.commit('propertyFilters/SET_FILTER', { key: 'characteristics', value: [] });
@@ -388,7 +411,11 @@ export default {
       expandedGroups,
       selectedRadioChar,
       toggleCharacteristic,
-      onRadioChange
+      onRadioChange,
+      expandedCheckboxGroups,
+      getVisibleCharacteristics,
+      needsShowMoreButton,
+      toggleShowMore
     };
   }
 };
