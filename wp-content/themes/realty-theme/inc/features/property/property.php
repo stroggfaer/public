@@ -28,6 +28,7 @@ class PropertyFeature {
     public function init() {
         $this->initAjax();
         $this->initShortcodes();
+        $this->initQueryMods();
     }
 
     // ============================================================
@@ -62,19 +63,26 @@ class PropertyFeature {
         ];
 
         // Локация
-        $location = $params['location'] ?? $params['location_slug'] ?? '';
-        if (!empty($location)) {
+        $location = $params['location'] ?? '';
+        $location_slug = $params['location_slug'] ?? '';
+        if (!empty($location_slug)) {
+            $location_term = get_term_by('slug', $location_slug, 'location');
+            if (!$location_term) {
+                // Попробовать с sanitize_title (латиница)
+                $location_term = get_term_by('slug', sanitize_title($location_slug), 'location');
+            }
+        } elseif (!empty($location)) {
             $location_term = get_term_by('slug', sanitize_title($location), 'location');
             if (!$location_term) {
                 $location_term = get_term_by('name', sanitize_text_field($location), 'location');
             }
-            if ($location_term) {
-                $args['tax_query'] = [[
-                    'taxonomy' => 'location',
-                    'field' => 'term_id',
-                    'terms' => $location_term->term_id,
-                ]];
-            }
+        }
+        if ($location_term) {
+            $args['tax_query'] = [[
+                'taxonomy' => 'location',
+                'field' => 'term_id',
+                'terms' => $location_term->term_id,
+            ]];
         }
 
         // Тип жилья
@@ -240,7 +248,12 @@ class PropertyFeature {
             $filters['location'] = sanitize_text_field(wp_unslash($loc_raw));
         }
         if ($loc_slug !== '') {
-            $filters['location_slug'] = sanitize_title($loc_slug);
+            // Декодируем URL, обрабатывая двойную кодировку
+            $decoded_slug = urldecode($loc_slug);
+            if (preg_match('/%[0-9A-Fa-f]{2}/', $decoded_slug)) {
+                $decoded_slug = urldecode($decoded_slug);
+            }
+            $filters['location_slug'] = sanitize_text_field($decoded_slug);
             if (empty($filters['location'])) {
                 $filters['location'] = $filters['location_slug'];
             }
@@ -345,9 +358,27 @@ class PropertyFeature {
         $filters = [];
 
         // Локация
-        if (!empty($params['location'])) {
+        if (!empty($params['location_slug'])) {
+            $loc_slug = $params['location_slug'];
+            $term = get_term_by('slug', $loc_slug, 'location');
+            if (!$term) {
+                $term = get_term_by('slug', sanitize_title($loc_slug), 'location');
+            }
+            if ($term && !is_wp_error($term)) {
+                $filters[] = [
+                    'key' => 'location',
+                    'label' => 'Город',
+                    'value' => $term->name,
+                    'raw' => $loc_slug,
+                    'type' => 'taxonomy',
+                ];
+            }
+        } elseif (!empty($params['location'])) {
             $loc_slug = urldecode($params['location']);
             $term = get_term_by('slug', sanitize_text_field($loc_slug), 'location');
+            if (!$term) {
+                $term = get_term_by('name', sanitize_text_field($loc_slug), 'location');
+            }
             if ($term && !is_wp_error($term)) {
                 $filters[] = [
                     'key' => 'location',
@@ -400,6 +431,98 @@ class PropertyFeature {
         return $filters;
     }
 
+    private function initQueryMods() {
+        add_action('pre_get_posts', [$this, 'modify_property_archive_query']);
+    }
+
+    /**
+     * Модификация основного запроса для архива property
+     */
+    public function modify_property_archive_query($query) {
+        if (!is_admin() && $query->is_main_query() && is_post_type_archive('property')) {
+            $params = $this->formatRequestParams('GET');
+
+            // Устанавливаем пагинацию и сортировку
+            $query->set('posts_per_page', $params['posts_per_page'] ?? self::$PER_LIMIT);
+            $query->set('paged', $params['paged'] ?? 1);
+            $query->set('orderby', $params['orderby'] ?? 'date');
+            $query->set('order', $params['order'] ?? 'DESC');
+
+            // Локация
+            $location = $params['location'] ?? '';
+            $location_slug = $params['location_slug'] ?? '';
+            if (!empty($location_slug)) {
+                $location_term = get_term_by('slug', $location_slug, 'location');
+                if (!$location_term) {
+                    $location_term = get_term_by('slug', sanitize_title($location_slug), 'location');
+                }
+            } elseif (!empty($location)) {
+                $location_term = get_term_by('slug', sanitize_title($location), 'location');
+                if (!$location_term) {
+                    $location_term = get_term_by('name', sanitize_text_field($location), 'location');
+                }
+            }
+            if ($location_term) {
+                $query->set('tax_query', [[
+                    'taxonomy' => 'location',
+                    'field' => 'term_id',
+                    'terms' => $location_term->term_id,
+                ]]);
+            }
+
+            // Тип жилья
+            if (!empty($params['property_types']) && is_array($params['property_types'])) {
+                $type_ids = array_map('intval', $params['property_types']);
+                $type_clause = [
+                    'taxonomy' => 'property_type',
+                    'field' => 'term_id',
+                    'terms' => $type_ids,
+                    'operator' => 'IN',
+                ];
+                $existing_tax = $query->get('tax_query') ?: [];
+                if (!empty($existing_tax)) {
+                    $existing_tax[] = $type_clause;
+                    $existing_tax['relation'] = 'AND';
+                } else {
+                    $existing_tax = [$type_clause];
+                }
+                $query->set('tax_query', $existing_tax);
+            }
+
+            // Цена и гости
+            $meta_query = [];
+            if (!empty($params['price_min'])) {
+                $meta_query[] = [
+                    'key' => 'price',
+                    'value' => intval($params['price_min']),
+                    'compare' => '>=',
+                    'type' => 'NUMERIC',
+                ];
+            }
+            if (!empty($params['price_max'])) {
+                $meta_query[] = [
+                    'key' => 'price',
+                    'value' => intval($params['price_max']),
+                    'compare' => '<=',
+                    'type' => 'NUMERIC',
+                ];
+            }
+            if (!empty($params['adults'])) {
+                $meta_query[] = [
+                    'key' => 'guests_count',
+                    'value' => intval($params['adults']),
+                    'compare' => '>=',
+                    'type' => 'NUMERIC',
+                ];
+            }
+            if (!empty($meta_query)) {
+                $query->set('meta_query', $meta_query);
+            }
+
+            // Характеристики не модифицируем в основном запросе, так как логика OR сложная
+        }
+    }
+
     // ============================================================
     // AJAX: Обработчики
     // ============================================================
@@ -416,6 +539,8 @@ class PropertyFeature {
         // Автодополнение локаций
         add_action('wp_ajax_location_autocomplete', [$this, 'ajaxLocationAutocomplete']);
         add_action('wp_ajax_nopriv_location_autocomplete', [$this, 'ajaxLocationAutocomplete']);
+        add_action('wp_ajax_get_locations_autocomplete', [$this, 'ajaxLocationAutocomplete']);
+        add_action('wp_ajax_nopriv_get_locations_autocomplete', [$this, 'ajaxLocationAutocomplete']);
     }
 
     /**

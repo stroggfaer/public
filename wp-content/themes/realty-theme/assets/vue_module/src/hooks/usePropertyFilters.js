@@ -205,7 +205,7 @@ export default function usePropertyFilters(params = {}) {
                 action: 'property_filter', // Используем новый action
                 nonce,
                 location: f.locationInput,
-                location_slug: f.locationInput ? decodeURIComponent(f.locationSlug) : '',
+                location_slug: f.locationSlug || '',
                 price_min: f.price_min,
                 price_max: f.price_max,
                 checkin_date: f.checkin_date,
