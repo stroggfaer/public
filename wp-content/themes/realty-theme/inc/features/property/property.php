@@ -65,6 +65,7 @@ class PropertyFeature {
         // Локация
         $location = $params['location'] ?? '';
         $location_slug = $params['location_slug'] ?? '';
+        $location_term = null;
         if (!empty($location_slug)) {
             $location_term = get_term_by('slug', $location_slug, 'location');
             if (!$location_term) {
@@ -242,7 +243,7 @@ class PropertyFeature {
 
         // 3. Локация — самая сложная часть, делаем аккуратно
         $loc_raw = $source['location']      ?? $filters['location'];
-        $loc_slug = $source['location_slug'] ?? $source['location'] ?? $filters['location_slug'];
+        $loc_slug = $source['location'] ?? $filters['location_slug'];
 
         if ($loc_raw !== '') {
             $filters['location'] = sanitize_text_field(wp_unslash($loc_raw));
@@ -451,6 +452,7 @@ class PropertyFeature {
             // Локация
             $location = $params['location'] ?? '';
             $location_slug = $params['location_slug'] ?? '';
+            $location_term = null;
             if (!empty($location_slug)) {
                 $location_term = get_term_by('slug', $location_slug, 'location');
                 if (!$location_term) {

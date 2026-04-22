@@ -242,30 +242,27 @@ export default {
     // Отправка формы
     function handleSubmit() {
       const params = new URLSearchParams();
-      
+
       if (locationInput.value) {
         params.append('location', locationInput.value);
       }
-      if (locationSlug.value) {
-        params.append('location_slug', locationSlug.value);
-      }
-      
+
       if (checkinDate.value) {
         params.append('checkin_date', checkinDate.value);
       }
-      
+
       if (checkoutDate.value) {
         params.append('checkout_date', checkoutDate.value);
       }
-      
+
       if (adults.value) {
         params.append('adults', adults.value);
       }
-      
+
       if (children.value) {
         params.append('children', children.value);
       }
-      
+
       const archiveUrl = '/property/' + (params.toString() ? '?' + params.toString() : '');
       window.location.href = archiveUrl;
     }
