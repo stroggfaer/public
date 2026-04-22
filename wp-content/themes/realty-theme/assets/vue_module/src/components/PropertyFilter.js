@@ -5,6 +5,7 @@ export default {
   template: `
     <div class="property-filter-sidebar-wrap">
       <el-form :id="formId" @submit.prevent label-position="top">
+
         <!-- Цена – слайдер с двумя ползунками и инпутами -->
         <el-form-item label="Цена">
           <div class="price-range-wrapper">
@@ -42,27 +43,41 @@ export default {
           </div>
         </el-form-item>
 
+        <!-- Тип жилья -->
+        <el-form-item v-if="propertyTypes.length > 0" label="Тип жилья">
+          <el-checkbox-group v-model="localFilters.property_types" @change="applyFilters">
+            <el-checkbox
+              v-for="type in visiblePropertyTypes"
+              :key="type.id"
+              :value="type.id"
+            >
+              {{ type.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+          <div v-if="propertyTypes.length > 10" class="show-more-btn-wrap">
+            <el-button type="text" size="small" @click="togglePropertyTypesExpanded">
+              {{ propertyTypesExpanded ? 'Скрыть' : 'Показать все' }}
+            </el-button>
+          </div>
+        </el-form-item>
+
         <!-- Характеристики: Первые 5 групп -->
         <template v-for="group in visibleGroups" :key="group.group_id">
           <el-form-item :label="group.group_name">
-            
+
             <!-- Checkbox -->
             <template v-if="group.type_ui === 'checkbox'">
               <el-checkbox-group v-model="localFilters.characteristics" @change="applyFilters">
                 <el-checkbox
                   v-for="char in getVisibleCharacteristics(group)"
                   :key="char.id"
-                  :label="char.id"
+                  :value="char.id"
                 >
                   {{ char.title }}
                 </el-checkbox>
               </el-checkbox-group>
               <div v-if="needsShowMoreButton(group)" class="show-more-btn-wrap">
-                <el-button
-                  type="text"
-                  size="small"
-                  @click="toggleShowMore(group.group_id)"
-                >
+                <el-button type="text" size="small" @click="toggleShowMore(group.group_id)">
                   {{ expandedCheckboxGroups[group.group_id] ? 'Скрыть' : 'Показать все' }}
                 </el-button>
               </div>
@@ -70,7 +85,7 @@ export default {
 
             <!-- Radio -->
             <el-radio-group v-else-if="group.type_ui === 'radio'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)">
-              <el-radio v-for="char in group.characteristics" :key="char.id" :label="char.id">
+              <el-radio v-for="char in group.characteristics" :key="char.id" :value="char.id">
                 {{ char.title }}
               </el-radio>
             </el-radio-group>
@@ -87,8 +102,8 @@ export default {
 
             <!-- Chips -->
             <div v-else-if="group.type_ui === 'chips'" class="chips-container">
-              <el-tag 
-                v-for="char in group.characteristics" 
+              <el-tag
+                v-for="char in group.characteristics"
                 :key="char.id"
                 :type="localFilters.characteristics.includes(char.id) ? 'primary' : 'info'"
                 @click="toggleCharacteristic(char.id)"
@@ -101,7 +116,7 @@ export default {
             <!-- Switch -->
             <div v-else-if="group.type_ui === 'switch'">
               <div v-for="char in group.characteristics" :key="char.id" style="display: flex; align-items: center; margin-bottom: 8px;">
-                <el-switch 
+                <el-switch
                   :model-value="localFilters.characteristics.includes(char.id)"
                   @change="(val) => toggleCharacteristic(char.id, val)"
                 />
@@ -114,30 +129,26 @@ export default {
 
         <!-- Характеристики: Остальные группы в collapse -->
         <el-collapse v-if="hiddenGroups.length > 0" v-model="expandedGroups">
-          <el-collapse-item 
-            v-for="group in hiddenGroups" 
+          <el-collapse-item
+            v-for="group in hiddenGroups"
             :key="group.group_id"
-            :name="group.group_id" 
+            :name="group.group_id"
             :title="group.group_name"
           >
-            
+
             <!-- Checkbox -->
             <template v-if="group.type_ui === 'checkbox'">
               <el-checkbox-group v-model="localFilters.characteristics" @change="applyFilters">
                 <el-checkbox
                   v-for="char in getVisibleCharacteristics(group)"
                   :key="char.id"
-                  :label="char.id"
+                  :value="char.id"
                 >
                   {{ char.title }}
                 </el-checkbox>
               </el-checkbox-group>
               <div v-if="needsShowMoreButton(group)" class="show-more-btn-wrap">
-                <el-button
-                  type="text"
-                  size="small"
-                  @click="toggleShowMore(group.group_id)"
-                >
+                <el-button type="text" size="small" @click="toggleShowMore(group.group_id)">
                   {{ expandedCheckboxGroups[group.group_id] ? 'Скрыть' : 'Показать все' }}
                 </el-button>
               </div>
@@ -145,7 +156,7 @@ export default {
 
             <!-- Radio -->
             <el-radio-group v-else-if="group.type_ui === 'radio'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)">
-              <el-radio v-for="char in group.characteristics" :key="char.id" :label="char.id">
+              <el-radio v-for="char in group.characteristics" :key="char.id" :value="char.id">
                 {{ char.title }}
               </el-radio>
             </el-radio-group>
@@ -162,8 +173,8 @@ export default {
 
             <!-- Chips -->
             <div v-else-if="group.type_ui === 'chips'" class="chips-container">
-              <el-tag 
-                v-for="char in group.characteristics" 
+              <el-tag
+                v-for="char in group.characteristics"
                 :key="char.id"
                 :type="localFilters.characteristics.includes(char.id) ? 'primary' : 'info'"
                 @click="toggleCharacteristic(char.id)"
@@ -176,7 +187,7 @@ export default {
             <!-- Switch -->
             <div v-else-if="group.type_ui === 'switch'">
               <div v-for="char in group.characteristics" :key="char.id" style="display: flex; align-items: center; margin-bottom: 8px;">
-                <el-switch 
+                <el-switch
                   :model-value="localFilters.characteristics.includes(char.id)"
                   @change="(val) => toggleCharacteristic(char.id, val)"
                 />
@@ -205,6 +216,7 @@ export default {
       </transition>
     </div>
   `,
+
   props: {
     activeFilters: Array,
     priceRange: Object,
@@ -243,16 +255,29 @@ export default {
     const loadingBtn = ref(false);
 
     // Локальные фильтры для формы
-    const localFilters = ref({ ...filters.value });
+    const localFilters = ref({
+      ...filters.value,
+      property_types: Array.isArray(filters.value?.property_types) ? [...filters.value.property_types] : [],
+    });
     const localPriceRangeValue = ref([...priceRangeValue.value]);
 
     // Характеристики
     const filterCharacteristics = ref(props.config?.filter_characteristics || []);
     const expandedGroups = ref([]);
-    
+
+    // Типы жилья
+    const propertyTypes = ref(Array.isArray(props.config?.property_types) ? props.config.property_types : []);
+    const propertyTypesExpanded = ref(false);
+    const visiblePropertyTypes = computed(() =>
+      propertyTypesExpanded.value ? propertyTypes.value : propertyTypes.value.slice(0, 10)
+    );
+    function togglePropertyTypesExpanded() {
+      propertyTypesExpanded.value = !propertyTypesExpanded.value;
+    }
+
     // Для radio и select (одиночный выбор)
     const selectedRadioChar = ref({});
-    
+
     // Для checkbox: показать/скрыть дополнительные элементы (лимит 10)
     const expandedCheckboxGroups = ref({});
 
@@ -260,7 +285,7 @@ export default {
     const visibleGroups = computed(() => filterCharacteristics.value.slice(0, 5));
     const hiddenGroups = computed(() => filterCharacteristics.value.slice(5));
 
-    // Есть ли активные фильтры (цена изменена или выбраны характеристики)
+    // Есть ли активные фильтры
     const priceMin = computed(() => Number(props.config?.price_range?.min) || 0);
     const priceMax = computed(() => Number(props.config?.price_range?.max) || 1000000);
     const hasActiveFilters = computed(() => {
@@ -269,9 +294,10 @@ export default {
         (f.price_min != null && f.price_min !== priceMin.value) ||
         (f.price_max != null && f.price_max !== priceMax.value);
       const hasChars = Array.isArray(f.characteristics) && f.characteristics.length > 0;
-      return priceChanged || hasChars;
+      const hasTypes = Array.isArray(f.property_types) && f.property_types.length > 0;
+      return priceChanged || hasChars || hasTypes;
     });
-    
+
     // Функция для получения видимых характеристик в checkbox группе (лимит 10)
     function getVisibleCharacteristics(group) {
       if (group.type_ui !== 'checkbox' || !group.characteristics) {
@@ -280,12 +306,12 @@ export default {
       const isExpanded = expandedCheckboxGroups.value[group.group_id];
       return isExpanded ? group.characteristics : group.characteristics.slice(0, 10);
     }
-    
+
     // Проверка, нужна ли кнопка "Показать все"
     function needsShowMoreButton(group) {
       return group.type_ui === 'checkbox' && group.characteristics && group.characteristics.length > 10;
     }
-    
+
     // Переключение состояния "Показать все" / "Скрыть"
     function toggleShowMore(groupId) {
       expandedCheckboxGroups.value[groupId] = !expandedCheckboxGroups.value[groupId];
@@ -323,31 +349,37 @@ export default {
     // Обновление URL
     function updateURL() {
       const params = new URLSearchParams(window.location.search);
-      
+
       if (localFilters.value.characteristics.length > 0) {
         params.set('characteristics', JSON.stringify(localFilters.value.characteristics));
       } else {
         params.delete('characteristics');
       }
-      
+
+      if (Array.isArray(localFilters.value.property_types) && localFilters.value.property_types.length > 0) {
+        params.set('property_types', JSON.stringify(localFilters.value.property_types));
+      } else {
+        params.delete('property_types');
+      }
+
       window.history.pushState({}, '', window.location.pathname + '?' + params.toString());
     }
 
     // Чтение из URL
     function initFromURL() {
       const params = new URLSearchParams(window.location.search);
+
       const characteristics = params.get('characteristics');
-      
       if (characteristics) {
         try {
           const parsed = JSON.parse(characteristics);
           if (Array.isArray(parsed)) {
             store.commit('propertyFilters/SET_FILTER', { key: 'characteristics', value: parsed });
             localFilters.value.characteristics = parsed;
-            
+
             filterCharacteristics.value.forEach(group => {
               if (['radio', 'select'].includes(group.type_ui)) {
-                const selectedInGroup = parsed.find(id => 
+                const selectedInGroup = parsed.find(id =>
                   group.characteristics.some(c => c.id === id)
                 );
                 if (selectedInGroup) {
@@ -360,11 +392,27 @@ export default {
           console.error('Error parsing characteristics from URL:', e);
         }
       }
+
+      const propertyTypesParam = params.get('property_types');
+      if (propertyTypesParam) {
+        try {
+          const parsed = JSON.parse(propertyTypesParam);
+          if (Array.isArray(parsed)) {
+            store.commit('propertyFilters/SET_FILTER', { key: 'property_types', value: parsed });
+            localFilters.value.property_types = parsed;
+          }
+        } catch (e) {
+          console.error('Error parsing property_types from URL:', e);
+        }
+      }
     }
 
     // Синхронизация локальных фильтров с store
     watch(filters, (newVal) => {
-      localFilters.value = { ...newVal };
+      localFilters.value = {
+        ...newVal,
+        property_types: Array.isArray(newVal?.property_types) ? newVal.property_types : [],
+      };
     }, { immediate: true });
 
     watch(priceRangeValue, (newVal) => {
@@ -405,24 +453,30 @@ export default {
 
     async function resetFilter() {
       reset();
-      localFilters.value = { ...filters.value };
-      localFilters.value.characteristics = [];
-      localFilters.value.characteristics_logic = 'OR';
+      localFilters.value = {
+        ...filters.value,
+        characteristics: [],
+        characteristics_logic: 'OR',
+        property_types: [],
+        price_min: priceMin.value,
+        price_max: priceMax.value,
+      };
       localPriceRangeValue.value = [priceMin.value, priceMax.value];
-      localFilters.value.price_min = priceMin.value;
-      localFilters.value.price_max = priceMax.value;
       selectedRadioChar.value = {};
       expandedGroups.value = [];
       expandedCheckboxGroups.value = {};
-      
+      propertyTypesExpanded.value = false;
+
       store.commit('propertyFilters/SET_FILTER', { key: 'characteristics', value: [] });
       store.commit('propertyFilters/SET_FILTER', { key: 'characteristics_logic', value: 'OR' });
-      
+      store.commit('propertyFilters/SET_FILTER', { key: 'property_types', value: [] });
+
       const params = new URLSearchParams(window.location.search);
       params.delete('characteristics');
       params.delete('characteristics_logic');
+      params.delete('property_types');
       window.history.pushState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
-      
+
       await applyFilters();
     }
 
@@ -461,6 +515,10 @@ export default {
       needsShowMoreButton,
       toggleShowMore,
       hasActiveFilters,
+      propertyTypes,
+      visiblePropertyTypes,
+      propertyTypesExpanded,
+      togglePropertyTypesExpanded,
     };
   }
 };

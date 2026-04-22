@@ -77,6 +77,23 @@ class PropertyFeature {
             }
         }
 
+        // Тип жилья
+        if (!empty($params['property_types']) && is_array($params['property_types'])) {
+            $type_ids = array_map('intval', $params['property_types']);
+            $type_clause = [
+                'taxonomy' => 'property_type',
+                'field'    => 'term_id',
+                'terms'    => $type_ids,
+                'operator' => 'IN',
+            ];
+            if (!empty($args['tax_query'])) {
+                $args['tax_query'][] = $type_clause;
+                $args['tax_query']['relation'] = 'AND';
+            } else {
+                $args['tax_query'] = [$type_clause];
+            }
+        }
+
         // Цена
         $meta_query = [];
         if (!empty($params['price_min'])) {
@@ -212,6 +229,7 @@ class PropertyFeature {
                 'price_max'     => 0,
                 'paged'         => 1,
                 'characteristics' => [],
+                'property_types'  => [],
         ], $overrides);
 
         // 3. Локация — самая сложная часть, делаем аккуратно
@@ -280,9 +298,25 @@ class PropertyFeature {
             // Преобразуем в массив целых чисел
             if (is_array($chars)) {
                 $chars = array_map('intval', array_filter($chars, 'is_numeric'));
-                // Сохраняем только если массив не пустой
                 if (!empty($chars)) {
                     $filters['characteristics'] = $chars;
+                }
+            }
+        }
+
+        // 8. Обработка типов жилья
+        if (isset($source['property_types'])) {
+            $types = $source['property_types'];
+            if (is_string($types)) {
+                $decoded = json_decode($types, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $types = $decoded;
+                }
+            }
+            if (is_array($types)) {
+                $types = array_map('intval', array_filter($types, 'is_numeric'));
+                if (!empty($types)) {
+                    $filters['property_types'] = $types;
                 }
             }
         }
@@ -548,7 +582,8 @@ class PropertyFeature {
         $config = [
                 'price_range' => $price_range,
                 'guests' => ['adults'=> ['min'=>1,'max'=>10],'children' => ['min'=>0,'max'=>8]],
-                'filter_characteristics' => realty_get_filter_characteristics()
+                'filter_characteristics' => realty_get_filter_characteristics(),
+                'property_types' => realty_get_property_types_for_filter(),
         ];
 
         $data = [

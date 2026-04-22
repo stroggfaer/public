@@ -12,6 +12,7 @@ function createDefaultFilters(overrides = {}) {
         children: 0,
         characteristics: [],
         characteristics_logic: 'OR', // Всегда OR для фильтров
+        property_types: [],
         ...overrides
     };
 }
@@ -25,7 +26,8 @@ const ALLOWED_KEYS = [
     'adults',
     'children',
     'characteristics',
-    'characteristics_logic'
+    'characteristics_logic',
+    'property_types',
 ];
 function normalizeFilters(input = {}) {
     const map = {
@@ -47,6 +49,20 @@ function normalizeFilters(input = {}) {
         
         // Обработка массивов (characteristics)
         if (newKey === 'characteristics') {
+            if (typeof value === 'string') {
+                try {
+                    value = JSON.parse(value);
+                } catch (e) {
+                    value = [];
+                }
+            }
+            if (!Array.isArray(value)) {
+                value = [];
+            }
+        }
+
+        // Обработка массивов (property_types)
+        if (newKey === 'property_types') {
             if (typeof value === 'string') {
                 try {
                     value = JSON.parse(value);

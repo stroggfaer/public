@@ -756,3 +756,32 @@ function realty_get_filter_characteristics() {
 
     return $result;
 }
+
+/**
+ * Возвращает список типов жилья для фильтра
+ *
+ * @return array [ ['id' => int, 'name' => string, 'slug' => string], ... ]
+ */
+function realty_get_property_types_for_filter(): array {
+    $terms = get_terms([
+        'taxonomy'   => 'property_type',
+        'hide_empty' => false,
+        'orderby'    => 'name',
+        'order'      => 'ASC',
+    ]);
+
+    if (is_wp_error($terms) || empty($terms)) {
+        return [];
+    }
+
+    $result = [];
+    foreach ($terms as $term) {
+        $result[] = [
+            'id'   => $term->term_id,
+            'name' => $term->name,
+            'slug' => $term->slug,
+        ];
+    }
+
+    return $result;
+}

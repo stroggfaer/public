@@ -213,6 +213,7 @@ export default function usePropertyFilters(params = {}) {
                 adults: f.adults,
                 children: f.children,
                 characteristics: f.characteristics || [],
+                property_types: f.property_types || [],
                 page: params.page || 1,
                 per_page: params.per_page || 10,
                 ...params
