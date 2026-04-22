@@ -1,174 +1,209 @@
 import {onMounted, ref, watch, computed} from 'vue';
-import moment from 'moment';
 import usePropertyFilters from '../hooks/usePropertyFilters';
 export default {
 
   template: `
-    <el-form :id="formId" @submit.prevent="handleSubmit" label-position="top">
-      <!-- Цена – слайдер с двумя ползунками и инпутами -->
-      <el-form-item label="Цена">
-        <div class="price-range-wrapper">
-          <div class="price-inputs-row">
-            <el-input
-                v-model.number="localFilters.price_min"
-                type="number"
+    <div class="property-filter-sidebar-wrap">
+      <el-form :id="formId" @submit.prevent label-position="top">
+        <!-- Цена – слайдер с двумя ползунками и инпутами -->
+        <el-form-item label="Цена">
+          <div class="price-range-wrapper">
+            <div class="price-inputs-row">
+              <el-input
+                  v-model.number="localFilters.price_min"
+                  type="number"
+                  :min="Number(priceRange.min) || 0"
+                  :max="localFilters.price_max"
+                  placeholder="{{ priceRange.min || 0 }}"
+                  size="small"
+                  class="price-input"
+                  @change="onPriceChange"
+              />
+              <el-input
+                  v-model.number="localFilters.price_max"
+                  type="number"
+                  :min="localFilters.price_min"
+                  :max="Number(priceRange.max)"
+                  placeholder="{{ priceRange.max }}"
+                  size="small"
+                  class="price-input"
+                  @change="onPriceChange"
+              />
+            </div>
+            <el-slider
+                v-model="localPriceRangeValue"
+                range
                 :min="Number(priceRange.min) || 0"
-                :max="localFilters.price_max"
-                placeholder="{{ priceRange.min || 0 }}"
-                size="small"
-                class="price-input"
-                @input="onPriceInput"
-            />
-            <el-input
-                v-model.number="localFilters.price_max"
-                type="number"
-                :min="localFilters.price_min"
-                :max="Number(priceRange.max)"
-                placeholder="{{ priceRange.max }}"
-                size="small"
-                class="price-input"
-                @input="onPriceInput"
+                :max="Number(priceRange.max) || 1000000"
+                :step="safeStep"
+                :format-tooltip="formatPriceTooltip"
+                @change="applyFilters"
             />
           </div>
-          <el-slider
-              v-model="localPriceRangeValue"
-              range
-              :min="Number(priceRange.min) || 0"
-              :max="Number(priceRange.max) || 1000000"
-              :step="safeStep"
-              :format-tooltip="formatPriceTooltip"
-          />
-        </div>
-      </el-form-item>
-
-      <!-- Характеристики: Первые 5 групп -->
-      <template v-for="group in visibleGroups" :key="group.group_id">
-        <el-form-item :label="group.group_name">
-          
-          <!-- Checkbox -->
-          <el-checkbox-group v-if="group.type_ui === 'checkbox'" v-model="localFilters.characteristics">
-            <el-checkbox v-for="char in group.characteristics" :key="char.id" :label="char.id">
-              {{ char.title }}
-            </el-checkbox>
-          </el-checkbox-group>
-
-          <!-- Radio -->
-          <el-radio-group v-else-if="group.type_ui === 'radio'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)">
-            <el-radio v-for="char in group.characteristics" :key="char.id" :label="char.id">
-              {{ char.title }}
-            </el-radio>
-          </el-radio-group>
-
-          <!-- Select -->
-          <el-select v-else-if="group.type_ui === 'select'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)" placeholder="Выберите">
-            <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
-          </el-select>
-
-          <!-- Multi Select -->
-          <el-select v-else-if="group.type_ui === 'multi_select'" v-model="localFilters.characteristics" multiple placeholder="Выберите">
-            <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
-          </el-select>
-
-          <!-- Chips -->
-          <div v-else-if="group.type_ui === 'chips'" class="chips-container">
-            <el-tag 
-              v-for="char in group.characteristics" 
-              :key="char.id"
-              :type="localFilters.characteristics.includes(char.id) ? 'primary' : 'info'"
-              @click="toggleCharacteristic(char.id)"
-              style="cursor: pointer; margin: 4px;"
-            >
-              {{ char.title }}
-            </el-tag>
-          </div>
-
-          <!-- Switch -->
-          <div v-else-if="group.type_ui === 'switch'">
-            <div v-for="char in group.characteristics" :key="char.id" style="display: flex; align-items: center; margin-bottom: 8px;">
-              <el-switch 
-                :model-value="localFilters.characteristics.includes(char.id)"
-                @change="(val) => toggleCharacteristic(char.id, val)"
-              />
-              <span style="margin-left: 8px;">{{ char.title }}</span>
-            </div>
-          </div>
-
         </el-form-item>
-      </template>
 
-      <!-- Характеристики: Остальные группы в collapse -->
-      <el-collapse v-if="hiddenGroups.length > 0" v-model="expandedGroups">
-        <el-collapse-item 
-          v-for="group in hiddenGroups" 
-          :key="group.group_id"
-          :name="group.group_id" 
-          :title="group.group_name"
-        >
-          
-          <!-- Checkbox -->
-          <el-checkbox-group v-if="group.type_ui === 'checkbox'" v-model="localFilters.characteristics">
-            <el-checkbox v-for="char in group.characteristics" :key="char.id" :label="char.id">
-              {{ char.title }}
-            </el-checkbox>
-          </el-checkbox-group>
+        <!-- Характеристики: Первые 5 групп -->
+        <template v-for="group in visibleGroups" :key="group.group_id">
+          <el-form-item :label="group.group_name">
+            
+            <!-- Checkbox -->
+            <template v-if="group.type_ui === 'checkbox'">
+              <el-checkbox-group v-model="localFilters.characteristics" @change="applyFilters">
+                <el-checkbox
+                  v-for="char in getVisibleCharacteristics(group)"
+                  :key="char.id"
+                  :label="char.id"
+                >
+                  {{ char.title }}
+                </el-checkbox>
+              </el-checkbox-group>
+              <div v-if="needsShowMoreButton(group)" class="show-more-btn-wrap">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="toggleShowMore(group.group_id)"
+                >
+                  {{ expandedCheckboxGroups[group.group_id] ? 'Скрыть' : 'Показать все' }}
+                </el-button>
+              </div>
+            </template>
 
-          <!-- Radio -->
-          <el-radio-group v-else-if="group.type_ui === 'radio'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)">
-            <el-radio v-for="char in group.characteristics" :key="char.id" :label="char.id">
-              {{ char.title }}
-            </el-radio>
-          </el-radio-group>
+            <!-- Radio -->
+            <el-radio-group v-else-if="group.type_ui === 'radio'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)">
+              <el-radio v-for="char in group.characteristics" :key="char.id" :label="char.id">
+                {{ char.title }}
+              </el-radio>
+            </el-radio-group>
 
-          <!-- Select -->
-          <el-select v-else-if="group.type_ui === 'select'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)" placeholder="Выберите">
-            <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
-          </el-select>
+            <!-- Select -->
+            <el-select v-else-if="group.type_ui === 'select'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)" placeholder="Выберите">
+              <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
+            </el-select>
 
-          <!-- Multi Select -->
-          <el-select v-else-if="group.type_ui === 'multi_select'" v-model="localFilters.characteristics" multiple placeholder="Выберите">
-            <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
-          </el-select>
+            <!-- Multi Select -->
+            <el-select v-else-if="group.type_ui === 'multi_select'" v-model="localFilters.characteristics" multiple placeholder="Выберите" @change="applyFilters">
+              <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
+            </el-select>
 
-          <!-- Chips -->
-          <div v-else-if="group.type_ui === 'chips'" class="chips-container">
-            <el-tag 
-              v-for="char in group.characteristics" 
-              :key="char.id"
-              :type="localFilters.characteristics.includes(char.id) ? 'primary' : 'info'"
-              @click="toggleCharacteristic(char.id)"
-              style="cursor: pointer; margin: 4px;"
-            >
-              {{ char.title }}
-            </el-tag>
-          </div>
-
-          <!-- Switch -->
-          <div v-else-if="group.type_ui === 'switch'">
-            <div v-for="char in group.characteristics" :key="char.id" style="display: flex; align-items: center; margin-bottom: 8px;">
-              <el-switch 
-                :model-value="localFilters.characteristics.includes(char.id)"
-                @change="(val) => toggleCharacteristic(char.id, val)"
-              />
-              <span style="margin-left: 8px;">{{ char.title }}</span>
+            <!-- Chips -->
+            <div v-else-if="group.type_ui === 'chips'" class="chips-container">
+              <el-tag 
+                v-for="char in group.characteristics" 
+                :key="char.id"
+                :type="localFilters.characteristics.includes(char.id) ? 'primary' : 'info'"
+                @click="toggleCharacteristic(char.id)"
+                style="cursor: pointer; margin: 4px;"
+              >
+                {{ char.title }}
+              </el-tag>
             </div>
-          </div>
 
-        </el-collapse-item>
-      </el-collapse>
+            <!-- Switch -->
+            <div v-else-if="group.type_ui === 'switch'">
+              <div v-for="char in group.characteristics" :key="char.id" style="display: flex; align-items: center; margin-bottom: 8px;">
+                <el-switch 
+                  :model-value="localFilters.characteristics.includes(char.id)"
+                  @change="(val) => toggleCharacteristic(char.id, val)"
+                />
+                <span style="margin-left: 8px;">{{ char.title }}</span>
+              </div>
+            </div>
 
-      <!-- Actions -->
-      <el-form-item>
-        <el-button type="primary" native-type="submit" :loading="loadingBtn">
-          Применить
-        </el-button>
+          </el-form-item>
+        </template>
 
-        <el-button @click="resetFilter">
-          Сбросить
-        </el-button>
-      </el-form-item>
-      
+        <!-- Характеристики: Остальные группы в collapse -->
+        <el-collapse v-if="hiddenGroups.length > 0" v-model="expandedGroups">
+          <el-collapse-item 
+            v-for="group in hiddenGroups" 
+            :key="group.group_id"
+            :name="group.group_id" 
+            :title="group.group_name"
+          >
+            
+            <!-- Checkbox -->
+            <template v-if="group.type_ui === 'checkbox'">
+              <el-checkbox-group v-model="localFilters.characteristics" @change="applyFilters">
+                <el-checkbox
+                  v-for="char in getVisibleCharacteristics(group)"
+                  :key="char.id"
+                  :label="char.id"
+                >
+                  {{ char.title }}
+                </el-checkbox>
+              </el-checkbox-group>
+              <div v-if="needsShowMoreButton(group)" class="show-more-btn-wrap">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="toggleShowMore(group.group_id)"
+                >
+                  {{ expandedCheckboxGroups[group.group_id] ? 'Скрыть' : 'Показать все' }}
+                </el-button>
+              </div>
+            </template>
 
-    </el-form>
+            <!-- Radio -->
+            <el-radio-group v-else-if="group.type_ui === 'radio'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)">
+              <el-radio v-for="char in group.characteristics" :key="char.id" :label="char.id">
+                {{ char.title }}
+              </el-radio>
+            </el-radio-group>
+
+            <!-- Select -->
+            <el-select v-else-if="group.type_ui === 'select'" v-model="selectedRadioChar[group.group_id]" @change="onRadioChange(group.group_id)" placeholder="Выберите">
+              <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
+            </el-select>
+
+            <!-- Multi Select -->
+            <el-select v-else-if="group.type_ui === 'multi_select'" v-model="localFilters.characteristics" multiple placeholder="Выберите" @change="applyFilters">
+              <el-option v-for="char in group.characteristics" :key="char.id" :label="char.title" :value="char.id" />
+            </el-select>
+
+            <!-- Chips -->
+            <div v-else-if="group.type_ui === 'chips'" class="chips-container">
+              <el-tag 
+                v-for="char in group.characteristics" 
+                :key="char.id"
+                :type="localFilters.characteristics.includes(char.id) ? 'primary' : 'info'"
+                @click="toggleCharacteristic(char.id)"
+                style="cursor: pointer; margin: 4px;"
+              >
+                {{ char.title }}
+              </el-tag>
+            </div>
+
+            <!-- Switch -->
+            <div v-else-if="group.type_ui === 'switch'">
+              <div v-for="char in group.characteristics" :key="char.id" style="display: flex; align-items: center; margin-bottom: 8px;">
+                <el-switch 
+                  :model-value="localFilters.characteristics.includes(char.id)"
+                  @change="(val) => toggleCharacteristic(char.id, val)"
+                />
+                <span style="margin-left: 8px;">{{ char.title }}</span>
+              </div>
+            </div>
+
+          </el-collapse-item>
+        </el-collapse>
+
+      </el-form>
+
+      <!-- Фиксированная кнопка сброса — видна только если есть активные фильтры -->
+      <transition name="filter-reset-fade">
+        <div v-if="hasActiveFilters" class="filter-reset-sticky">
+          <el-button
+            type="danger"
+            plain
+            :loading="loadingBtn"
+            class="filter-reset-btn"
+            @click="resetFilter"
+          >
+            Сбросить все фильтры
+          </el-button>
+        </div>
+      </transition>
+    </div>
   `,
   props: {
     activeFilters: Array,
@@ -193,7 +228,6 @@ export default {
       querySearch,
       reset,
       initFilters,
-      validate,
       fetchPropertiesRender,
       initFiltersFromStore
     } = usePropertyFilters({
@@ -225,6 +259,18 @@ export default {
     // Первые 5 групп видимы, остальные в collapse
     const visibleGroups = computed(() => filterCharacteristics.value.slice(0, 5));
     const hiddenGroups = computed(() => filterCharacteristics.value.slice(5));
+
+    // Есть ли активные фильтры (цена изменена или выбраны характеристики)
+    const priceMin = computed(() => Number(props.config?.price_range?.min) || 0);
+    const priceMax = computed(() => Number(props.config?.price_range?.max) || 1000000);
+    const hasActiveFilters = computed(() => {
+      const f = localFilters.value;
+      const priceChanged =
+        (f.price_min != null && f.price_min !== priceMin.value) ||
+        (f.price_max != null && f.price_max !== priceMax.value);
+      const hasChars = Array.isArray(f.characteristics) && f.characteristics.length > 0;
+      return priceChanged || hasChars;
+    });
     
     // Функция для получения видимых характеристик в checkbox группе (лимит 10)
     function getVisibleCharacteristics(group) {
@@ -235,17 +281,17 @@ export default {
       return isExpanded ? group.characteristics : group.characteristics.slice(0, 10);
     }
     
-    // Проверка, нужна ли кнопка "Показать еще"
+    // Проверка, нужна ли кнопка "Показать все"
     function needsShowMoreButton(group) {
       return group.type_ui === 'checkbox' && group.characteristics && group.characteristics.length > 10;
     }
     
-    // Переключение состояния "Показать еще" / "Скрыть"
+    // Переключение состояния "Показать все" / "Скрыть"
     function toggleShowMore(groupId) {
       expandedCheckboxGroups.value[groupId] = !expandedCheckboxGroups.value[groupId];
     }
 
-    // Toggle для chips и switch
+    // Toggle для chips и switch — применяем сразу
     function toggleCharacteristic(charId, value = null) {
       const index = localFilters.value.characteristics.indexOf(charId);
       if (value === false || (value === null && index > -1)) {
@@ -253,13 +299,13 @@ export default {
       } else if (value === true || (value === null && index === -1)) {
         localFilters.value.characteristics.push(charId);
       }
+      applyFilters();
     }
 
-    // Обработка radio и select (одиночный выбор)
+    // Обработка radio и select (одиночный выбор) — применяем сразу
     function onRadioChange(groupId) {
       const charId = selectedRadioChar.value[groupId];
       if (charId) {
-        // Удаляем все характеристики этой группы
         const group = filterCharacteristics.value.find(g => g.group_id === groupId);
         if (group) {
           const groupCharIds = group.characteristics.map(c => c.id);
@@ -267,11 +313,11 @@ export default {
             id => !groupCharIds.includes(id)
           );
         }
-        // Добавляем выбранную
         if (!localFilters.value.characteristics.includes(charId)) {
           localFilters.value.characteristics.push(charId);
         }
       }
+      applyFilters();
     }
 
     // Обновление URL
@@ -299,7 +345,6 @@ export default {
             store.commit('propertyFilters/SET_FILTER', { key: 'characteristics', value: parsed });
             localFilters.value.characteristics = parsed;
             
-            // Инициализируем selectedRadioChar для radio/select
             filterCharacteristics.value.forEach(group => {
               if (['radio', 'select'].includes(group.type_ui)) {
                 const selectedInGroup = parsed.find(id => 
@@ -339,57 +384,56 @@ export default {
       }
     });
 
-    // Фильтры запуск;
-    async function handleSubmit() {
+    // Применить фильтры (по change)
+    async function applyFilters() {
       try {
-        // Обновляем store только при сабмите
         store.commit('propertyFilters/SET_FILTERS', localFilters.value);
-        updateURL(); // Обновляем URL
+        updateURL();
         loadingBtn.value = true;
         await fetchPropertiesRender();
-        loadingBtn.value = false;
       } catch (e) {
-        // Можно добавить уведомление об ошибке
         console.error(e.message);
+      } finally {
+        loadingBtn.value = false;
       }
     }
 
-    function onPriceInput() {
+    function onPriceChange() {
       localSyncPriceInputs();
+      applyFilters();
     }
 
     async function resetFilter() {
       reset();
-      // Полностью очищаем локальные данные
       localFilters.value = { ...filters.value };
       localFilters.value.characteristics = [];
       localFilters.value.characteristics_logic = 'OR';
-      localPriceRangeValue.value = [localFilters.value.price_min, localFilters.value.price_max];
+      localPriceRangeValue.value = [priceMin.value, priceMax.value];
+      localFilters.value.price_min = priceMin.value;
+      localFilters.value.price_max = priceMax.value;
       selectedRadioChar.value = {};
       expandedGroups.value = [];
-      expandedCheckboxGroups.value = {}; // Сбрасываем состояние "Показать еще"
+      expandedCheckboxGroups.value = {};
       
-      // Обновляем store
       store.commit('propertyFilters/SET_FILTER', { key: 'characteristics', value: [] });
       store.commit('propertyFilters/SET_FILTER', { key: 'characteristics_logic', value: 'OR' });
       
-      // Очищаем URL
       const params = new URLSearchParams(window.location.search);
       params.delete('characteristics');
       params.delete('characteristics_logic');
       window.history.pushState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
       
-      await handleSubmit();
+      await applyFilters();
     }
 
-    onMounted(()=>{
-        initFromURL(); // Читаем из URL
-        initFiltersFromStore();
-        store.commit('propertyFilters/SET_INIT', {
-          config: props.config,
-          initFilters: props.initFilters,
-          activeFilter: props.activeFilters,
-        });
+    onMounted(() => {
+      initFromURL();
+      initFiltersFromStore();
+      store.commit('propertyFilters/SET_INIT', {
+        config: props.config,
+        initFilters: props.initFilters,
+        activeFilter: props.activeFilters,
+      });
     });
 
     return {
@@ -400,9 +444,9 @@ export default {
       formId,
       formatPriceTooltip,
       querySearch,
-      handleSubmit,
+      applyFilters,
       resetFilter,
-      onPriceInput,
+      onPriceChange,
       priceRange: props.config.price_range,
       initFilters,
       filterCharacteristics,
@@ -415,7 +459,8 @@ export default {
       expandedCheckboxGroups,
       getVisibleCharacteristics,
       needsShowMoreButton,
-      toggleShowMore
+      toggleShowMore,
+      hasActiveFilters,
     };
   }
 };

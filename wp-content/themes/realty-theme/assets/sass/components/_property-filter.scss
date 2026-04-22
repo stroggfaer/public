@@ -179,3 +179,47 @@
 .price-range-wrapper .price-inputs-row .el-input {
     width: 100% !important;
 }
+
+// Обёртка сайдбара фильтров
+.property-filter-sidebar-wrap {
+    position: relative;
+}
+
+// Кнопка "Показать все / Скрыть" для checkbox групп
+.show-more-btn-wrap {
+    margin-top: 6px;
+
+    .el-button {
+        padding: 0;
+        font-size: 13px;
+        color: #409eff;
+    }
+}
+
+// Фиксированная кнопка сброса фильтров
+.filter-reset-sticky {
+    position: sticky;
+    bottom: 16px;
+    z-index: 100;
+    padding: 12px 0 4px;
+    background: linear-gradient(to bottom, transparent, #fff 40%);
+    pointer-events: none;
+
+    .filter-reset-btn {
+        width: 100%;
+        pointer-events: all;
+        font-weight: 500;
+    }
+}
+
+// Анимация появления/скрытия кнопки сброса
+.filter-reset-fade-enter-active,
+.filter-reset-fade-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.filter-reset-fade-enter-from,
+.filter-reset-fade-leave-to {
+    opacity: 0;
+    transform: translateY(8px);
+}
