@@ -37,5 +37,9 @@ if ( ! defined( 'SYSTEM_CHARACTERISTIC_GROUP_OPTIONS' ) ) {
             'value' => 'system_accommodations',
             'label' => 'Размещения',
         ),
+        array(
+            'value' => 'hours_limit',
+            'label' => 'Период аренды',
+        ),
     ) );
 }

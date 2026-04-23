@@ -524,3 +524,102 @@ function realty_enqueue_characteristics_metabox_assets( $hook ) {
     ) );
 }
 add_action( 'admin_enqueue_scripts', 'realty_enqueue_characteristics_metabox_assets' );
+
+function realty_register_hours_limit_metabox() {
+    add_meta_box(
+        'property_hours_limit_metabox',
+        __( 'Период аренды', 'realty-theme' ),
+        'realty_render_hours_limit_metabox',
+        'property',
+        'normal',
+        'high'
+    );
+}
+add_action( 'add_meta_boxes', 'realty_register_hours_limit_metabox' );
+
+function realty_render_hours_limit_metabox( $post ) {
+    $saved   = get_post_meta( $post->ID, 'hours_limit', true );
+    $options = realty_get_chars_by_system_template( 'hours_limit' );
+
+    wp_nonce_field( 'realty_save_hours_limit', 'realty_hours_limit_nonce' );
+    ?>
+    <p>
+        <label for="property_hours_limit"><?php esc_html_e( 'Период цены', 'realty-theme' ); ?></label><br>
+        <select id="property_hours_limit" name="property_hours_limit" style="min-width:200px;">
+            <option value=""><?php esc_html_e( '---', 'realty-theme' ); ?></option>
+            <?php if ( ! empty( $options ) ) : ?>
+                <?php foreach ( $options as $opt ) : ?>
+                    <option value="<?php echo esc_attr( $opt['value'] ); ?>" <?php selected( $saved, $opt['value'] ); ?>>
+                        <?php echo esc_html( $opt['label'] ); ?>
+                    </option>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <option disabled><?php esc_html_e( 'Создайте группу с шаблоном «Период аренды» в Справочнике', 'realty-theme' ); ?></option>
+            <?php endif; ?>
+        </select>
+        <p class="description"><?php esc_html_e( 'Отображается рядом с ценой на странице объекта', 'realty-theme' ); ?></p>
+    </p>
+    <?php
+}
+
+function realty_save_hours_limit( $post_id ) {
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+    if ( ! isset( $_POST['realty_hours_limit_nonce'] ) ) return;
+    if ( ! wp_verify_nonce( $_POST['realty_hours_limit_nonce'], 'realty_save_hours_limit' ) ) return;
+    if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+    $value = isset( $_POST['property_hours_limit'] ) ? sanitize_text_field( $_POST['property_hours_limit'] ) : '';
+    update_post_meta( $post_id, 'hours_limit', $value );
+}
+add_action( 'save_post_property', 'realty_save_hours_limit' );
+
+/**
+ * Рендер скрытого select hours_limit + JS для встройки рядом с полем Цена (Pods)
+ */
+function realty_render_hours_limit_inline() {
+    $screen = get_current_screen();
+    if ( ! $screen || $screen->post_type !== 'property' || $screen->base !== 'post' ) return;
+
+    global $post;
+    if ( ! $post ) return;
+
+    $saved   = get_post_meta( $post->ID, 'hours_limit', true );
+    $options = realty_get_chars_by_system_template( 'hours_limit' );
+
+    wp_nonce_field( 'realty_save_hours_limit', 'realty_hours_limit_nonce' );
+    ?>
+    <div id="hours-limit-wrap" style="display:none;">
+        <select id="property_hours_limit" name="property_hours_limit">
+            <option value=""><?php esc_html_e( '---', 'realty-theme' ); ?></option>
+            <?php foreach ( $options as $opt ) : ?>
+                <option value="<?php echo esc_attr( $opt['value'] ); ?>" <?php selected( $saved, $opt['value'] ); ?>>
+                    <?php echo esc_html( $opt['label'] ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <p class="description" style="margin:4px 0 0;"><?php esc_html_e( 'Период цены', 'realty-theme' ); ?></p>
+    </div>
+    <script>
+    jQuery(function($) {
+        var $wrap = $('#hours-limit-wrap');
+        if (!$wrap.length) return;
+
+        // Ищем строку таблицы с label "Цена" в метабоксах Pods
+        var $priceRow = $('tr').filter(function() {
+            return $(this).find('th, label').text().trim() === 'Цена';
+        }).first();
+
+        if ($priceRow.length) {
+            var $td = $priceRow.find('td').first();
+            var $priceInput = $td.find('input').first();
+
+            // Встраиваем select в ту же ячейку рядом с input
+            $priceInput.css({ display: 'inline-block', verticalAlign: 'top', width: 'auto' });
+            $wrap.show().css({ display: 'inline-block', verticalAlign: 'top', marginLeft: '8px' });
+            $priceInput.after($wrap);
+        }
+    });
+    </script>
+    <?php
+}
+add_action( 'admin_footer', 'realty_render_hours_limit_inline' );

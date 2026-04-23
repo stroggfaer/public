@@ -785,3 +785,36 @@ function realty_get_property_types_for_filter(): array {
 
     return $result;
 }
+
+/**
+ * Получить характеристики из справочника по system_template группы
+ *
+ * Используется в метабоксах и там, где нет сохранённых характеристик объекта.
+ *
+ * @param string $system_template Значение group_system_template (например 'hours_limit')
+ * @return array [ ['value' => post_title, 'label' => label|post_title], ... ]
+ */
+function realty_get_chars_by_system_template( $system_template ) {
+    $groups = get_terms( [
+        'taxonomy'   => 'char_group',
+        'hide_empty' => false,
+        'meta_query' => [ [ 'key' => 'group_system_template', 'value' => $system_template ] ],
+    ] );
+
+    if ( empty( $groups ) || is_wp_error( $groups ) ) return [];
+
+    $chars = get_posts( [
+        'post_type'      => 'characteristic',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'meta_value_num',
+        'meta_key'       => 'sort_order',
+        'order'          => 'ASC',
+        'tax_query'      => [ [ 'taxonomy' => 'char_group', 'field' => 'term_id', 'terms' => $groups[0]->term_id ] ],
+    ] );
+
+    return array_map( fn( $c ) => [
+        'value' => $c->post_title,
+        'label' => get_post_meta( $c->ID, 'label', true ) ?: $c->post_title,
+    ], $chars );
+}

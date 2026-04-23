@@ -11,12 +11,28 @@ $pod = $args['pod'] ?? null;
 $price_raw = $pod ? $pod->field('price') : 0;
 $price_formatted = $price_raw ? number_format((float) $price_raw, 0, '.', ' ') . ' ₽' : '—';
 
+$period_label = '';
+
+if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
+    $chars = realty_get_property_characteristics($pod->id(), null, [
+            'type' => 'one',
+            'system_temp' => 'hours_limit',
+            'limit' => -1,
+    ])['characteristics'] ?? [];
+
+    $match = current(array_filter($chars, fn($c) => $c['title'] === $value));
+
+    $period_label = $match['label'] ?? $match['title'] ?? $value;
+}
+
 ?>
 <div class="property-contact-card">
     <div class="card-header">
         <div class="price">
             <span class="amount"><?php echo esc_html($price_formatted); ?></span>
-            <span class="period">/ ночь</span>
+            <?php if ( $period_label ) : ?>
+                <span class="period">/ <?php echo esc_html( $period_label ); ?></span>
+            <?php endif; ?>
         </div>
         <div class="rating">
             <span class="material-symbols-outlined star-icon">star</span>

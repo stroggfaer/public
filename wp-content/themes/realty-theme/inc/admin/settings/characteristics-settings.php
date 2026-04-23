@@ -756,7 +756,7 @@ function realty_ajax_save_characteristic_group() {
     }
     
     // Валидация system_template
-    $allowed_system_templates = array( '', 'system_apartment', 'system_popular_services', 'system_rules', 'system_accommodations' );
+    $allowed_system_templates = wp_list_pluck( SYSTEM_CHARACTERISTIC_GROUP_OPTIONS, 'value' );
     if ( ! in_array( $group_system_template, $allowed_system_templates, true ) ) {
         $group_system_template = '';
     }
