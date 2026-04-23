@@ -516,6 +516,12 @@ function realty_enqueue_characteristics_metabox_assets( $hook ) {
         array(),
         '1.0.0'
     );
+
+    wp_add_inline_style( 'realty-property-characteristics', '
+        .pods-currency-container { position: relative; display: inline-flex; align-items: center; width: 100%; }
+        .pods-currency-container .pods-currency-sign { position: absolute; left: 8px; z-index: 1; pointer-events: none; font-style: normal; color: #555; font-family: inherit; font-size: inherit; background: none; border: none; padding: 0; }
+        .pods-currency-container .pods-form-ui-field-type-currency { padding-left: 24px !important; width: 100%; box-sizing: border-box; }
+    ' );
     
     // Localize данные
     wp_localize_script( 'realty-property-characteristics', 'realtyCharacteristicsData', array(
