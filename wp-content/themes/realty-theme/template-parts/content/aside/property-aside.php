@@ -1,9 +1,21 @@
 <?php
+/**
+ * @package WordPress
+ * @param object $pod Pods объект недвижимости
+ */
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+$pod = $args['pod'] ?? null;
+$price_raw = $pod ? $pod->field('price') : 0;
+$price_formatted = $price_raw ? number_format((float) $price_raw, 0, '.', ' ') . ' ₽' : '—';
+
 ?>
 <div class="property-contact-card">
     <div class="card-header">
         <div class="price">
-            <span class="amount">27 075 ₽</span>
+            <span class="amount"><?php echo esc_html($price_formatted); ?></span>
             <span class="period">/ ночь</span>
         </div>
         <div class="rating">
