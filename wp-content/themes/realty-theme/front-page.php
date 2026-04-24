@@ -24,36 +24,32 @@ get_header(); ?>
             </section>
         </div>
 
+        <?php
+        $popular_tag_ids = realty_get_home_popular_tags();
+        if ( ! empty( $popular_tag_ids ) ) : ?>
         <section class="chips py-10">
             <div class="col-full">
                 <div class="chip-container">
+                    <?php foreach ( $popular_tag_ids as $tag_id ) :
+                        $icon      = get_post_meta( $tag_id, 'icon', true );
+                        $icon_type = get_post_meta( $tag_id, 'icon_type', true );
+                        $media_id  = (int) get_post_meta( $tag_id, 'media_id', true );
+                        $label     = get_post_meta( $tag_id, 'label', true ) ?: get_the_title( $tag_id );
+                        if ( ! $label ) continue;
+                    ?>
                     <div class="chip__com">
-                        <span class="material-symbols-outlined">beach_access</span>
-                        <span class="chip__com-text">Beachfront</span>
+                        <?php if ( $icon_type === 'upload' && $media_id ) : ?>
+                            <?php echo wp_get_attachment_image( $media_id, [ 24, 24 ] ); ?>
+                        <?php else : ?>
+                            <span class="material-symbols-outlined"><?php echo esc_html( $icon ); ?></span>
+                        <?php endif; ?>
+                        <span class="chip__com-text"><?php echo esc_html( $label ); ?></span>
                     </div>
-
-                    <div class="chip__com">
-                        <span class="material-symbols-outlined">cabin</span>
-                        <span class="chip__com-text">Cabins</span>
-                    </div>
-
-                    <div class="chip__com">
-                        <span class="material-symbols-outlined">apartment</span>
-                        <span class="chip__com-text">City Flats</span>
-                    </div>
-
-                    <div class="chip__com">
-                        <span class="material-symbols-outlined">pool</span>
-                        <span class="chip__com-text">Amazing Pools</span>
-                    </div>
-
-                    <div class="chip__com">
-                        <span class="material-symbols-outlined">landscape</span>
-                        <span class="chip__com-text">Mountain Views</span>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </section>
+        <?php endif; ?>
 
         <!-- Дополнительный контент -->
         <section class="featured-properties__com py-10">
