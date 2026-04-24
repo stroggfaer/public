@@ -25,7 +25,8 @@ get_header(); ?>
         </div>
 
         <?php
-        $popular_tag_ids = realty_get_home_popular_tags();
+        $popular_tag_ids  = realty_get_home_popular_tags();
+        $archive_base_url = get_post_type_archive_link( 'property' );
         if ( ! empty( $popular_tag_ids ) ) : ?>
         <section class="chips py-10">
             <div class="col-full">
@@ -36,15 +37,19 @@ get_header(); ?>
                         $media_id  = (int) get_post_meta( $tag_id, 'media_id', true );
                         $label     = get_post_meta( $tag_id, 'label', true ) ?: get_the_title( $tag_id );
                         if ( ! $label ) continue;
+                        $chip_url = add_query_arg(
+                            [ 'characteristics' => wp_json_encode( [ $tag_id ] ) ],
+                            $archive_base_url
+                        );
                     ?>
-                    <div class="chip__com">
+                    <a href="<?php echo esc_url( $chip_url ); ?>" class="chip__com">
                         <?php if ( $icon_type === 'upload' && $media_id ) : ?>
                             <?php echo wp_get_attachment_image( $media_id, [ 24, 24 ] ); ?>
                         <?php else : ?>
                             <span class="material-symbols-outlined"><?php echo esc_html( $icon ); ?></span>
                         <?php endif; ?>
                         <span class="chip__com-text"><?php echo esc_html( $label ); ?></span>
-                    </div>
+                    </a>
                     <?php endforeach; ?>
                 </div>
             </div>
