@@ -31,10 +31,19 @@ add_action( 'admin_menu', 'realty_theme_add_admin_menu' );
 /**
  * Регистрация CSS стилей для страницы настроек
  *
+ * @param string $hook Текущий хук страницы.
  * @since 1.0.0
  */
-function realty_theme_admin_styles() {
-    // Стили встроены в эту страницу для обратной совместимости
+function realty_theme_admin_styles( $hook ) {
+    // Подключаем Material Symbols только на странице настроек темы
+    if ( isset( $_GET['page'] ) && $_GET['page'] === 'realty-theme-settings' ) {
+        wp_enqueue_style(
+            'material-symbols-outlined',
+            'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200',
+            [],
+            null
+        );
+    }
 }
 add_action( 'admin_enqueue_scripts', 'realty_theme_admin_styles' );
 
@@ -59,6 +68,7 @@ function realty_theme_register_settings() {
     register_setting( 'realty_theme_home_settings', 'realty_home_title' );
     register_setting( 'realty_theme_home_settings', 'realty_home_subtitle' );
     register_setting( 'realty_theme_home_settings', 'realty_home_cta_text' );
+    register_setting( 'realty_theme_home_settings', 'realty_home_popular_tags' );
 
     // Настройки темы
     register_setting( 'realty_theme_theme_settings', 'realty_logo_type' );
@@ -299,6 +309,13 @@ function realty_theme_save_home_settings() {
     if ( isset( $_POST['realty_home_cta_text'] ) ) {
         update_option( 'realty_home_cta_text', sanitize_text_field( wp_unslash( $_POST['realty_home_cta_text'] ) ) );
     }
+    if ( isset( $_POST['realty_home_popular_tags'] ) && is_array( $_POST['realty_home_popular_tags'] ) ) {
+        $tags = array_slice( array_map( 'absint', $_POST['realty_home_popular_tags'] ), 0, 10 );
+        $tags = array_values( array_filter( $tags ) );
+        update_option( 'realty_home_popular_tags', $tags );
+    } else {
+        update_option( 'realty_home_popular_tags', [] );
+    }
 }
 
 /**
@@ -396,4 +413,53 @@ function realty_get_home_subtitle() {
  */
 function realty_get_home_cta_text() {
     return get_option( 'realty_home_cta_text', __( 'Начать поиск', 'realty-theme' ) );
+}
+
+/**
+ * Получение массива ID популярных тегов (характеристик) для главной страницы
+ *
+ * @return int[] Массив ID характеристик.
+ * @since 1.0.0
+ */
+function realty_get_home_popular_tags() {
+    $ids = get_option( 'realty_home_popular_tags', [] );
+    return is_array( $ids ) ? $ids : [];
+}
+
+/**
+ * Получение характеристик с иконками для мультиселекта
+ *
+ * @return array[] Массив характеристик с полями id, title, label, icon, icon_type, media_id.
+ * @since 1.0.0
+ */
+function realty_get_characteristics_with_icons() {
+    $query = new WP_Query( [
+        'post_type'      => 'characteristic',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'meta_value_num',
+        'meta_key'       => 'sort_order',
+        'order'          => 'ASC',
+    ] );
+
+    $result = [];
+    foreach ( $query->posts as $char ) {
+        $icon      = get_post_meta( $char->ID, 'icon', true );
+        $icon_type = get_post_meta( $char->ID, 'icon_type', true );
+        $media_id  = (int) get_post_meta( $char->ID, 'media_id', true );
+
+        // Фильтр: только с иконкой
+        if ( ( $icon_type === 'upload' && $media_id ) || ( $icon_type !== 'upload' && $icon ) ) {
+            $result[] = [
+                'id'        => $char->ID,
+                'title'     => $char->post_title,
+                'label'     => get_post_meta( $char->ID, 'label', true ) ?: $char->post_title,
+                'icon'      => $icon,
+                'icon_type' => $icon_type,
+                'media_id'  => $media_id,
+            ];
+        }
+    }
+
+    return $result;
 }
