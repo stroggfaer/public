@@ -31,7 +31,6 @@ get_header();
                 <div class="property-layout">
 
                     <div class="content-card-list">
-                        <?php custom_breadcrumbs(post_type_archive_title('', false)); ?>
                         <div class="page-header">
                             <h1 class="page-title"><?php post_type_archive_title(); ?></h1>
                         </div>

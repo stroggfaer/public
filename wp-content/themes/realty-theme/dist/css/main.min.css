@@ -312,6 +312,80 @@ body, html {
   margin: 0 0 0 5px;
 }
 
+.location-card {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: 290px;
+  height: 385px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+.location-card .property-thumbnail {
+  position: absolute;
+  inset: 0px;
+}
+.location-card .property-thumbnail::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0.7)));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.location-card img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  -webkit-transition: all 0.2s ease-in-out 0s;
+  transition: all 0.2s ease-in-out 0s;
+}
+.location-card:hover img {
+  -webkit-transform: scale(1.1);
+          transform: scale(1.1);
+}
+.location-card .entry-header {
+  color: #fff;
+  padding: 20px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  z-index: 5;
+}
+.location-card .entry-header .entry-title {
+  font-size: 24px;
+  line-height: 29px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.location-card .entry-header .variations {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  padding: 6px 12px;
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+}
+@media screen and (max-width: 992px) {
+  .location-card {
+    width: 100%;
+    max-width: 240px;
+  }
+}
+
 .chip-container {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -2725,4 +2799,28 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 }
 .site-main-map .archive-pagination .pods-pagination li .current:hover {
   background-color: #005a87;
+}
+
+.content-area .list-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 290px));
+  gap: 24px;
+  width: 100%;
+  margin: 40px 0;
+}
+.content-area .entry-header h1 {
+  margin-bottom: 8px;
+}
+.content-area .entry-header p {
+  color: #717171;
+  font-size: 16px;
+}
+.content-area .pagination {
+  margin: 40px 0 40px;
+}
+.content-area .locations-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: #717171;
+  font-size: 16px;
 }

@@ -9,7 +9,7 @@ $search = !empty($_GET['s']) ? $_GET['s'] : null;
 ?>
 
 <main id="site-content-rubric" role="main" class="col-full content-rubric">
-    <?php custom_breadcrumbs($search ? 'Поиск' : single_cat_title('', false)); ?>
+    <?php get_template_part('template-parts/component/breadcrumbs', null, array('current_page' => ($search ? 'Поиск' : single_cat_title('', false)))); ?>
     <?php if(!empty($search)): ?>
         <h1 class="title">Поиск: <?=$search?></h1>
     <?php else: ?>

@@ -30,14 +30,13 @@ if (function_exists('pods')) {
 }
 ?>
 <article class="location-card">
-    <a class="location-card__link" href="<?php echo esc_url($term_link); ?>">
-        <div class="location-card__thumbnail">
-            <img src="<?php echo esc_url($thumbnail ?: get_template_directory_uri() . '/assets/images/no_image.jpg'); ?>" alt="<?php echo esc_attr($term->name); ?>" loading="lazy">
+    <a class="property-thumbnail" href="<?php echo esc_url($term_link); ?>">
+        <img src="<?php echo esc_url($thumbnail ?: get_template_directory_uri() . '/assets/images/no_city.png'); ?>" alt="<?php echo esc_attr($term->name); ?>" loading="lazy">
+        <div class="entry-header">
+            <h3 class="entry-title"><?php echo esc_html($term->name); ?></h3>
+            <?php if (isset($term->count)) : ?>
+                <div class="variations"> <?php echo esc_html(sprintf(_n('%d объект', '%d объектов', $term->count, 'realty-theme'), $term->count)); ?></div>
+            <?php endif; ?>
         </div>
-        <div class="location-card__badge">Город</div>
-        <h3 class="location-card__title"><?php echo esc_html($term->name); ?></h3>
-        <?php if (isset($term->count)) : ?>
-            <div class="location-card__meta"><?php echo esc_html(sprintf(_n('%d объект', '%d объектов', $term->count, 'realty-theme'), $term->count)); ?></div>
-        <?php endif; ?>
     </a>
 </article>

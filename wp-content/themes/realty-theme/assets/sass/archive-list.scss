@@ -1,0 +1,30 @@
+.content-area {
+  .list-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 290px));
+    gap: 24px;
+    width: 100%;
+    margin: 40px 0;
+  }
+  
+  .entry-header {
+    h1 {
+      margin-bottom: 8px;
+    }
+    p {
+      color: #717171;
+      font-size: 16px;
+    }
+  }
+  .pagination {
+    margin: 40px 0 40px;
+  }
+  
+  .locations-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: #717171;
+    font-size: 16px;
+  }
+}
+

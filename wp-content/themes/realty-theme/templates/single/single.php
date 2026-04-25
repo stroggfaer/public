@@ -8,7 +8,7 @@ $elementId = getPostMenuActive();
 
 get_header(); // This fxn gets the header.php file and renders it ?>
 	<div class="col-full" id="<?=$elementId?>">
-        <?php custom_breadcrumbs(); ?>
+        <?php get_template_part('template-parts/component/breadcrumbs', null, array('current_page' => get_the_title())); ?>
         <div class="theme-content post-article">
                <div id="content" role="main">
                 <?php if ( have_posts() ) :

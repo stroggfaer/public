@@ -31,27 +31,14 @@ $properties_query = new WP_Query(array(
 <div id="primary" class="content-area">
     <main id="main" class="site-main" role="main">
         <div class="location-detail">
-            <nav class="breadcrumb__com" aria-label="breadcrumb">
-                <a href="<?php echo esc_url(home_url('/')); ?>">Главная</a>
-                <span>/</span>
-                <a href="<?php echo esc_url(home_url('/locations/')); ?>">Города</a>
-                <span>/</span>
-                <?php
-                $ancestors = get_ancestors($term->term_id, 'location');
-                $ancestors = array_reverse($ancestors);
-                foreach ($ancestors as $ancestor_id) {
-                    $ancestor = get_term($ancestor_id, 'location');
-                    if ($ancestor && !is_wp_error($ancestor)) {
-                        $ancestor_link = get_term_link($ancestor);
-                        if (is_wp_error($ancestor_link)) {
-                            $ancestor_link = home_url('/locations/' . $ancestor->slug . '/');
-                        }
-                        echo '<a href="' . esc_url($ancestor_link) . '">' . esc_html($ancestor->name) . '</a> <span>/</span> ';
-                    }
-                }
-                ?>
-                <span class="breadcrumb_name"><?php echo esc_html($term->name); ?></span>
-            </nav>
+            <?php
+            get_template_part('template-parts/component/breadcrumbs', null, array(
+                'term' => $term,
+                'taxonomy' => 'location',
+                'taxonomy_archive_url' => home_url('/locations/'),
+                'taxonomy_archive_label' => 'Города'
+            ));
+            ?>
 
             <header class="location-detail__header">
                 <?php
