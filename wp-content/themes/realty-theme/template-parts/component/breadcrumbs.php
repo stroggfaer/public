@@ -16,7 +16,6 @@ if (!empty($location_terms) && !is_wp_error($location_terms)) {
     $ancestors = array_reverse($ancestors);
     echo '<nav class="breadcrumb__com" aria-label="breadcrumb">';
     echo '<a href="' . esc_url(home_url('/')) . '">Главная</a> <span>/</span> ';
-    echo '<a href="' . esc_url(home_url('/locations/')) . '">Города</a> <span>/</span> ';
     foreach ($ancestors as $ancestor_id) {
         $ancestor = get_term($ancestor_id, 'location');
         if ($ancestor && !is_wp_error($ancestor)) {
