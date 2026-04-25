@@ -43,11 +43,6 @@ class PropertyFeature {
      * @return array
      */
     public function getList(array $params = []): array {
-//        $term = get_queried_object();
-//        if (!empty($term)) {
-//            $params['location'] = $term->name;
-//            $params['location_slug'] = $term->slug;
-//        }
 
         $defaults = [
             'posts_per_page' => self::$PER_LIMIT,
@@ -237,7 +232,7 @@ class PropertyFeature {
         $location = '';
         $location_slug = '';
 
-        if (!empty($term)) {
+        if (!empty($term) && !empty($term->slug) && !empty($term->name)) {
             $location = $term->name;
             $location_slug = $term->slug;
         }
@@ -711,7 +706,7 @@ class PropertyFeature {
     public function shortcodeFilter($atts): string {
         $term = get_queried_object();
         $location = '';
-        if (!empty($term)) {
+        if (!empty($term) && !empty($term->slug) && !empty($term->name)) {
             $location = $term->name;
         }
 
