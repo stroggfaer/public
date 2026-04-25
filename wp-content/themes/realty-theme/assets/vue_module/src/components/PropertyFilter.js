@@ -241,7 +241,8 @@ export default {
       reset,
       initFilters,
       fetchPropertiesRender,
-      initFiltersFromStore
+      initFiltersFromStore,
+      setFilter
     } = usePropertyFilters({
       config: props.config,
       context: props.context,
@@ -488,6 +489,8 @@ export default {
         initFilters: props.initFilters,
         activeFilter: props.activeFilters,
       });
+
+      if (props.config.location) setFilter('locationInput', props.config.location);
     });
 
     return {

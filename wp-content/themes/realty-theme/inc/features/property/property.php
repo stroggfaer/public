@@ -43,6 +43,12 @@ class PropertyFeature {
      * @return array
      */
     public function getList(array $params = []): array {
+//        $term = get_queried_object();
+//        if (!empty($term)) {
+//            $params['location'] = $term->name;
+//            $params['location_slug'] = $term->slug;
+//        }
+
         $defaults = [
             'posts_per_page' => self::$PER_LIMIT,
             'paged' => 1,
@@ -226,10 +232,21 @@ class PropertyFeature {
             default   => $_REQUEST,
         };
 
+        $term = get_queried_object();
+
+        $location = '';
+        $location_slug = '';
+
+        if (!empty($term)) {
+            $location = $term->name;
+            $location_slug = $term->slug;
+        }
+
+
         // 2. Базовые значения + overrides
         $filters = array_merge([
-                'location'      => '',
-                'location_slug' => '',
+                'location'      => $location,
+                'location_slug' => $location_slug,
                 'checkin_date'  => '',
                 'checkout_date' => '',
                 'adults'        => ($context === 'post') ? 0 : 1,
@@ -243,7 +260,7 @@ class PropertyFeature {
 
         // 3. Локация — самая сложная часть, делаем аккуратно
         $loc_raw = $source['location']      ?? $filters['location'];
-        $loc_slug = $source['location'] ?? $filters['location_slug'];
+        $loc_slug = $source['location_slug'] ?? $filters['location_slug'];
 
         if ($loc_raw !== '') {
             $filters['location'] = sanitize_text_field(wp_unslash($loc_raw));
@@ -692,6 +709,12 @@ class PropertyFeature {
      * Шорткод [property_filter]
      */
     public function shortcodeFilter($atts): string {
+        $term = get_queried_object();
+        $location = '';
+        if (!empty($term)) {
+            $location = $term->name;
+        }
+
         $context = $atts['context'] ?? 'default';
 
         $active_filters = get_option('property_active_filters', [
@@ -711,6 +734,7 @@ class PropertyFeature {
                 'guests' => ['adults'=> ['min'=>1,'max'=>10],'children' => ['min'=>0,'max'=>8]],
                 'filter_characteristics' => realty_get_filter_characteristics(),
                 'property_types' => realty_get_property_types_for_filter(),
+                'location' => $location
         ];
 
         $data = [
@@ -767,10 +791,20 @@ class PropertyFeature {
     /**
      * Рендер формы для главной страницы (GET форма)
      */
-    public function renderHomeForm(): string {
+    public function renderHomeForm($args = []): string {
         $active_filters = get_option('property_active_filters', [
             'location', 'checkin_date', 'checkout_date', 'adults', 'children',
         ]);
+
+        $location = null;
+
+        if (!empty($args['location']) && $args['location'] instanceof WP_Term) {
+            $location = [
+                    'id'   => (int) $args['location']->term_id,
+                    'name' => $args['location']->name,
+                    'slug' => $args['location']->slug,
+            ];
+        }
 
         $config = [
             'guests' => [
@@ -784,6 +818,7 @@ class PropertyFeature {
             'config' => $config,
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce($this->nonceAction),
+            'location' => $location
         ];
 
         $propertyFilterData = wp_json_encode(
@@ -810,6 +845,7 @@ class PropertyFeature {
                             :config="propertyFilterData.config"
                             :ajax-url="propertyFilterData.ajaxUrl"
                             :nonce="propertyFilterData.nonce"
+                            :location="propertyFilterData.location"
                         />
                     `,
                     setup() {

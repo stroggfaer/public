@@ -34,7 +34,6 @@ function normalizeFilters(input = {}) {
         location: 'locationInput',
         location_slug: 'locationSlug',
     };
-
     const result = {};
 
     Object.keys(input).forEach(key => {
@@ -77,7 +76,6 @@ function normalizeFilters(input = {}) {
 
         result[newKey] = value;
     });
-
     return result;
 }
 

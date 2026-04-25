@@ -2801,6 +2801,13 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   background-color: #005a87;
 }
 
+.property-archive-container.location-page .content-card-list {
+  max-width: 100%;
+}
+.property-archive-container.location-page .content-card-list .properties-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .content-area .list-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 290px));
@@ -2823,4 +2830,85 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   text-align: center;
   color: #717171;
   font-size: 16px;
+}
+
+.location-banner {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.location-banner__content {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 24px;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+}
+.location-banner__thumbnail {
+  -ms-flex-negative: 0;
+      flex-shrink: 0;
+  width: 200px;
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.location-banner__thumbnail img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.location-banner__info {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+}
+.location-banner__title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: #222;
+}
+.location-banner__description {
+  color: #717171;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.location-banner__description p {
+  margin: 0 0 12px;
+}
+.location-banner__description p:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 768px) {
+  .location-banner__content {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+  }
+  .location-banner__thumbnail {
+    width: 100%;
+    height: 200px;
+  }
+  .location-banner__title {
+    font-size: 24px;
+  }
+}
+
+.property-layout--no-map {
+  display: block !important;
+}
+.property-layout--no-map .content-card-list {
+  width: 100%;
+  max-width: 100%;
+}
+
+.location-page .property-content-area {
+  width: 100%;
 }

@@ -184,22 +184,9 @@ export default function usePropertyFilters(params = {}) {
         }
         try {
             const f = filters.value;
-
-            console.log('[usePropertyFilters] ajaxUrl:', ajaxUrl, 'nonce:', nonce);
             const meta = hasStoreAvailable ? store.getters['propertyFilters/getMeta'] : {};
-            console.log('[usePropertyFilters] Current meta:', meta);
-            
-            // Отладка: выводим фильтры перед отправкой
-            console.log('[usePropertyFilters] Sending filters:', {
-                location: f.locationInput,
-                location_slug: f.locationSlug,
-                price_min: f.price_min,
-                price_max: f.price_max,
-                adults: f.adults,
-                children: f.children,
-                characteristics: f.characteristics,
-                page: params.page || 1
-            });
+
+
             
             const res = await ApiService.post(ajaxUrl, {
                 action: 'property_filter', // Используем новый action

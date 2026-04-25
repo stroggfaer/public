@@ -174,8 +174,8 @@ function property_filter_render_form($context = 'default') {
 /**
  * Рендер формы фильтрации для главной страницы
  */
-function property_filter_render_home_form() {
-    return PropertyFeature::getInstance()->renderHomeForm();
+function property_filter_render_home_form(array $args = array()) {
+    return PropertyFeature::getInstance()->renderHomeForm($args);
 }
 
 /**

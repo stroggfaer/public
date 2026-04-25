@@ -4,33 +4,37 @@
  *
  * @package Realty Theme
  */
-get_header();
 
 $term = get_queried_object();
 if (!$term || is_wp_error($term)) {
+    get_header();
     get_template_part('template-parts/content/content-none');
     get_footer();
     return;
 }
 
-$paged = max(1, get_query_var('paged', 1));
-$properties_query = new WP_Query(array(
-    'post_type'      => 'property',
-    'posts_per_page' => 6,
-    'paged'          => $paged,
-    'tax_query'      => array(
-        array(
-            'taxonomy' => 'location',
-            'field'    => 'term_id',
-            'terms'    => $term->term_id,
-        ),
-    ),
-));
+// Получаем настройки карты из админки
+$map_zoom = get_option('realty_map_zoom', 6);
+$map_center_lat = get_option('realty_default_lat', 55.7558);
+$map_center_lng = get_option('realty_default_lng', 37.6173);
+
+// Меняем слот в шапке - форма поиска с предзаполненным городом (город нельзя изменить)
+// Меняем слот ставка
+add_filter('realty_header_slot', function ($content) use ($term) {
+    return '<div class="main-search-form-container">'.property_filter_render_home_form(array('location'=> $term) ).'</div>';
+});
+
+
+
+get_header();
 ?>
 
 <div id="primary" class="content-area">
-    <main id="main" class="site-main" role="main">
-        <div class="location-detail">
+    <main id="main" class="site-main-map" role="main">
+        <?php get_template_part('template-parts/component/error-valid'); ?>
+        
+        <!-- Баннер города с изображением и описанием -->
+        <div class="location-banner">
             <?php
             get_template_part('template-parts/component/breadcrumbs', null, array(
                 'term' => $term,
@@ -38,68 +42,55 @@ $properties_query = new WP_Query(array(
                 'taxonomy_archive_url' => home_url('/locations/'),
                 'taxonomy_archive_label' => 'Города'
             ));
-            ?>
-
-            <header class="location-detail__header">
-                <?php
-                $thumbnail = '';
-                if (function_exists('pods')) {
-                    $pod = pods('location', $term->term_id);
-                    if ($pod) {
-                        $thumbnail_field = $pod->field('thumbnail');
-                        if (!empty($thumbnail_field)) {
-                            $thumbnail = is_array($thumbnail_field) ? ($thumbnail_field['guid'] ?? '') : $thumbnail_field;
-                        }
+            
+            $thumbnail = '';
+            if (function_exists('pods')) {
+                $pod = pods('location', $term->term_id);
+                if ($pod) {
+                    $thumbnail_field = $pod->field('thumbnail');
+                    if (!empty($thumbnail_field)) {
+                        $thumbnail = is_array($thumbnail_field) ? ($thumbnail_field['guid'] ?? '') : $thumbnail_field;
                     }
                 }
-                ?>
-                <div class="location-detail__thumbnail">
-                    <img src="<?php echo esc_url($thumbnail ?: get_template_directory_uri() . '/assets/images/no_image.jpg'); ?>" alt="<?php echo esc_attr($term->name); ?>">
-                </div>
-                <h1><?php echo esc_html($term->name); ?></h1>
-                <?php if (!empty($term->description)) : ?>
-                    <div class="location-detail__description"><?php echo wp_kses_post(wpautop($term->description)); ?></div>
-                <?php endif; ?>
-            </header>
-
-            <section class="location-detail__properties">
-                <h2>Объекты в этом городе</h2>
-
-                <?php if ($properties_query->have_posts()) : ?>
-                    <div class="property-list locations-property-list">
-                        <?php while ($properties_query->have_posts()) : $properties_query->the_post(); ?>
-                            <?php $pod = pods('property', get_the_ID()); ?>
-                            <?php get_template_part('template-parts/component/property-card', null, array('pod' => $pod)); ?>
-                        <?php endwhile; ?>
+            }
+            ?>
+            <div class="location-banner__content">
+                <?php if ($thumbnail) : ?>
+                    <div class="location-banner__thumbnail">
+                        <img src="<?php echo esc_url($thumbnail); ?>" alt="<?php echo esc_attr($term->name); ?>">
                     </div>
-
-                    <?php
-                    $term_link = get_term_link($term);
-                    if (is_wp_error($term_link)) {
-                        $term_link = home_url('/locations/' . $term->slug . '/');
-                    }
-                    $pagination = paginate_links(array(
-                        'base'      => user_trailingslashit(trailingslashit($term_link) . 'page/%#%/'),
-                        'format'    => '',
-                        'current'   => $paged,
-                        'total'     => $properties_query->max_num_pages,
-                        'mid_size'  => 1,
-                        'prev_text' => '‹',
-                        'next_text' => '›',
-                        'type'      => 'list',
-                    ));
-                    if ($pagination) :
-                        echo '<nav class="pagination">' . $pagination . '</nav>';
-                    endif;
-                    ?>
-                <?php else : ?>
-                    <div class="locations-empty">В этом городе пока нет объектов.</div>
                 <?php endif; ?>
+                <div class="location-banner__info">
+                    <h1 class="location-banner__title"><?php echo esc_html($term->name); ?></h1>
+                    <?php if (!empty($term->description)) : ?>
+                        <div class="location-banner__description"><?php echo wp_kses_post(wpautop($term->description)); ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 
-                <?php wp_reset_postdata(); ?>
-            </section>
+        <!-- Контейнер для фильтров, списка и карты (переиспользуем структуру archive-property) -->
+        <div class="property-archive-container location-page">
+            <!-- Сайдбар с фильтрами -->
+            <aside class="property-filters-sidebar">
+                <?php get_template_part('template-parts/content/list/property-filters'); ?>
+            </aside>
+            
+            <!-- Основной контент: только список (без карты) -->
+            <div class="property-content-area">
+                <div class="property-layout property-layout--no-map">
+                    <div class="content-card-list">
+                        <?php get_template_part('template-parts/content/list/property-card-list', null, [
+                            'ajaxUrl' => admin_url('admin-ajax.php'),
+                            'nonce' => wp_create_nonce('property_filter_nonce'),
+                        ]); ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </div>
 
-<?php get_footer(); ?>
+<?php
+get_footer();
+?>

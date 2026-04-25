@@ -1,6 +1,7 @@
-import { ref, onMounted, watch, h } from 'vue';
+import {ref, onMounted, watch, h, computed} from 'vue';
 import moment from 'moment';
 import usePropertyFilters from '../hooks/usePropertyFilters';
+import {declension} from "@assets/vue_module/src/utlis/helpers";
 
 export default {
 
@@ -16,6 +17,7 @@ export default {
               class="location-autocomplete"
               @select="localHandleLocationSelect"
               clearable
+              :disabled="disabledLocation"
           >
             <template #prefix>
               <span class="icon material-symbols-outlined">location_on</span>
@@ -127,7 +129,11 @@ export default {
     nonce: {
       type: String,
       default: ''
-    }
+    },
+    location: {
+      type: Object,
+      default: null
+    },
   },
 
   setup(props) {
@@ -159,6 +165,10 @@ export default {
     const children = ref(0);
     const guestsPopoverVisible = ref(false);
 
+    const disabledLocation = computed(() => {
+      return Boolean(props.location);
+    })
+
     // Локальная обертка для handleLocationSelect
     function localHandleLocationSelect(item) {
       locationInput.value = item.name;
@@ -177,16 +187,7 @@ export default {
       }
     }
 
-    function declension(forms, number) {
-      const count = Math.abs(number);
-      const cases = [2, 0, 1, 1, 1, 2];
-      const chosenCase = (count % 100 > 4 && count % 100 < 20) ? 2 : cases[(count % 10) < 5 ? count % 5 : 5];
-      
-      return {
-        count: number,
-        text: forms[chosenCase]
-      };
-    }
+
 
     const guestsDisplayText = ref('Гости');
 
@@ -195,7 +196,7 @@ export default {
       if (total > 0) {
         // Показываем детальную информацию: "2 взрослых, 1 ребенок"
         const parts = [];
-        
+
         if (adults.value > 0) {
           const adultObj = declension(['взрослых', 'взрослый', 'взрослых'], adults.value);
           parts.push(`${adults.value} ${adultObj.text}`);
@@ -215,8 +216,13 @@ export default {
     const guestsPopover = () => {}
 
     const initFormData = (newVal) => {
-      locationInput.value = newVal.locationInput;
-      locationSlug.value = newVal.locationSlug;
+      if (props.location) {
+        locationInput.value = props.location.name;
+        locationSlug.value = props.location.slug;
+      }else {
+        locationInput.value = newVal.locationInput;
+        locationSlug.value = newVal.locationSlug;
+      }
       checkinDate.value = newVal.checkin_date;
       checkoutDate.value = newVal.checkout_date;
       adults.value = newVal.adults;
@@ -267,6 +273,8 @@ export default {
       window.location.href = archiveUrl;
     }
 
+
+
     onMounted(() => {
       updateGuestsDisplay();
     });
@@ -281,6 +289,7 @@ export default {
       children,
       guestsPopoverVisible,
       guestsDisplayText,
+      disabledLocation,
       querySearch,
       localHandleLocationSelect,
       disabledCheckinDate,

@@ -147,3 +147,11 @@
   }
 }
 
+.property-archive-container.location-page {
+  .content-card-list {
+    max-width: 100%;
+    .properties-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+}
