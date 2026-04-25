@@ -8,6 +8,8 @@
 //<button class="button__com danger full">Удалить (на всю ширину)</button>
 //<a href="#" class="button__com link">Просто ссылка</a>
 .button__com {
+  text-wrap-mode: nowrap;
+  box-sizing: border-box;
   // Базовые стили — от них всё отталкивается
   display: inline-flex;
   align-items: center;
@@ -19,7 +21,7 @@
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-
+  text-decoration: unset !important;
   // Дефолтный размер (средний)
   font-size: 14px;
   line-height: 20px;
@@ -43,6 +45,7 @@
   &:focus-visible {
     background: $color_green_dark;
     opacity: 1;
+    color: white;
   }
   &:active {
     box-shadow: none;
@@ -139,6 +142,7 @@
     aspect-ratio: 1 / 1;
     border-radius: 50%;
   }
+
 }
 
 .featured-properties__com {

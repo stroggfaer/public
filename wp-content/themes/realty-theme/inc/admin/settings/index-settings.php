@@ -429,6 +429,11 @@ function realty_get_home_popular_tags() {
 /**
  * Получение характеристик с иконками для мультиселекта
  *
+ * Возвращает только характеристики у которых:
+ * - есть иконка
+ * - группа имеет use_in_filters = 1
+ * - характеристика привязана хотя бы к одному опубликованному объекту недвижимости
+ *
  * @return array[] Массив характеристик с полями id, title, label, icon, icon_type, media_id.
  * @since 1.0.0
  */
@@ -442,24 +447,96 @@ function realty_get_characteristics_with_icons() {
         'order'          => 'ASC',
     ] );
 
+    if ( empty( $query->posts ) ) {
+        return [];
+    }
+
+    // Предзагружаем мета-кэш для всех характеристик за один запрос
+    $all_ids = wp_list_pluck( $query->posts, 'ID' );
+    update_meta_cache( 'post', $all_ids );
+
+    // Собираем ID характеристик, которые реально привязаны к недвижимости
+    $used_char_ids = realty_get_used_characteristic_ids();
+
+    // Кэш групп: term_id → use_in_filters
+    $group_filter_cache = [];
+
     $result = [];
     foreach ( $query->posts as $char ) {
         $icon      = get_post_meta( $char->ID, 'icon', true );
         $icon_type = get_post_meta( $char->ID, 'icon_type', true );
         $media_id  = (int) get_post_meta( $char->ID, 'media_id', true );
 
-        // Фильтр: только с иконкой
-        if ( ( $icon_type === 'upload' && $media_id ) || ( $icon_type !== 'upload' && $icon ) ) {
-            $result[] = [
-                'id'        => $char->ID,
-                'title'     => $char->post_title,
-                'label'     => get_post_meta( $char->ID, 'label', true ) ?: $char->post_title,
-                'icon'      => $icon,
-                'icon_type' => $icon_type,
-                'media_id'  => $media_id,
-            ];
+        // Условие 1: есть иконка
+        if ( ! ( ( $icon_type === 'upload' && $media_id ) || ( $icon_type !== 'upload' && $icon ) ) ) {
+            continue;
         }
+
+        // Условие 2: группа имеет use_in_filters = 1
+        $terms = get_the_terms( $char->ID, 'char_group' );
+        if ( empty( $terms ) || is_wp_error( $terms ) ) {
+            continue;
+        }
+        $term    = $terms[0];
+        $term_id = $term->term_id;
+
+        if ( ! isset( $group_filter_cache[ $term_id ] ) ) {
+            $group_filter_cache[ $term_id ] = (int) get_term_meta( $term_id, 'use_in_filters', true );
+        }
+        if ( ! $group_filter_cache[ $term_id ] ) {
+            continue;
+        }
+
+        // Условие 3: привязана хотя бы к одному объекту недвижимости
+        if ( ! in_array( $char->ID, $used_char_ids, true ) ) {
+            continue;
+        }
+
+        $result[] = [
+            'id'        => $char->ID,
+            'title'     => $char->post_title,
+            'label'     => get_post_meta( $char->ID, 'label', true ) ?: $char->post_title,
+            'icon'      => $icon,
+            'icon_type' => $icon_type,
+            'media_id'  => $media_id,
+        ];
     }
 
     return $result;
+}
+
+/**
+ * Получить уникальные ID характеристик, привязанных хотя бы к одному опубликованному объекту
+ *
+ * @return int[] Массив ID характеристик.
+ * @since 1.0.0
+ */
+function realty_get_used_characteristic_ids() {
+    global $wpdb;
+
+    // Получаем все property_characteristics мета одним SQL-запросом
+    $rows = $wpdb->get_col(
+        "SELECT pm.meta_value
+         FROM {$wpdb->postmeta} pm
+         INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+         WHERE pm.meta_key = 'property_characteristics'
+           AND p.post_type = 'property'
+           AND p.post_status = 'publish'"
+    );
+
+    $used_ids = [];
+    foreach ( $rows as $serialized ) {
+        $data = maybe_unserialize( $serialized );
+        if ( ! is_array( $data ) ) {
+            continue;
+        }
+        foreach ( $data as $item ) {
+            $cid = (int) ( $item['characteristic_id'] ?? 0 );
+            if ( $cid > 0 ) {
+                $used_ids[ $cid ] = true;
+            }
+        }
+    }
+
+    return array_keys( $used_ids );
 }
