@@ -6,18 +6,6 @@
     }
   }
 
-  .property-filters-sidebar {
-    width: 288px;
-    flex: 0 0 288px;
-    background: #fff;
-    padding: 20px;
-    .property-archive-filters {
-      position: sticky;
-      left: 0;
-      top: 0;
-    }
-  }
-
   .property-content-area {
     flex: 1;
     min-width: 0;

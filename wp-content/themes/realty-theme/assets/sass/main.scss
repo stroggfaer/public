@@ -6,6 +6,8 @@ body,html {
 // настройки
 @import "_mixins";
 @import "_vars";
+// Element Plus глобальные стили
+@import "components/_element-plus-global";
 // Стили;
 @import "components/_component";
 @import "components/_layout";

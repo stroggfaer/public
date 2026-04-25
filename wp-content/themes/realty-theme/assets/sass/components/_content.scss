@@ -466,3 +466,89 @@ article.post .the-content {
      width: 100%;
   }
 }
+
+
+// ============================================================================
+// Property Filters — адаптация под Element Plus
+// ============================================================================
+
+.property-filter-sidebar-wrap {
+  background: $color-white;
+  border-radius: $border-radius;
+}
+
+
+
+
+
+// ──────────────── FILTER RESET STICKY BUTTON ────────────────
+.filter-reset-sticky {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 24px;
+  background: linear-gradient(to top, $color-white 80%, rgba(255, 255, 255, 0));
+  margin: 24px -24px -24px;
+  z-index: 10;
+  
+  .filter-reset-btn {
+    width: 100%;
+    --el-button-hover-bg-color: var(--ui-color-danger);
+    --el-button-hover-border-color: var(--ui-color-danger);
+    --el-button-hover-text-color: var(--ui-color-surface);
+  }
+  
+  @media screen and (max-width: $media-sm) {
+    padding: 12px 16px;
+    margin: 16px -16px -16px;
+  }
+}
+
+// Анимация появления кнопки сброса
+.filter-reset-fade-enter-active,
+.filter-reset-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.filter-reset-fade-enter-from,
+.filter-reset-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+// ──────────────── FILTER SIDEBAR LAYOUT ────────────────
+.property-filters-sidebar {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 288px;
+  flex: 0 0 288px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  .el-form-item__content {
+     display: block;
+  }
+  // Кастомный скроллбар
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $color-medium-grey-3;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $color-dark-grey;
+    border-radius: 3px;
+    
+    &:hover {
+      background: $color-black-lite;
+    }
+  }
+
+}
