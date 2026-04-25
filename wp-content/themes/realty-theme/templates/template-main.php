@@ -1,7 +1,7 @@
 
 <?php
 /**
- * Template Name: Теплозавод
+ * Template front-page:
  */
 get_header();
 ?>

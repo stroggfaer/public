@@ -170,7 +170,7 @@ function setup_property_pods() {
                 'show_in_nav_menus' => true,
                 'show_admin_column' => true,
                 'query_var' => true,
-                'rewrite' => array( 'slug' => 'location' ),
+                'rewrite' => array( 'slug' => 'locations' ),
                 'rest_enabled' => true,
             ),
         );
@@ -300,7 +300,7 @@ function register_property_location_taxonomy() {
         'show_admin_column'          => true,
         'show_in_nav_menus'          => true,
         'show_tagcloud'              => false,
-        'rewrite'                    => array( 'slug' => 'location' ),
+        'rewrite'                    => array( 'slug' => 'locations' ),
         'show_in_rest'               => true,
     );
 

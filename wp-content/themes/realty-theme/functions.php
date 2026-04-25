@@ -229,6 +229,71 @@ function validate_property_search_parameters() {
     }
 }
 
+function realty_register_locations_rewrite_rules() {
+    add_rewrite_tag('%locations_archive%', '([0-9]+)');
+    add_rewrite_rule('^locations/?$', 'index.php?locations_archive=1', 'top');
+    add_rewrite_rule('^locations/page/([0-9]{1,})/?$', 'index.php?locations_archive=1&paged=$matches[1]', 'top');
+}
+add_action('init', 'realty_register_locations_rewrite_rules');
+
+function realty_add_locations_query_var($vars) {
+    $vars[] = 'locations_archive';
+    return $vars;
+}
+add_filter('query_vars', 'realty_add_locations_query_var');
+
+function realty_flush_rewrite_rules_on_theme_switch() {
+    realty_register_locations_rewrite_rules();
+    flush_rewrite_rules();
+}
+add_action('after_switch_theme', 'realty_flush_rewrite_rules_on_theme_switch');
+
+function realty_maybe_flush_rewrite_rules_once() {
+    if ( '1' !== get_option( 'realty_locations_rewrite_flushed', '0' ) ) {
+        realty_register_locations_rewrite_rules();
+        flush_rewrite_rules( false );
+        update_option( 'realty_locations_rewrite_flushed', '1' );
+    }
+}
+add_action( 'admin_init', 'realty_maybe_flush_rewrite_rules_once' );
+
+// Поддержка шаблонов, перемещённых в папку templates/
+function realty_theme_template_include($template) {
+    $base_dir = get_template_directory();
+    if (get_query_var('locations_archive')) {
+        $custom = $base_dir . '/templates/pages/archive-location.php';
+        if (file_exists($custom)) {
+            return $custom;
+        }
+    }
+    if (is_post_type_archive('property')) {
+        $custom = $base_dir . '/templates/pages/archive-property.php';
+        if (file_exists($custom)) {
+            return $custom;
+        }
+    }
+    if (is_tax('location')) {
+        $custom = $base_dir . '/templates/single/single-location.php';
+        if (file_exists($custom)) {
+            return $custom;
+        }
+    }
+    if (is_singular('property')) {
+        $custom = $base_dir . '/templates/single/single-property.php';
+        if (file_exists($custom)) {
+            return $custom;
+        }
+    }
+    if (is_singular('location')) {
+        $custom = $base_dir . '/templates/single/single-location.php';
+        if (file_exists($custom)) {
+            return $custom;
+        }
+    }
+    return $template;
+}
+add_filter('template_include', 'realty_theme_template_include', 99);
+
 // Функция для получения ошибок валидации
 function get_property_search_errors() {
     $errors = get_transient('property_search_errors');

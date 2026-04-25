@@ -29,11 +29,11 @@ get_header();
 //            print_r($pod);
 //            echo '</pre>';
             ?>
-            <?php  get_template_part( 'template-parts/component/breadcrumbs'); ?>
+            <?php  get_template_part('template-parts/component/breadcrumbs'); ?>
             <div class="property-columns">
                 <div class="property-content">
                     <!--Блок галерия-->
-                    <?php  get_template_part( 'template-parts/content/single/property-gallery',null, array('pod' => $pod)); ?>
+                    <?php  get_template_part( 'template-parts/content/single/property-gallery', null, array('pod' => $pod)); ?>
                     <!--./Блок галерия-->
                     <div class="property-details">
                         <div class="entry-header">
@@ -47,18 +47,18 @@ get_header();
                             <span class="material-symbols-outlined">location_on</span>
                             <?=esc_html($location_display)?>
                         </div>
-                        <?php  get_template_part( 'template-parts/content/single/property-features',null, array('pod' => $pod)); ?>
+                        <?php  get_template_part( 'template-parts/content/single/property-features', null, array('pod' => $pod)); ?>
 
-                        <?php  get_template_part( 'template-parts/content/single/property-rules',null, array('pod' => $pod)); ?>
+                        <?php  get_template_part( 'template-parts/content/single/property-rules', null, array('pod' => $pod)); ?>
 
                         <div class="section-property property-description">
                             <h3 class="title">Описание</h3>
                             <?php the_content(); ?>
                         </div>
 
-                        <?php  get_template_part( 'template-parts/content/single/property-characteristics',null, array('pod' => $pod)); ?>
+                        <?php  get_template_part( 'template-parts/content/single/property-characteristics', null, array('pod' => $pod)); ?>
 
-                        <?php  get_template_part( 'template-parts/content/single/property-map',null, array('pod' => $pod)); ?>
+                        <?php  get_template_part( 'template-parts/content/single/property-map', null, array('pod' => $pod)); ?>
                     </div>
                 </div>
 
