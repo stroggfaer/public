@@ -250,7 +250,7 @@ export default {
       ajaxUrl: props.ajaxUrl,
       nonce: props.nonce
     });
-
+    const limitMore = 6;
     const store = Vuex.useStore();
 
     const loadingBtn = ref(false);
@@ -305,12 +305,12 @@ export default {
         return group.characteristics || [];
       }
       const isExpanded = expandedCheckboxGroups.value[group.group_id];
-      return isExpanded ? group.characteristics : group.characteristics.slice(0, 10);
+      return isExpanded ? group.characteristics : group.characteristics.slice(0, limitMore);
     }
 
     // Проверка, нужна ли кнопка "Показать все"
     function needsShowMoreButton(group) {
-      return group.type_ui === 'checkbox' && group.characteristics && group.characteristics.length > 10;
+      return group.type_ui === 'checkbox' && group.characteristics && group.characteristics.length > limitMore;
     }
 
     // Переключение состояния "Показать все" / "Скрыть"
