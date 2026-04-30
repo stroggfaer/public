@@ -326,7 +326,7 @@ h4,
 h5,
 h6 {
   clear: both;
-  color: #292929;
+  color: #000;
 }
 h1 {
   line-height: 45px;
@@ -659,15 +659,6 @@ html[xmlns] .clearfix {
 * html .clearfix {
   height: 1%;
 }
-
-
-
-.property-list {
-    flex: 1;
-    min-width: 0; /* Prevents flex item from overflowing */
-}
-
-
 .entry-title {
     margin: 0 0 10px 0;
     font-size: 18px;

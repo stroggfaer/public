@@ -437,9 +437,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgb(229 231 235 /1);
-    background-image: radial-gradient(#3078744a 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-image: url("~@assets/images/map.webp");
+    background-repeat: no-repeat;
+    background-size: 100%;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);

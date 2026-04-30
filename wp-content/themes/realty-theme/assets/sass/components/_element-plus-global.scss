@@ -79,7 +79,6 @@
   --el-collapse-header-bg-color: transparent;
   --el-collapse-content-bg-color: transparent;
 }
-
 // ──────────────── CHECKBOX ────────────────
 .el-checkbox {
   --el-checkbox-checked-bg-color: var(--ui-color-primary);
@@ -117,19 +116,22 @@
     padding-left: 8px;
     font-size: 14px;
     line-height: 20px;
-    color: $color-black-lite;
+    color: $color-black-label;
     font-weight: 400;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
     flex: 1;
     min-width: 0;
+    @include ease();
+    &:hover {
+      color: $color-site;
+    }
   }
   
   &.is-checked {
     .el-checkbox__label {
-      color: $color-black;
-      font-weight: 500;
+      color: $color-site;
     }
   }
 }
@@ -221,6 +223,21 @@
     --el-button-border-color: var(--ui-color-danger);
     --el-button-hover-bg-color: var(--ui-color-danger-hover);
     --el-button-hover-border-color: var(--ui-color-danger-hover);
+  }
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  &.el-button--large {
+    --el-button-size: 48px;
+    height: var(--el-button-size);
+    padding: 0 28px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    .material-symbols-outlined {
+      font-size: 20px;
+    }
   }
 }
 

@@ -818,3 +818,27 @@ function realty_get_chars_by_system_template( $system_template ) {
         'label' => get_post_meta( $c->ID, 'label', true ) ?: $c->post_title,
     ], $chars );
 }
+
+/**
+ * @param WP_Term $term
+ * @return string
+ */
+function location_thumbnail_template(WP_Term $term): string {
+    $thumbnail = get_template_directory_uri() . '/assets/images/no_city.png';
+
+    if (function_exists('pods')) {
+        $pod = pods('location', $term->term_id);
+
+        if ($pod) {
+            $thumbnail_field = $pod->field('thumbnail');
+
+            if (!empty($thumbnail_field)) {
+                $thumbnail = is_array($thumbnail_field)
+                    ? ($thumbnail_field['guid'] ?? $thumbnail)
+                    : $thumbnail_field;
+            }
+        }
+    }
+
+    return $thumbnail;
+}

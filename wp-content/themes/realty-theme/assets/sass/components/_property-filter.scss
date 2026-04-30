@@ -196,21 +196,7 @@
     }
 }
 
-// Фиксированная кнопка сброса фильтров
-.filter-reset-sticky {
-    position: sticky;
-    bottom: 16px;
-    z-index: 100;
-    padding: 12px 0 4px;
-    background: linear-gradient(to bottom, transparent, #fff 40%);
-    pointer-events: none;
 
-    .filter-reset-btn {
-        width: 100%;
-        pointer-events: all;
-        font-weight: 500;
-    }
-}
 
 // Анимация появления/скрытия кнопки сброса
 .filter-reset-fade-enter-active,

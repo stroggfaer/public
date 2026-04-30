@@ -60,8 +60,8 @@ get_header(); ?>
         <section class="featured-properties__com py-10">
             <div class="col-full">
                 <div class="featured-header">
-                    <h2 class="section-title font-bold">Trending Destinations</h2>
-                    <a href="#" class="bold border">View all</a>
+                    <h2 class="section-title font-bold">Популярные направления</h2>
+                    <a href="/property/" class="bold border">Посмотреть все</a>
                 </div>
 
                 <?php
@@ -90,17 +90,13 @@ get_header(); ?>
             <div class="col-full">
                 <div class="map-card__com ">
                     <div class="map-card__com-content">
-                        <h2 class="map-card__com-title">Discover on the map</h2>
+                        <h2 class="map-card__com-title">Найдите своё идеальное пространство</h2>
                         <p class="map-card__com-description">
-                            Explore the best rentals in your favorite neighborhood with our interactive map search tool.
+                            От уютных квартир до роскошных отелей — всё в одном месте
                         </p>
-<!--                        <button class="button__com lg">-->
-<!--                            <span class="material-symbols-outlined">map</span>-->
-<!--                            Open Interactive Map-->
-<!--                        </button>-->
                         <a href="/property/" class="button__com lg">
                             <span class="material-symbols-outlined">map</span>
-                            Open Interactive Map
+                            Смотреть на карте
                         </a>
                     </div>
 

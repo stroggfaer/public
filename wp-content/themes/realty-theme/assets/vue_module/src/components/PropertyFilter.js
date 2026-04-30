@@ -204,10 +204,8 @@ export default {
       <transition name="filter-reset-fade">
         <div v-if="hasActiveFilters" class="filter-reset-sticky">
           <el-button
-            type="danger"
-            plain
             :loading="loadingBtn"
-            class="filter-reset-btn"
+            class="filter-reset-btn shadow-lg"
             @click="resetFilter"
           >
             Сбросить все фильтры

@@ -364,6 +364,9 @@ header.site-header {
            }
          }
        }
+       .el-input.is-disabled .el-input__wrapper {
+         background-color: transparent;
+       }
        // new
        .el-autocomplete {
          max-width: 200px;
