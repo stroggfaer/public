@@ -7,8 +7,6 @@ export default {
       required: true
     }
   },
-
-  // language=Vue
   template: `
     <el-form
       ref="registerFormRef"
@@ -26,7 +24,7 @@ export default {
           :disabled="registerLoading"
         >
           <template #suffix>
-            <el-icon><MessageIcon /></el-icon>
+            <span class="material-symbols-outlined">mail</span>
           </template>
         </el-input>
       </el-form-item>
@@ -41,7 +39,7 @@ export default {
           :disabled="registerLoading"
         >
           <template #suffix>
-            <el-icon><LockIcon /></el-icon>
+            <span class="material-symbols-outlined">lock</span>
           </template>
         </el-input>
       </el-form-item>
@@ -56,7 +54,7 @@ export default {
           :disabled="registerLoading"
         >
           <template #suffix>
-            <el-icon><LockIcon /></el-icon>
+            <span class="material-symbols-outlined">lock</span>
           </template>
         </el-input>
       </el-form-item>
@@ -88,11 +86,6 @@ export default {
   `,
 
   emits: ['switchToLogin'],
-
-  components: {
-    MessageIcon: window.ElementPlusIconsVue?.Message,
-    LockIcon: window.ElementPlusIconsVue?.Lock,
-  },
 
   setup(props) {
     const registerForm = reactive({
