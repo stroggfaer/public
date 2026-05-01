@@ -1,0 +1,216 @@
+/**
+ * Стили страницы авторизации / регистрации
+ * Vue3 + Element Plus
+ */
+
+/* ── Страница ─────────────────────────────────────────────── */
+.auth-page {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  background: #f5f4f0;
+}
+
+/* ── Заголовок ────────────────────────────────────────────── */
+.auth-page__hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: $color-black-normal;
+  margin: 0 0 0.5rem;
+}
+
+.auth-page__subtitle {
+  font-size: 1rem;
+  color: $color-dark-grey-2;
+  max-width: 360px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ── Карточка ─────────────────────────────────────────────── */
+.auth-page__card {
+  width: 100%;
+  max-width: 500px;
+  background: $color-white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* ── Табы ─────────────────────────────────────────────────── */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid $color-grey;
+}
+
+.auth-tabs__btn {
+  flex: 1;
+  padding: 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 1rem;
+  font-weight: 500;
+  color: $color-dark-grey;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+
+  &:hover {
+    color: $color_green;
+  }
+
+  &--active {
+    color: $color_green;
+    border-bottom-color: $color_green;
+    font-weight: 600;
+  }
+}
+
+/* ── Форма ────────────────────────────────────────────────── */
+.auth-form {
+  padding: 2rem;
+
+  /* Перекрываем стили Element Plus для соответствия дизайну */
+  .el-form-item__label {
+    font-weight: 600;
+    color: $color-black-normal;
+    font-size: 0.95rem;
+    padding-bottom: 6px;
+  }
+
+  .el-input__wrapper {
+    background: $color-medium-grey;
+    border-radius: 10px;
+    box-shadow: none !important;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+
+    &:hover,
+    &.is-focus {
+      border-color: $color_green;
+    }
+  }
+
+  .el-input__inner {
+    background: transparent;
+    font-size: 1rem;
+    color: $color-black-normal;
+
+    &::placeholder {
+      color: $color-light-grey;
+    }
+  }
+
+  .el-input__suffix {
+    color: $color-dark-grey;
+  }
+}
+
+/* Строка лейбла с ссылкой "Забыли пароль?" */
+.auth-form__label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-form__forgot {
+  font-size: 0.875rem;
+  color: $color_green;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Алерт ошибки */
+.auth-form__alert {
+  margin-bottom: 1rem;
+  border-radius: 10px;
+}
+
+/* Кнопка сабмита */
+.auth-form__submit.el-button {
+  width: 100%;
+  height: 52px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: $color_green;
+  border-color: $color_green;
+  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+
+  &:hover,
+  &:focus {
+    background: $color_green_dark;
+    border-color: $color_green_dark;
+  }
+
+  &.is-loading {
+    opacity: 0.8;
+  }
+}
+
+/* Разделитель */
+.auth-form__divider {
+  height: 1px;
+  background: $color-grey;
+  margin: 1.5rem 0;
+}
+
+/* Футер формы */
+.auth-form__footer {
+  text-align: center;
+  padding-bottom: 0.5rem;
+}
+
+.auth-form__footer-hint {
+  font-size: 0.9rem;
+  color: $color-dark-grey;
+  margin: 0 0 0.25rem;
+}
+
+.auth-form__footer-cta {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: $color-black-normal;
+  margin: 0 0 0.5rem;
+}
+
+.auth-form__footer-link {
+  font-size: 0.95rem;
+  color: $color_green;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* ── Адаптив ──────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .auth-page__card {
+    border-radius: 12px;
+  }
+
+  .auth-form {
+    padding: 1.5rem;
+  }
+
+  .auth-page__title {
+    font-size: 1.6rem;
+  }
+}
