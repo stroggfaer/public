@@ -20,9 +20,6 @@ if ( is_user_logged_in() ) {
 
 get_header();
 
-// Подключаем компонент формы
-require_once get_template_directory() . '/my/component/auth-form.php';
-
 $default_tab = 'login';
 if ( isset( $_GET['tab'] ) && 'register' === sanitize_text_field( wp_unslash( $_GET['tab'] ) ) ) {
     $default_tab = 'register';
@@ -31,7 +28,7 @@ if ( isset( $_GET['tab'] ) && 'register' === sanitize_text_field( wp_unslash( $_
 
 <div id="primary" class="content-area">
     <main id="main" class="site-main">
-        <?php my_cabinet_render_auth_form( array( 'default_tab' => $default_tab ) ); ?>
+        <?php get_template_part( 'my/component/auth-form', null, array( 'default_tab' => $default_tab ) ); ?>
     </main>
 </div>
 

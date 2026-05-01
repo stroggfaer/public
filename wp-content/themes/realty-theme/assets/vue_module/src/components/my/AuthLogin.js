@@ -26,7 +26,7 @@ export default {
           :disabled="loginLoading"
         >
           <template #suffix>
-            <el-icon><Message /></el-icon>
+            <el-icon><MessageIcon /></el-icon>
           </template>
         </el-input>
       </el-form-item>
@@ -47,7 +47,7 @@ export default {
           :disabled="loginLoading"
         >
           <template #suffix>
-            <el-icon><Lock /></el-icon>
+            <el-icon><LockIcon /></el-icon>
           </template>
         </el-input>
       </el-form-item>
@@ -80,6 +80,11 @@ export default {
   `,
 
   emits: ['switchToRegister'],
+
+  components: {
+    MessageIcon: window.ElementPlusIconsVue?.Message,
+    LockIcon: window.ElementPlusIconsVue?.Lock,
+  },
 
   setup(props) {
     const loginForm = reactive({
