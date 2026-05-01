@@ -3414,3 +3414,256 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 .location-page .property-content-area {
   width: 100%;
 }
+
+/**
+ * Основные стили модуля "Мой кабинет"
+ */
+/**
+ * Стили главной страницы личного кабинета
+ */
+.my-cabinet-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/**
+ * Стили формы сообщения
+ */
+/**
+ * Стили формы длительного проживания
+ */
+/**
+ * Стили страницы авторизации / регистрации
+ * Vue3 + Element Plus
+ */
+/* ── Страница ─────────────────────────────────────────────── */
+.auth-page {
+  min-height: 70vh;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  padding: 3rem 1rem;
+  background: #f5f4f0;
+}
+
+/* ── Заголовок ────────────────────────────────────────────── */
+.auth-page__hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2F3034;
+  margin: 0 0 0.5rem;
+}
+
+.auth-page__subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  max-width: 360px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ── Карточка ─────────────────────────────────────────────── */
+.auth-page__card {
+  width: 100%;
+  max-width: 500px;
+  background: #fff;
+  border-radius: 16px;
+  -webkit-box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* ── Табы ─────────────────────────────────────────────────── */
+.auth-tabs {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  border-bottom: 1px solid #B8B8B8;
+}
+
+.auth-tabs__btn {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  padding: 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #969696;
+  cursor: pointer;
+  -webkit-transition: color 0.2s, border-color 0.2s;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+}
+.auth-tabs__btn:hover {
+  color: #307875;
+}
+.auth-tabs__btn--active {
+  color: #307875;
+  border-bottom-color: #307875;
+  font-weight: 600;
+}
+
+/* ── Форма ────────────────────────────────────────────────── */
+.auth-form {
+  padding: 2rem;
+  /* Перекрываем стили Element Plus для соответствия дизайну */
+}
+.auth-form .el-form-item__label {
+  font-weight: 600;
+  color: #2F3034;
+  font-size: 0.95rem;
+  padding-bottom: 6px;
+}
+.auth-form .el-input__wrapper {
+  background: #F8F8F8;
+  border-radius: 10px;
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+  border: 1px solid transparent;
+  -webkit-transition: border-color 0.2s;
+  transition: border-color 0.2s;
+}
+.auth-form .el-input__wrapper:hover, .auth-form .el-input__wrapper.is-focus {
+  border-color: #307875;
+}
+.auth-form .el-input__inner {
+  background: transparent;
+  font-size: 1rem;
+  color: #2F3034;
+}
+.auth-form .el-input__inner::-webkit-input-placeholder {
+  color: #B6B8B9;
+}
+.auth-form .el-input__inner::-moz-placeholder {
+  color: #B6B8B9;
+}
+.auth-form .el-input__inner:-ms-input-placeholder {
+  color: #B6B8B9;
+}
+.auth-form .el-input__inner::-ms-input-placeholder {
+  color: #B6B8B9;
+}
+.auth-form .el-input__inner::placeholder {
+  color: #B6B8B9;
+}
+.auth-form .el-input__suffix {
+  color: #969696;
+}
+
+/* Строка лейбла с ссылкой "Забыли пароль?" */
+.auth-form__label-row {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  width: 100%;
+}
+
+.auth-form__forgot {
+  font-size: 0.875rem;
+  color: #307875;
+  text-decoration: none;
+  font-weight: 500;
+}
+.auth-form__forgot:hover {
+  text-decoration: underline;
+}
+
+/* Алерт ошибки */
+.auth-form__alert {
+  margin-bottom: 1rem;
+  border-radius: 10px;
+}
+
+/* Кнопка сабмита */
+.auth-form__submit.el-button {
+  width: 100%;
+  height: 52px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: #307875;
+  border-color: #307875;
+  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+}
+.auth-form__submit.el-button:hover, .auth-form__submit.el-button:focus {
+  background: #08544a;
+  border-color: #08544a;
+}
+.auth-form__submit.el-button.is-loading {
+  opacity: 0.8;
+}
+
+/* Разделитель */
+.auth-form__divider {
+  height: 1px;
+  background: #B8B8B8;
+  margin: 1.5rem 0;
+}
+
+/* Футер формы */
+.auth-form__footer {
+  text-align: center;
+  padding-bottom: 0.5rem;
+}
+
+.auth-form__footer-hint {
+  font-size: 0.9rem;
+  color: #969696;
+  margin: 0 0 0.25rem;
+}
+
+.auth-form__footer-cta {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2F3034;
+  margin: 0 0 0.5rem;
+}
+
+.auth-form__footer-link {
+  font-size: 0.95rem;
+  color: #307875;
+  text-decoration: none;
+  font-weight: 500;
+}
+.auth-form__footer-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Адаптив ──────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .auth-page__card {
+    border-radius: 12px;
+  }
+  .auth-form {
+    padding: 1.5rem;
+  }
+  .auth-page__title {
+    font-size: 1.6rem;
+  }
+}

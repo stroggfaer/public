@@ -1,0 +1,106 @@
+/**
+ * Стили форм авторизации для модуля "Мой кабинет"
+ */
+
+// Импортируем переменные и миксины
+@import "../vars";
+@import "../mixins";
+
+// Стили формы входа
+.my-cabinet-auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: $white;
+  border-radius: $border-radius;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  
+  .form-title {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: $primary-color;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: $text-color;
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+    
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+    }
+  }
+  
+  .form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    
+    .btn {
+      padding: 0.75rem;
+      border: none;
+      border-radius: $border-radius;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      
+      &.btn-primary {
+        background: $primary-color;
+        color: $white;
+        
+        &:hover {
+          background: darken($primary-color, 10%);
+        }
+      }
+      
+      &.btn-secondary {
+        background: $secondary-color;
+        color: $white;
+        
+        &:hover {
+          background: darken($secondary-color, 10%);
+        }
+      }
+    }
+    
+    .auth-links {
+      text-align: center;
+      font-size: 0.9rem;
+      
+      a {
+        color: $primary-color;
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+// Стили формы регистрации
+.my-cabinet-register-form {
+  @extend .my-cabinet-auth-form;
+}
+
+// Стили формы восстановления пароля
+.my-cabinet-reset-form {
+  @extend .my-cabinet-auth-form;
+}

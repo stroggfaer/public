@@ -38,8 +38,8 @@ $slot_center = apply_filters('realty_header_slot', '');
                 </nav>
             <?php endif; ?>
             <div class="actions">
-                 <button class="button__com">Вход</button>
-                 <a href="#" class="button__com link">Регистрация</a>
+                 <a href="<?php echo esc_url( home_url( '/my-auth/' ) ); ?>" class="button__com">Вход</a>
+                 <a href="<?php echo esc_url( add_query_arg( 'tab', 'register', home_url( '/my-auth/' ) ) ); ?>" class="button__com link">Регистрация</a>
             </div>
         </div>
     </div>

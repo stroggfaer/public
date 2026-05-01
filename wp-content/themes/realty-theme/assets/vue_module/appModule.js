@@ -2,6 +2,12 @@ import store from './src/store/index.js';
 import HelloWorld from './src/components/HelloWord.js';
 import PropertyFilter from './src/components/PropertyFilter.js';
 import HomePropertyFilter from './src/components/HomePropertyFilter.js';
+
+import AuthLogin from './src/components/my/AuthLogin.js';
+import AuthRegistration from './src/components/my/AuthRegistration.js';
+import AuthForgot from './src/components/my/AuthForgot.js';
+
+
 import useProperty from './src/hooks/useProperty.js';
 import usePropertyFilters from './src/hooks/usePropertyFilters';
 import useModal from './src/hooks/useModal.js';
@@ -24,7 +30,8 @@ import {
   ElDatePicker,
   ElAutocomplete,
   ElMessage,
-  ElPopover
+  ElPopover,
+  ElAlert,
 } from 'element-plus';
 import {ApiService} from './src/services/api';
 export function createAppModule(options = {}) {
@@ -48,6 +55,9 @@ export {
   HelloWorld,
   PropertyFilter,
   HomePropertyFilter,
+  AuthLogin,
+  AuthRegistration,
+  AuthForgot,
   GoogleMap,
   ElButton,
   ElDialog,
@@ -59,6 +69,7 @@ export {
   ElAutocomplete,
   ElPopover,
   ElMessage,
+  ElAlert,
   ApiService,
   useProperty,
   usePropertyFilters,

@@ -152,6 +152,9 @@ require get_template_directory() . '/inc/admin/settings/property-characteristics
 // Подключаем универсальную страницу настроек
 require get_template_directory() . '/inc/admin/settings/index-settings.php';
 
+// Подключаем модуль "Мой кабинет"
+require get_template_directory() . '/my/hook/hook-function.php';
+
 // ============================================================
 // Обратная совместимость - создаём глобальные функции-обёртки
 // ============================================================
