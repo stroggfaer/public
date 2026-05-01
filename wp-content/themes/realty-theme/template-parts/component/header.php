@@ -38,8 +38,24 @@ $slot_center = apply_filters('realty_header_slot', '');
                 </nav>
             <?php endif; ?>
             <div class="actions">
-                 <a href="<?php echo esc_url( home_url( '/my-auth/' ) ); ?>" class="button__com">Вход</a>
-                 <a href="<?php echo esc_url( add_query_arg( 'tab', 'register', home_url( '/my-auth/' ) ) ); ?>" class="button__com link">Регистрация</a>
+                 <?php if ( is_user_logged_in() ) : ?>
+                     <?php
+                     $current_user = wp_get_current_user();
+                     $display_name = $current_user->display_name ?: $current_user->user_email;
+                     $avatar = get_avatar( $current_user->ID, 40, '', '', array('class' => 'user-avatar') );
+                     ?>
+                     <div class="user-menu">
+                         <a href="<?php echo esc_url( home_url( '/my-cabinet/' ) ); ?>" class="user-menu__link">
+                             <div class="user-menu__avatar">
+                                 <?php echo $avatar; ?>
+                             </div>
+                             <span class="user-menu__name"><?php echo esc_html( $display_name ); ?></span>
+                         </a>
+                     </div>
+                 <?php else : ?>
+                     <a href="<?php echo esc_url( home_url( '/my-auth/' ) ); ?>" class="button__com">Вход</a>
+                     <a href="<?php echo esc_url( add_query_arg( 'tab', 'register', home_url( '/my-auth/' ) ) ); ?>" class="button__com link">Регистрация</a>
+                 <?php endif; ?>
             </div>
         </div>
     </div>

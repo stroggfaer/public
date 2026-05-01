@@ -177,6 +177,29 @@ add_action( 'template_redirect', 'my_cabinet_protect_cabinet_page', 5 );
 
 
 // ============================================================
+// Скрытие WordPress Admin Bar для подписчиков
+// ============================================================
+
+/**
+ * Отключение WordPress Admin Bar для пользователей с ролью Subscriber
+ * Admin Bar показывается только для администраторов, редакторов и авторов
+ */
+function my_cabinet_disable_admin_bar_for_subscribers() {
+    // Если пользователь не авторизован - admin bar и так скрыт
+    if ( ! is_user_logged_in() ) {
+        return;
+    }
+    
+    $user = wp_get_current_user();
+    
+    // Скрываем admin bar для подписчиков
+    if ( in_array( 'subscriber', (array) $user->roles, true ) ) {
+        show_admin_bar( false );
+    }
+}
+add_action( 'after_setup_theme', 'my_cabinet_disable_admin_bar_for_subscribers' );
+
+// ============================================================
 // AJAX: Вход
 // ============================================================
 
