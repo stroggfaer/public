@@ -37,8 +37,8 @@ function my_cabinet_render_auth_form( $args = array() ) {
 
     <div id="auth-form-app" class="auth-page">
         <div class="auth-page__hero">
-            <h1 class="auth-page__title">EstateStay</h1>
-            <p class="auth-page__subtitle">Простой доступ к вашему личному кабинету и связи с хозяином</p>
+            <h1 class="auth-page__title"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></h1>
+            <p class="auth-page__subtitle"><?php esc_html_e( 'Простой доступ к вашему личному кабинету и связи с хозяином', 'realty-theme' ); ?></p>
         </div>
 
         <div class="auth-page__card">
