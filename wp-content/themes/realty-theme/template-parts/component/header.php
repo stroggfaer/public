@@ -45,7 +45,7 @@ $slot_center = apply_filters('realty_header_slot', '');
                      $avatar = get_avatar( $current_user->ID, 40, '', '', array('class' => 'user-avatar') );
                      ?>
                      <div class="user-menu">
-                         <a href="<?php echo esc_url( home_url( '/my-cabinet/' ) ); ?>" class="user-menu__link">
+                         <a href="<?php echo esc_url( home_url( '/my/dashboard/' ) ); ?>" class="user-menu__link">
                              <div class="user-menu__avatar">
                                  <?php echo $avatar; ?>
                              </div>

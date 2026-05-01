@@ -1,0 +1,93 @@
+/**
+ * Стили бокового меню личного кабинета
+ */
+
+.my-sidebar {
+  width: 240px;
+  background: $color-white;
+  border-right: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  padding: 2rem 0;
+
+  @media (max-width: $media-md) {
+    width: 200px;
+  }
+
+  @media (max-width: $media-sm) {
+    display: none;
+  }
+}
+
+.my-sidebar-nav {
+  flex: 1;
+  padding: 0 1rem;
+}
+
+.my-sidebar-footer {
+  border-top: 1px solid $color-border;
+  padding: 1rem;
+}
+
+.my-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: $border-radius;
+  text-decoration: none;
+  color: $color-dark-grey-2;
+  transition: all 0.2s ease;
+  margin-bottom: 0.25rem;
+
+  &:hover {
+    background: $color-grey-lite;
+    color: $color-site;
+
+    .material-symbols-outlined {
+      color: $color-site;
+    }
+  }
+
+  &--active {
+    background: $color-blue-lite;
+    color: $color-blue-normal;
+    font-weight: 600;
+
+    .material-symbols-outlined {
+      color: $color-blue-normal;
+    }
+
+    &:hover {
+      background: darken($color-blue-lite, 3%);
+    }
+  }
+
+  &--logout {
+    color: $color-red-btn;
+
+    &:hover {
+      background: $color-red-lite;
+      color: $color-red;
+    }
+  }
+
+  .material-symbols-outlined {
+    font-size: 1.25rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-dark-grey;
+    transition: color 0.2s ease;
+  }
+
+  .my-sidebar-label {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+}

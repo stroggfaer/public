@@ -2,12 +2,436 @@
  * Стили главной страницы личного кабинета
  */
 
-.my-cabinet-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.my-dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background: $color-width-2;
 }
 
-.my-cabinet-header {
+.my-main-content {
+  flex: 1;
+  padding: 2rem 3rem;
+  overflow-y: auto;
 
+  @media (max-width: $media-md) {
+    padding: 1.5rem 2rem;
+  }
+
+  @media (max-width: $media-sm) {
+    padding: 1rem;
+  }
+}
+
+.my-content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.my-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2rem;
+  align-items: start;
+
+  @media (max-width: $media-lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.my-content-main {
+  min-width: 0;
+}
+
+.my-content-sidebar {
+  @media (max-width: $media-lg) {
+    display: none;
+  }
+}
+
+.my-page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: $color-grey-dark-2;
+  margin: 0 0 2rem 0;
+
+  @media (max-width: $media-md) {
+    font-size: 1.75rem;
+  }
+}
+
+// Карточка бронирования
+.my-booking-card {
+  background: $color-white;
+  border-radius: $border-radius;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.my-booking-header {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid $color-border;
+
+  @media (max-width: $media-sm) {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+.my-booking-image {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: $media-sm) {
+    width: 100%;
+    height: 200px;
+  }
+}
+
+.my-booking-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.my-booking-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.my-rating-star {
+  color: $color-orange;
+  font-size: 1rem;
+}
+
+.my-rating-value {
+  font-weight: 600;
+  color: $color-grey-dark-2;
+}
+
+.my-rating-badge {
+  padding: 0.25rem 0.75rem;
+  background: $color-green-light;
+  color: $color-site;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.my-booking-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $color-grey-dark-2;
+  margin: 0;
+  line-height: 1.4;
+
+  @media (max-width: $media-sm) {
+    font-size: 1.125rem;
+  }
+}
+
+.my-booking-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $color-dark-grey-2;
+  font-size: 0.9375rem;
+
+  .material-symbols-outlined {
+    font-size: 1.125rem;
+    color: $color-dark-grey;
+  }
+}
+
+.my-booking-status {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+
+  &--pending {
+    background: $color-orange-lite;
+    color: $color-orange;
+  }
+}
+
+.my-booking-price {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+
+  @media (max-width: $media-sm) {
+    text-align: left;
+  }
+}
+
+.my-price-amount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: $color-site;
+
+  @media (max-width: $media-sm) {
+    font-size: 1.5rem;
+  }
+}
+
+.my-price-period {
+  font-size: 0.75rem;
+  color: $color-dark-grey;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Детали проживания
+.my-booking-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  padding: 1.5rem;
+
+  @media (max-width: $media-sm) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.my-details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.my-details-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $color-dark-grey;
+  margin: 0;
+}
+
+.my-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid $color-border-ling;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.my-details-label {
+  font-size: 0.9375rem;
+  color: $color-dark-grey-2;
+}
+
+.my-details-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $color-grey-dark-2;
+  text-align: right;
+
+  &--link {
+    color: $color-site;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.my-details-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $color-site;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  .material-symbols-outlined {
+    font-size: 1.125rem;
+  }
+}
+
+// Боковая панель действий
+.my-actions-panel {
+  background: $color-white;
+  border-radius: $border-radius;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 2rem;
+}
+
+.my-actions-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: $color-grey-dark-2;
+  margin: 0 0 0.5rem 0;
+}
+
+.my-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  .material-symbols-outlined {
+    font-size: 1.25rem;
+  }
+
+  &--primary {
+    background: $color-site;
+    color: $color-white;
+
+    &:hover {
+      background: $color-green-dark;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($color-site, 0.3);
+    }
+  }
+
+  &--secondary {
+    background: $color-white;
+    color: $color-site;
+    border: 2px solid $color-site;
+
+    &:hover {
+      background: $color-green-light;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Информация о хозяине
+.my-host-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.my-host-avatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.my-host-status {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: $color-green-normal;
+  border: 2px solid $color-white;
+  border-radius: 50%;
+}
+
+.my-host-details {
+  flex: 1;
+}
+
+.my-host-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $color-grey-dark-2;
+  margin-bottom: 0.25rem;
+}
+
+.my-host-response {
+  font-size: 0.8125rem;
+  color: $color-dark-grey;
+  line-height: 1.4;
+}
+
+// Информационное уведомление
+.my-info-notice {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: $color-blue-light;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.my-notice-icon {
+  font-size: 1.25rem;
+  color: $info;
+  flex-shrink: 0;
+}
+
+.my-notice-text {
+  font-size: 0.875rem;
+  color: $color-dark-grey-2;
+  line-height: 1.6;
+  margin: 0;
+}
+
+// Пустое состояние
+.my-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.my-empty-icon {
+  font-size: 4rem;
+  color: $color-dark-grey;
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+}
+
+.my-empty-text {
+  font-size: 1.125rem;
+  color: $color-dark-grey-2;
+  margin: 0;
 }

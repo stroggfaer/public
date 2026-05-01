@@ -214,3 +214,51 @@
     font-size: 1.6rem;
   }
 }
+
+/* ── User Menu в Header ───────────────────────────────────── */
+.user-menu {
+  display: flex;
+  align-items: center;
+}
+
+.user-menu__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ui-color-text);
+  transition: opacity var(--ui-transition-duration) var(--ui-transition-function);
+  padding: 6px 12px;
+  border-radius: var(--ui-border-radius);
+}
+
+.user-menu__link:hover {
+  opacity: 0.8;
+  background-color: rgba(48, 120, 117, 0.05);
+}
+
+.user-menu__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-menu__avatar img,
+.user-menu__avatar .user-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-menu__name {
+  font-size: var(--ui-font-size-base);
+  font-weight: 600;
+  color: var(--ui-color-text);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

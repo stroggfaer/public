@@ -19,25 +19,47 @@ function my_cabinet_register_template() {
     $template_path = get_template_directory() . '/my/dashboard.php';
     
     if ( file_exists( $template_path ) ) {
+        // Основной маршрут /my/ - редирект на /my/dashboard/
+        add_rewrite_rule( '^my/?$', 'index.php?my_cabinet_redirect=true', 'top' );
+        
+        // Маршрут /my/dashboard/ - главная страница ЛК
         add_rewrite_tag( '%my_cabinet%', 'true' );
-        add_rewrite_rule( '^my-cabinet/?$', 'index.php?my_cabinet=true', 'top' );
+        add_rewrite_rule( '^my/dashboard/?$', 'index.php?my_cabinet=true', 'top' );
+        
+        // Маршруты /my/{page}/ - другие страницы ЛК
+        add_rewrite_tag( '%my_page%', '([^/]+)' );
+        add_rewrite_rule( '^my/([^/]+)/?$', 'index.php?my_page=$matches[1]', 'top' );
     }
 }
 add_action( 'init', 'my_cabinet_register_template' );
 
 /**
- * Добавление переменной запроса для шаблона
+ * Добавление переменных запроса для шаблона
  */
 function my_cabinet_add_query_var( $vars ) {
     $vars[] = 'my_cabinet';
+    $vars[] = 'my_page';
+    $vars[] = 'my_cabinet_redirect';
     return $vars;
 }
 add_filter( 'query_vars', 'my_cabinet_add_query_var' );
 
 /**
+ * Обработка редиректа /my/ -> /my/dashboard/
+ */
+function my_cabinet_handle_redirect() {
+    if ( get_query_var( 'my_cabinet_redirect' ) ) {
+        wp_safe_redirect( home_url( '/my/dashboard/' ), 301 );
+        exit;
+    }
+}
+add_action( 'template_redirect', 'my_cabinet_handle_redirect', 1 );
+
+/**
  * Подключение шаблона личного кабинета
  */
 function my_cabinet_template_include( $template ) {
+    // Главная страница /my/dashboard/
     if ( get_query_var( 'my_cabinet' ) ) {
         // Проверка авторизации: только для вошедших пользователей
         if ( ! is_user_logged_in() ) {
@@ -50,6 +72,27 @@ function my_cabinet_template_include( $template ) {
             return $custom_template;
         }
     }
+    
+    // Другие страницы /my/{page}/
+    $my_page = get_query_var( 'my_page' );
+    if ( $my_page ) {
+        // Проверка авторизации
+        if ( ! is_user_logged_in() ) {
+            wp_safe_redirect( home_url( '/my-auth/' ) );
+            exit;
+        }
+        
+        // Поиск шаблона для страницы
+        $page_template = get_template_directory() . '/my/' . sanitize_file_name( $my_page ) . '.php';
+        if ( file_exists( $page_template ) ) {
+            return $page_template;
+        }
+        
+        // Если шаблон не найден, редирект на главную
+        wp_safe_redirect( home_url( '/my/dashboard/' ), 302 );
+        exit;
+    }
+    
     return $template;
 }
 add_filter( 'template_include', 'my_cabinet_template_include', 99 );
@@ -85,6 +128,18 @@ function my_cabinet_auth_flush_rewrite_rules() {
     }
 }
 add_action( 'init', 'my_cabinet_auth_flush_rewrite_rules', 20 );
+
+/**
+ * Очистка rewrite rules для обновления маршрутов /my/
+ */
+function my_cabinet_flush_my_routes_rewrite_rules() {
+    // Флаг для отслеживания обновления маршрутов /my/
+    if ( ! get_option( 'my_routes_updated_v2', false ) ) {
+        flush_rewrite_rules( false );
+        update_option( 'my_routes_updated_v2', true );
+    }
+}
+add_action( 'init', 'my_cabinet_flush_my_routes_rewrite_rules', 25 );
 
 /**
  * Добавление query var
@@ -129,17 +184,19 @@ function my_cabinet_is_auth_page() {
 }
 
 /**
- * Проверка, что текущая страница — страница личного кабинета /my-cabinet/.
+ * Проверка, что текущая страница — страница личного кабинета /my/ или /my/*.
  */
 function my_cabinet_is_cabinet_page() {
-    if ( get_query_var( 'my_cabinet' ) ) {
+    if ( get_query_var( 'my_cabinet' ) || get_query_var( 'my_page' ) || get_query_var( 'my_cabinet_redirect' ) ) {
         return true;
     }
 
     if ( isset( $_SERVER['REQUEST_URI'] ) ) {
         $request_uri = wp_unslash( $_SERVER['REQUEST_URI'] );
         $request_path = trim( parse_url( $request_uri, PHP_URL_PATH ), '/' );
-        if ( 'my-cabinet' === $request_path || strpos( $request_path, 'my-cabinet/' ) === 0 ) {
+        
+        // Проверяем /my/ и /my/*
+        if ( 'my' === $request_path || strpos( $request_path, 'my/' ) === 0 ) {
             return true;
         }
     }
@@ -243,7 +300,7 @@ function my_cabinet_ajax_login() {
     }
 
     wp_send_json_success( array(
-        'redirect' => home_url( '/my-cabinet/' ),
+        'redirect' => home_url( '/my/dashboard/' ),
         'message'  => 'Вход выполнен успешно.',
     ) );
 }
@@ -313,7 +370,7 @@ function my_cabinet_ajax_register() {
     wp_set_auth_cookie( $user_id, true );
 
     wp_send_json_success( array(
-        'redirect' => home_url( '/my-cabinet/' ),
+        'redirect' => home_url( '/my/dashboard/' ),
         'message'  => 'Регистрация прошла успешно.',
     ) );
 }

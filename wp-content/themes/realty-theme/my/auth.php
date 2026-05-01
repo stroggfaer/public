@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Если пользователь уже авторизован — редиректим в кабинет
 if ( is_user_logged_in() ) {
-    wp_safe_redirect( home_url( '/my-cabinet/' ) );
+    wp_safe_redirect( home_url( '/my/dashboard/' ) );
     exit;
 }
 

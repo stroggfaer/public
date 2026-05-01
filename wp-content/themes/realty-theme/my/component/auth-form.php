@@ -20,7 +20,7 @@ $app_data = array(
     'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
     'loginNonce'    => wp_create_nonce( 'my_cabinet_login_nonce' ),
     'registerNonce' => wp_create_nonce( 'my_cabinet_register_nonce' ),
-    'redirectUrl'   => home_url( '/my-cabinet/' ),
+    'redirectUrl'   => home_url( '/my/dashboard/' ),
 );
 
 $app_data_json = wp_json_encode( $app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG );
