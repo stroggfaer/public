@@ -59,6 +59,11 @@ export default {
         </el-input>
       </el-form-item>
 
+      <el-form-item prop="consentAgreed">
+        <el-checkbox v-model="registerForm.consentAgreed">
+          Я даю согласие на <a href="#" class="auth-form__consent-link" @click.prevent>обработку персональных данных</a>
+        </el-checkbox>
+      </el-form-item>
       <el-alert
         v-if="registerError"
         :title="registerError"
@@ -92,6 +97,7 @@ export default {
       email: '',
       password: '',
       passwordConfirm: '',
+      consentAgreed: false,
     });
     const registerLoading = ref(false);
     const registerError = ref('');
@@ -119,6 +125,14 @@ export default {
           trigger: 'blur',
         },
       ],
+      consentAgreed: [
+        {
+          type: 'enum',
+          enum: [true],
+          message: 'Необходимо дать согласие на обработку персональных данных',
+          trigger: 'change',
+        },
+      ]
     };
 
     const doAjaxRegister = async (data) => {
@@ -168,7 +182,6 @@ export default {
         }
       });
     };
-
     return {
       registerForm,
       registerLoading,

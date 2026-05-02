@@ -4121,6 +4121,17 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   border-radius: 10px;
 }
 .auth-form {
+  /* Чекбокс согласия */
+}
+.auth-form .auth-form__consent-link {
+  color: #307875;
+  text-decoration: none;
+  font-weight: 500;
+}
+.auth-form .auth-form__consent-link:hover {
+  text-decoration: underline;
+}
+.auth-form {
   /* Разделитель */
 }
 .auth-form .auth-form__divider {
