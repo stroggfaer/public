@@ -74,7 +74,7 @@ export default {
         :loading="registerLoading"
         native-type="submit"
         @click.prevent="submitRegister"
-      >Регистрация &nbsp;→</el-button>
+      >Регистрация   <span class="material-symbols-outlined">output</span></el-button>
     </el-form>
 
     <div class="auth-form__divider"></div>

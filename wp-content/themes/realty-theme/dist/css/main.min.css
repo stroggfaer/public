@@ -329,30 +329,6 @@ body, html {
   background-color: rgba(48, 120, 116, 0.1);
 }
 
-.el-form .el-form-item {
-  margin-bottom: 15px;
-}
-.el-form .el-form-item:last-of-type {
-  margin-bottom: 0;
-}
-.el-form .el-form-item .el-form-item__label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
-  padding-bottom: 0;
-  line-height: 20px;
-}
-.el-form .el-form-item .el-form-item__content {
-  line-height: normal;
-  width: 100%;
-}
-.el-form .el-form-item .el-form-item__content .price-range-wrapper {
-  width: 100%;
-}
-
 .price-range-wrapper .price-inputs-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -446,6 +422,124 @@ body, html {
 .el-checkbox .el-checkbox__input .el-checkbox__inner::after {
   left: 8px;
   top: 7px;
+}
+
+.el-form .el-form-item {
+  margin-bottom: 24px;
+}
+.el-form .el-form-item__label-wrap {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.el-form .el-form-item__label-wrap span {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(19, 22, 22);
+}
+.el-form .el-form-item__label-wrap .label-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ui-color-primary);
+  text-decoration: none;
+  -webkit-transition: color var(--ui-transition-fast-duration);
+  transition: color var(--ui-transition-fast-duration);
+}
+.el-form .el-form-item__label-wrap .label-link:hover {
+  color: var(--ui-color-primary-dark);
+}
+.el-form .el-form-item .el-form-item__label {
+  color: rgb(63, 73, 72);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  font-weight: 600;
+  width: 100%;
+}
+.el-form .el-form-item .el-form-item__label a {
+  color: #307875;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 20px;
+  margin-bottom: -15px;
+}
+.el-form .el-form-item .el-form-item__label a:hover {
+  text-decoration: underline;
+}
+.el-form .el-form-item .el-form-item__label a {
+  display: inline-block;
+  margin-left: 8px;
+}
+.el-form .el-form-item .el-input {
+  --el-input-bg-color: #f5f7f9;
+  --el-input-border-color: transparent;
+}
+.el-form .el-form-item .el-input input::-webkit-outer-spin-button,
+.el-form .el-form-item .el-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.el-form .el-form-item .el-input .el-input__wrapper {
+  background-color: var(--el-input-bg-color);
+  border: 1px solid var(--el-input-border-color);
+  border-radius: 12px;
+  /* Важно: обнуляем box-shadow, который дает жирность */
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+  -webkit-transition: background-color var(--ui-transition-duration), border-color var(--ui-transition-duration);
+  transition: background-color var(--ui-transition-duration), border-color var(--ui-transition-duration);
+}
+.el-form .el-form-item .el-input .el-input__wrapper:hover {
+  --el-input-border-color: var(--ui-color-border-hover);
+}
+.el-form .el-form-item .el-input .el-input__wrapper.is-focus {
+  background-color: var(--ui-color-surface) !important;
+  --el-input-border-color: var(--ui-color-border-hover);
+  /* Вместо тени используем чистый border 1px */
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+}
+.el-form .el-form-item .el-input .el-input__wrapper .material-symbols-outlined {
+  font-size: 20px;
+  color: #7d8590;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+.el-form .el-form-item .el-input .el-input__wrapper.is-disabled .el-input__wrapper {
+  background-color: var(--ui-color-disabled);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.el-form .el-form-item .el-input.el-input--large .el-input__inner {
+  height: 48px;
+}
+.el-form .el-form-item .el-input:not(.el-input--large) .el-input__wrapper {
+  border-radius: 8px;
+  padding: 0 12px;
+}
+.el-form .el-form-item .el-input:not(.el-input--large) .el-input__inner {
+  height: 36px;
+}
+.el-form .el-form-item .el-input .el-input__inner {
+  font-size: 14px;
+  color: var(--ui-color-text);
+  background: transparent !important;
+}
+.el-form .el-form-item.is-error .el-input__wrapper {
+  --el-input-border-color: var(--ui-color-danger) !important;
 }
 
 .button__com {
@@ -1293,6 +1387,7 @@ a.border:hover {
 .site-header {
   width: 100%;
   padding: 15px 0px;
+  background-color: #fff;
   border-bottom: 1px solid rgb(226, 232, 240);
 }
 .site-header .col-flex {
@@ -2248,77 +2343,6 @@ article.post .the-content {
   background: #4f4f4f;
 }
 
-form input[type=text], form input[type=email], form textarea {
-  border-color: rgb(19, 22, 22);
-}
-form input[type=text]:focus, form input[type=text]:focus-visible, form input[type=email]:focus, form input[type=email]:focus-visible, form textarea:focus, form textarea:focus-visible {
-  border-color: #307875 !important;
-  outline: none !important;
-}
-form input[type=submit] {
-  background-color: #307875;
-  border-color: #307875;
-  color: #fff;
-  font-size: 16px;
-}
-form .wpcf7-spinner {
-  display: none;
-}
-@media screen and (max-width: 992px) {
-  form input {
-    width: 100%;
-  }
-  form textarea {
-    padding: 3px;
-    width: 100%;
-  }
-}
-
-button,
-html input[type=button] input[type=reset],
-input[type=submit] {
-  -webkit-transition: all 0.2s ease-in-out 0s;
-  transition: all 0.2s ease-in-out 0s;
-  font-size: 14px;
-  line-height: 24px;
-  font-weight: 700;
-  padding: 8px 18px;
-  border-radius: 8px;
-  opacity: 1;
-  display: inline-block;
-  white-space: nowrap;
-  cursor: pointer;
-  background: #FFF;
-  border: 1px solid #DCDFE6;
-  color: #606266;
-  -webkit-appearance: none;
-  text-align: center;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  outline: 0;
-  margin: 0;
-}
-button:focus, button:hover,
-html input[type=button] input[type=reset]:focus,
-html input[type=button] input[type=reset]:hover,
-input[type=submit]:focus,
-input[type=submit]:hover {
-  opacity: 0.6;
-}
-@media screen and (max-width: 992px) {
-  button,
-  html input[type=button] input[type=reset],
-  input[type=submit] {
-    width: 100%;
-  }
-}
-
-.wpcf7 form.invalid .wpcf7-response-output,
-.wpcf7 form.unaccepted .wpcf7-response-output,
-.wpcf7 form.payment-required .wpcf7-response-output {
-  border-color: #FF3E17 !important;
-}
-
 .el-button {
   font-size: 16px;
   line-height: 24px;
@@ -3049,78 +3073,22 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 .footer {
   background-color: #fff;
   color: #fff;
-  padding: 40px 0 20px;
+  padding: 20px 0 20px;
   border-top: 1px solid rgb(226, 232, 240);
   -ms-flex-negative: 0;
       flex-shrink: 0;
-}
-.footer .footer__columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 32px;
-  margin-bottom: 32px;
-}
-.footer p {
-  font-width: 300;
-}
-.footer h2, .footer h3 {
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #333333;
-  margin-bottom: 16px;
-}
-.footer .widget_nav_menu ul,
-.footer .widget_block ul {
-  list-style: none;
-  margin: 0px;
-}
-.footer .widget_nav_menu ul a,
-.footer .widget_block ul a {
-  display: block;
-  color: #969696;
-  text-decoration: none;
-  padding: 2px 0;
-  margin: 0px;
-  font-size: 14px;
-  font-weight: 300;
-}
-.footer .widget_nav_menu ul a:hover,
-.footer .widget_block ul a:hover {
-  color: #307875;
-}
-.footer .footer__divider {
-  border: none;
-  border-top: 1px solid rgb(226, 232, 240);
-  margin: 32px 0;
 }
 .footer .footer__bottom {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-align: start;
-      -ms-flex-align: start;
-          align-items: flex-start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   gap: 16px;
-}
-@media (min-width: 768px) {
-  .footer .footer__bottom {
-    -webkit-box-orient: horizontal;
-    -webkit-box-direction: normal;
-        -ms-flex-direction: row;
-            flex-direction: row;
-    -webkit-box-pack: justify;
-        -ms-flex-pack: justify;
-            justify-content: space-between;
-    -webkit-box-align: center;
-        -ms-flex-align: center;
-            align-items: center;
-  }
 }
 .footer .footer__copyright {
   font-size: 14px;
@@ -3424,7 +3392,6 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 .my-sidebar {
   width: 240px;
   background: #fff;
-  border-right: 1px solid #e5e7eb;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -3436,16 +3403,6 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   position: sticky;
   top: 0;
   padding: 2rem 0;
-}
-@media (max-width: 992px) {
-  .my-sidebar {
-    width: 200px;
-  }
-}
-@media (max-width: 520px) {
-  .my-sidebar {
-    display: none;
-  }
 }
 
 .my-sidebar-nav {
@@ -3531,7 +3488,6 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   display: -ms-flexbox;
   display: flex;
   min-height: 100vh;
-  background: #fafaf9;
 }
 
 .my-main-content {
@@ -4048,8 +4004,9 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
  * Стили страницы авторизации / регистрации
  * Vue3 + Element Plus
  */
-/* ── Страница ─────────────────────────────────────────────── */
 .auth-page {
+  padding-top: 64px;
+  padding-bottom: 64px;
   min-height: 70vh;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -4064,25 +4021,23 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
-  padding: 3rem 1rem;
   background: #f5f4f0;
+  font-size: 16px;
 }
 
 /* ── Заголовок ────────────────────────────────────────────── */
 .auth-page__hero {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 54px;
 }
 
 .auth-page__title {
-  font-size: 2rem;
-  font-weight: 700;
+  line-height: 34px;
+  font-size: 32px;
   color: #2F3034;
-  margin: 0 0 0.5rem;
 }
 
 .auth-page__subtitle {
-  font-size: 1rem;
   color: #6b7280;
   max-width: 360px;
   margin: 0 auto;
@@ -4112,76 +4067,41 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   -webkit-box-flex: 1;
       -ms-flex: 1;
           flex: 1;
-  padding: 1rem;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: 1rem;
-  font-weight: 500;
   color: #969696;
+  padding: 24px 0px;
   cursor: pointer;
   -webkit-transition: color 0.2s, border-color 0.2s;
   transition: color 0.2s, border-color 0.2s;
   margin-bottom: -1px;
 }
 .auth-tabs__btn:hover {
-  color: #307875;
+  color: rgb(19, 22, 22);
 }
 .auth-tabs__btn--active {
   color: #307875;
   border-bottom-color: #307875;
-  font-weight: 600;
+}
+.auth-tabs__btn--active:hover {
+  color: #307875;
 }
 
 /* ── Форма ────────────────────────────────────────────────── */
 .auth-form {
-  padding: 2rem;
-  /* Перекрываем стили Element Plus для соответствия дизайну */
+  padding: 30px;
 }
-.auth-form .el-form-item__label {
-  font-weight: 600;
-  color: #2F3034;
-  font-size: 0.95rem;
-  padding-bottom: 6px;
+.auth-form .el-form {
+  margin-bottom: 40px;
 }
-.auth-form .el-input__wrapper {
-  background: #F8F8F8;
-  border-radius: 10px;
-  -webkit-box-shadow: none !important;
-          box-shadow: none !important;
-  border: 1px solid transparent;
-  -webkit-transition: border-color 0.2s;
-  transition: border-color 0.2s;
+.auth-form .auth-form__submit {
+  width: 100%;
 }
-.auth-form .el-input__wrapper:hover, .auth-form .el-input__wrapper.is-focus {
-  border-color: #307875;
+.auth-form {
+  /* Строка лейбла с ссылкой "Забыли пароль?" */
 }
-.auth-form .el-input__inner {
-  background: transparent;
-  font-size: 1rem;
-  color: #2F3034;
-}
-.auth-form .el-input__inner::-webkit-input-placeholder {
-  color: #B6B8B9;
-}
-.auth-form .el-input__inner::-moz-placeholder {
-  color: #B6B8B9;
-}
-.auth-form .el-input__inner:-ms-input-placeholder {
-  color: #B6B8B9;
-}
-.auth-form .el-input__inner::-ms-input-placeholder {
-  color: #B6B8B9;
-}
-.auth-form .el-input__inner::placeholder {
-  color: #B6B8B9;
-}
-.auth-form .el-input__suffix {
-  color: #969696;
-}
-
-/* Строка лейбла с ссылкой "Забыли пароль?" */
-.auth-form__label-row {
+.auth-form .auth-form__label-row {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -4193,91 +4113,41 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
           align-items: center;
   width: 100%;
 }
-
-.auth-form__forgot {
-  font-size: 0.875rem;
-  color: #307875;
-  text-decoration: none;
-  font-weight: 500;
+.auth-form {
+  /* Алерт ошибки */
 }
-.auth-form__forgot:hover {
-  text-decoration: underline;
-}
-
-/* Алерт ошибки */
-.auth-form__alert {
+.auth-form .auth-form__alert {
   margin-bottom: 1rem;
   border-radius: 10px;
 }
-
-/* Кнопка сабмита */
-.auth-form__submit.el-button {
-  width: 100%;
-  height: 52px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  background: #307875;
-  border-color: #307875;
-  letter-spacing: 0.02em;
-  margin-top: 0.5rem;
+.auth-form {
+  /* Разделитель */
 }
-.auth-form__submit.el-button:hover, .auth-form__submit.el-button:focus {
-  background: #08544a;
-  border-color: #08544a;
-}
-.auth-form__submit.el-button.is-loading {
-  opacity: 0.8;
-}
-
-/* Разделитель */
-.auth-form__divider {
+.auth-form .auth-form__divider {
   height: 1px;
   background: #B8B8B8;
   margin: 1.5rem 0;
 }
-
-/* Футер формы */
-.auth-form__footer {
+.auth-form {
+  /* Футер формы */
+}
+.auth-form .auth-form__footer {
   text-align: center;
   padding-bottom: 0.5rem;
 }
-
-.auth-form__footer-hint {
-  font-size: 0.9rem;
-  color: #969696;
+.auth-form .auth-form__footer p {
+  padding: 0px;
+  margin: 5px 0px;
+}
+.auth-form .auth-form__footer-hint {
+  color: #6b7280;
   margin: 0 0 0.25rem;
 }
-
-.auth-form__footer-cta {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #2F3034;
-  margin: 0 0 0.5rem;
-}
-
-.auth-form__footer-link {
-  font-size: 0.95rem;
+.auth-form .auth-form__footer-link {
   color: #307875;
-  text-decoration: none;
-  font-weight: 500;
-}
-.auth-form__footer-link:hover {
-  text-decoration: underline;
+  font-weight: 600;
 }
 
-/* ── Адаптив ──────────────────────────────────────────────── */
-@media (max-width: 540px) {
-  .auth-page__card {
-    border-radius: 12px;
-  }
-  .auth-form {
-    padding: 1.5rem;
-  }
-  .auth-page__title {
-    font-size: 1.6rem;
-  }
-}
 /* ── User Menu в Header ───────────────────────────────────── */
 .user-menu {
   display: -webkit-box;

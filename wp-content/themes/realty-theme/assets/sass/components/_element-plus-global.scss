@@ -184,11 +184,11 @@
   --el-input-text-color: var(--ui-color-text);
   --el-input-placeholder-color: var(--ui-color-placeholder);
   --el-input-border-radius: var(--ui-border-radius);
-  
+
   .el-input__wrapper {
     border-radius: var(--ui-border-radius);
   }
-  
+
   .el-input__inner {
     font-size: 14px;
   }
@@ -347,38 +347,6 @@
   }
 }
 
-//---------
-// ──────────────── EL-FORM CUSTOMIZATION ────────────────
-.el-form {
-  // Кастомизация el-form-item
-  .el-form-item {
-    margin-bottom: 15px;
-
-    &:last-of-type {
-      margin-bottom: 0;
-    }
-
-    // Лейбл секции
-    .el-form-item__label {
-      font-size: 14px;
-      font-weight: 600;
-      color: $color-dark-grey-2;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
-      padding-bottom: 0;
-      line-height: 20px;
-    }
-
-    .el-form-item__content {
-      line-height: normal;
-      width: 100%;
-      .price-range-wrapper {
-        width: 100%;
-      }
-    }
-  }
-}
 
 // ──────────────── PRICE RANGE SLIDER ────────────────
 .price-range-wrapper {
@@ -480,4 +448,127 @@
 .el-checkbox .el-checkbox__input .el-checkbox__inner::after {
   left: 8px;
   top: 7px;
+}
+
+// ──────────────── EL-FORM CUSTOMIZATION ────────────────:
+.el-form {
+  .el-form-item {
+    margin-bottom: 24px; // Увеличил отступ между полями для чистоты
+
+    // Контейнер для кастомного лейбла (Текст + Ссылка)
+    &__label-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 8px;
+
+      span {
+        font-size: 14px;
+        font-weight: 600;
+        color: $color-black; // Основной цвет текста из макета
+      }
+
+      .label-link {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--ui-color-primary);
+        text-decoration: none;
+        transition: color var(--ui-transition-fast-duration);
+
+        &:hover {
+          color: var(--ui-color-primary-dark);
+        }
+      }
+    }
+    .el-form-item__label {
+      color: rgb(63 73 72 / 1);
+      display: flex;
+      font-weight: 600;
+      width: 100%;
+      a {
+        color: $color_green;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 20px;
+        margin-bottom: -15px;
+        &:hover {
+          text-decoration: underline;
+        }
+        display: inline-block;
+        margin-left: 8px;
+      }
+    }
+    // Стилизация Input строго внутри Form Item
+    .el-input {
+      --el-input-bg-color: #f5f7f9;
+      --el-input-border-color: transparent;
+      // Убираем системные стрелочки у input type="number"
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .el-input__wrapper {
+        background-color: var(--el-input-bg-color);
+        border: 1px solid var(--el-input-border-color);
+        border-radius: 12px;
+        /* Важно: обнуляем box-shadow, который дает жирность */
+        box-shadow: none !important;
+        transition: background-color var(--ui-transition-duration), border-color var(--ui-transition-duration);
+
+        &:hover {
+          --el-input-border-color: var(--ui-color-border-hover);
+        }
+
+        &.is-focus {
+          background-color: var(--ui-color-surface) !important;
+          --el-input-border-color: var(--ui-color-border-hover);
+          /* Вместо тени используем чистый border 1px */
+          box-shadow: none !important;
+        }
+
+        // Иконки (mail, lock)
+        .material-symbols-outlined {
+          font-size: 20px;
+          color: #7d8590; // Цвет иконки со скрина
+          display: flex;
+          align-items: center;
+        }
+
+        // Если инпут заблокирован
+        &.is-disabled {
+          .el-input__wrapper {
+            background-color: var(--ui-color-disabled);
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+
+      // Размеры
+      &.el-input--large {
+        .el-input__inner { height: 48px; }
+      }
+
+      &:not(.el-input--large) {
+        .el-input__wrapper { border-radius: 8px; padding: 0 12px; }
+        .el-input__inner { height: 36px; }
+      }
+
+      .el-input__inner {
+        font-size: 14px;
+        color: var(--ui-color-text);
+        background: transparent !important; // Чтобы не перекрывал wrapper
+      }
+    }
+
+    // Обработка ошибок (Validation Error)
+    &.is-error {
+      .el-input__wrapper {
+        --el-input-border-color: var(--ui-color-danger) !important;
+      }
+    }
+  }
 }

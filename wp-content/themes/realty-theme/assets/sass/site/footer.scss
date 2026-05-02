@@ -1,67 +1,17 @@
 // Стили для футера
 .footer {
-  background-color: $color-white;
-  color: $color-white;
-  padding: 40px 0 20px;
-  border-top: 1px solid $color-medium-grey-2;
-  flex-shrink: 0;
-  .footer__columns {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 32px;
-    margin-bottom: 32px;
-  }
-  p {
-    font-width: 300;
-  }
-  h2,h3 {
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: $color-black-medium;
-    margin-bottom: 16px;
-  }
-  .widget_nav_menu,
-  .widget_block {
-     ul {
-       list-style: none;
-       margin: 0px;
-       a {
-         display: block;
-         color: $color-dark-grey;
-         text-decoration: none;
-         padding: 2px 0;
-         margin: 0px;
-         font-size: 14px;
-         font-weight: 300;
-         &:hover {
-           color: $color-a-hover;
-         }
-       }
-     }
-  }
-  .footer__divider {
-    border: none;
+    background-color: $color-white;
+    color: $color-white;
+    padding: 20px 0 20px;
     border-top: 1px solid $color-medium-grey-2;
-    margin: 32px 0;
-  }
+    flex-shrink: 0;
 
   .footer__bottom {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: space-between;
     gap: 16px;
   }
-
-  @media (min-width: 768px) {
-    .footer__bottom {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-    }
-  }
-
   .footer__copyright {
     font-size: 14px;
     font-weight: 300;

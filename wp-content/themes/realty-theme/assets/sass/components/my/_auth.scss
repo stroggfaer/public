@@ -3,32 +3,32 @@
  * Vue3 + Element Plus
  */
 
-/* ── Страница ─────────────────────────────────────────────── */
+///* ── Страница ─────────────────────────────────────────────── */
 .auth-page {
+  padding-top: 64px;
+  padding-bottom: 64px;
   min-height: 70vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
   background: #f5f4f0;
+  font-size: 16px;
 }
 
 /* ── Заголовок ────────────────────────────────────────────── */
 .auth-page__hero {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 54px;
 }
 
 .auth-page__title {
-  font-size: 2rem;
-  font-weight: 700;
+  line-height: 34px;
+  font-size: 32px;
   color: $color-black-normal;
-  margin: 0 0 0.5rem;
 }
 
 .auth-page__subtitle {
-  font-size: 1rem;
   color: $color-dark-grey-2;
   max-width: 360px;
   margin: 0 auto;
@@ -53,168 +53,82 @@
 
 .auth-tabs__btn {
   flex: 1;
-  padding: 1rem;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: 1rem;
-  font-weight: 500;
   color: $color-dark-grey;
+  padding: 24px 0px;
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s;
   margin-bottom: -1px;
-
   &:hover {
-    color: $color_green;
+    color: $color-black;
   }
-
   &--active {
     color: $color_green;
     border-bottom-color: $color_green;
-    font-weight: 600;
+    &:hover {
+      color: $color_green;
+    }
   }
 }
 
 /* ── Форма ────────────────────────────────────────────────── */
 .auth-form {
-  padding: 2rem;
-
-  /* Перекрываем стили Element Plus для соответствия дизайну */
-  .el-form-item__label {
-    font-weight: 600;
-    color: $color-black-normal;
-    font-size: 0.95rem;
-    padding-bottom: 6px;
+  padding: 30px;
+  .el-form {
+    margin-bottom: 40px;
+  }
+  .auth-form__submit {
+    width: 100%;
+  }
+  /* Строка лейбла с ссылкой "Забыли пароль?" */
+  .auth-form__label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
-  .el-input__wrapper {
-    background: $color-medium-grey;
+
+  /* Алерт ошибки */
+  .auth-form__alert {
+    margin-bottom: 1rem;
     border-radius: 10px;
-    box-shadow: none !important;
-    border: 1px solid transparent;
-    transition: border-color 0.2s;
+  }
 
-    &:hover,
-    &.is-focus {
-      border-color: $color_green;
+
+  /* Разделитель */
+  .auth-form__divider {
+    height: 1px;
+    background: $color-grey;
+    margin: 1.5rem 0;
+  }
+
+  /* Футер формы */
+  .auth-form__footer {
+    text-align: center;
+    padding-bottom: 0.5rem;
+    p {
+      padding: 0px;
+      margin: 5px 0px;
     }
   }
 
-  .el-input__inner {
-    background: transparent;
-    font-size: 1rem;
-    color: $color-black-normal;
-
-    &::placeholder {
-      color: $color-light-grey;
-    }
+  .auth-form__footer-hint {
+    color: $color-dark-grey-2;
+    margin: 0 0 0.25rem;
   }
 
-  .el-input__suffix {
-    color: $color-dark-grey;
-  }
-}
+  .auth-form__footer-cta {
 
-/* Строка лейбла с ссылкой "Забыли пароль?" */
-.auth-form__label-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.auth-form__forgot {
-  font-size: 0.875rem;
-  color: $color_green;
-  text-decoration: none;
-  font-weight: 500;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-/* Алерт ошибки */
-.auth-form__alert {
-  margin-bottom: 1rem;
-  border-radius: 10px;
-}
-
-/* Кнопка сабмита */
-.auth-form__submit.el-button {
-  width: 100%;
-  height: 52px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  background: $color_green;
-  border-color: $color_green;
-  letter-spacing: 0.02em;
-  margin-top: 0.5rem;
-
-  &:hover,
-  &:focus {
-    background: $color_green_dark;
-    border-color: $color_green_dark;
   }
 
-  &.is-loading {
-    opacity: 0.8;
+  .auth-form__footer-link {
+     color: $color-site;
+     font-weight: 600;
   }
 }
-
-/* Разделитель */
-.auth-form__divider {
-  height: 1px;
-  background: $color-grey;
-  margin: 1.5rem 0;
-}
-
-/* Футер формы */
-.auth-form__footer {
-  text-align: center;
-  padding-bottom: 0.5rem;
-}
-
-.auth-form__footer-hint {
-  font-size: 0.9rem;
-  color: $color-dark-grey;
-  margin: 0 0 0.25rem;
-}
-
-.auth-form__footer-cta {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: $color-black-normal;
-  margin: 0 0 0.5rem;
-}
-
-.auth-form__footer-link {
-  font-size: 0.95rem;
-  color: $color_green;
-  text-decoration: none;
-  font-weight: 500;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-/* ── Адаптив ──────────────────────────────────────────────── */
-@media (max-width: 540px) {
-  .auth-page__card {
-    border-radius: 12px;
-  }
-
-  .auth-form {
-    padding: 1.5rem;
-  }
-
-  .auth-page__title {
-    font-size: 1.6rem;
-  }
-}
-
 /* ── User Menu в Header ───────────────────────────────────── */
 .user-menu {
   display: flex;

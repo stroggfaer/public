@@ -219,11 +219,6 @@ input {
 input[type="checkbox"],
 input[type="radio"] {
   box-sizing: border-box;
-  /* Addresses box sizing set to content-box in IE8/9 */
-
-  padding: 0;
-  /* Addresses excess padding in IE8/9 */
-  width: auto;
 }
 input[type="search"] {
   -webkit-appearance: textfield;
@@ -246,50 +241,6 @@ input::-moz-focus-inner {
 
   border: 0;
   padding: 0;
-}
-input[type=text],
-input[type=email],
-textarea {
-  color: #888888;
-  border: 1px solid #dddddd;
-  border-radius: 5px;
-  max-width: 600px;
-  display: block;
-}
-input[type=text]:focus,
-input[type=email]:focus,
-textarea:focus {
-  color: #101010;
-}
-input[type=text],
-input[type=email] {
-  padding: 3px;
-}
-textarea {
-  overflow: auto;
-  /* Removes default vertical scrollbar in IE6/7/8/9 */
-
-  padding: 10px;
-  vertical-align: top;
-  /* Improves readability and alignment in all browsers */
-
-  width: 98%;
-}
-.wpcf7-list-item {
-    margin: 0px;
-}
-.wpcf7 .wpcf7-submit:disabled {
-    opacity: 0.4;
-}
-.wpcf7-list-item-label {
-    position: relative;
-    top: 1px;
-}
-body.dark-mode textarea, body.dark-mode input[type=email], body.dark-mode input[type=text] {
-    color: #000 !important;
-}
-.wpcf7-not-valid-tip {
-    color: #dc3232 !important;
 }
 * {
   box-sizing: border-box;

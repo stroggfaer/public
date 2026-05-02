@@ -25,7 +25,6 @@ $app_data = array(
 
 $app_data_json = wp_json_encode( $app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG );
 ?>
-
 <div id="auth-form-app" class="auth-page">
     <div class="auth-page__hero">
         <h1 class="auth-page__title"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></h1>
@@ -61,7 +60,6 @@ $app_data_json = wp_json_encode( $app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TA
                 @switch-to-login="activeTab = 'login'"
             ></auth-registration>
         </div>
-
     </div>
 </div>
 

@@ -59,7 +59,7 @@ export default {
         :loading="loginLoading"
         native-type="submit"
         @click.prevent="submitLogin"
-      >Войти в аккаунт &nbsp;→</el-button>
+      >Войти в аккаунт <span class="material-symbols-outlined">output</span></el-button>
 
       <el-alert
         v-if="loginError"

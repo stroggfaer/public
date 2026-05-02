@@ -9,32 +9,30 @@ if ($pods && $pods->exists()) {
 <footer class="footer">
     <div class="col-full">
         <!-- Колонки -->
-        <div class="footer__columns">
-            <div class="footer__column footer-widget-1">
-                <?php if(is_active_sidebar( 'footer-widget-1' )): ?>
-                    <?php dynamic_sidebar( 'footer-widget-1' ); ?>
-                <?php endif; ?>
-            </div>
-            <div class="footer__column footer-widget-2">
-                <?php if(is_active_sidebar( 'footer-widget-2' )): ?>
-                    <?php dynamic_sidebar( 'footer-widget-2' ); ?>
-                <?php endif; ?>
-            </div>
-            <div class="footer__column footer-widget-3">
-                <?php if(is_active_sidebar( 'footer-widget-3' )): ?>
-                    <?php dynamic_sidebar( 'footer-widget-3' ); ?>
-                <?php endif; ?>
-            </div>
-            <div class="footer__column footer-widget-4">
-                <?php if(is_active_sidebar( 'footer-widget-4' )): ?>
-                    <?php dynamic_sidebar( 'footer-widget-4' ); ?>
-                <?php endif; ?>
-            </div>
-        </div>
+<!--        <div class="footer__columns">-->
+<!--            <div class="footer__column footer-widget-1">-->
+<!--                --><?php //if(is_active_sidebar( 'footer-widget-1' )): ?>
+<!--                    --><?php //dynamic_sidebar( 'footer-widget-1' ); ?>
+<!--                --><?php //endif; ?>
+<!--            </div>-->
+<!--            <div class="footer__column footer-widget-2">-->
+<!--                --><?php //if(is_active_sidebar( 'footer-widget-2' )): ?>
+<!--                    --><?php //dynamic_sidebar( 'footer-widget-2' ); ?>
+<!--                --><?php //endif; ?>
+<!--            </div>-->
+<!--            <div class="footer__column footer-widget-3">-->
+<!--                --><?php //if(is_active_sidebar( 'footer-widget-3' )): ?>
+<!--                    --><?php //dynamic_sidebar( 'footer-widget-3' ); ?>
+<!--                --><?php //endif; ?>
+<!--            </div>-->
+<!--            <div class="footer__column footer-widget-4">-->
+<!--                --><?php //if(is_active_sidebar( 'footer-widget-4' )): ?>
+<!--                    --><?php //dynamic_sidebar( 'footer-widget-4' ); ?>
+<!--                --><?php //endif; ?>
+<!--            </div>-->
+<!--        </div>-->
 
         <!-- Разделитель -->
-        <div class="footer__divider"></div>
-
         <!-- Нижняя часть -->
         <div class="footer__bottom">
             <p class="footer__copyright">

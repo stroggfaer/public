@@ -5,21 +5,12 @@
 .my-sidebar {
   width: 240px;
   background: $color-white;
-  border-right: 1px solid $color-border;
   display: flex;
   flex-direction: column;
   height: 100vh;
   position: sticky;
   top: 0;
   padding: 2rem 0;
-
-  @media (max-width: $media-md) {
-    width: 200px;
-  }
-
-  @media (max-width: $media-sm) {
-    display: none;
-  }
 }
 
 .my-sidebar-nav {
