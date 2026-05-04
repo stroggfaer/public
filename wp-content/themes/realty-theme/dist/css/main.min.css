@@ -3437,32 +3437,31 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   margin-bottom: 0.25rem;
 }
 .my-sidebar-item:hover {
-  background: #F5F5F8;
   color: #307875;
 }
 .my-sidebar-item:hover .material-symbols-outlined {
   color: #307875;
 }
 .my-sidebar-item--active {
-  background: #ECF5FF;
-  color: #1F1E81;
-  font-weight: 600;
+  color: #307875;
 }
 .my-sidebar-item--active .material-symbols-outlined {
-  color: #1F1E81;
+  color: #307875 !important;
 }
-.my-sidebar-item--active:hover {
-  background: rgb(220.7, 236.9473684211, 255);
+.my-sidebar-item--active {
+  font-weight: 500;
 }
 .my-sidebar-item--logout {
   color: #F56C6C;
 }
+.my-sidebar-item--logout .material-symbols-outlined {
+  color: #F56C6C !important;
+}
 .my-sidebar-item--logout:hover {
-  background: #FFF1F0;
   color: #FF3E17;
 }
 .my-sidebar-item .material-symbols-outlined {
-  font-size: 1.25rem;
+  font-size: 20px;
   width: 24px;
   height: 24px;
   display: -webkit-box;

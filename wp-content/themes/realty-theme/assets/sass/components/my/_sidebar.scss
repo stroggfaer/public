@@ -36,7 +36,6 @@
   margin-bottom: 0.25rem;
 
   &:hover {
-    background: $color-grey-lite;
     color: $color-site;
 
     .material-symbols-outlined {
@@ -45,30 +44,28 @@
   }
 
   &--active {
-    background: $color-blue-lite;
-    color: $color-blue-normal;
-    font-weight: 600;
-
+    color: $color-site;
     .material-symbols-outlined {
-      color: $color-blue-normal;
+      color: $color-site !important;
     }
-
+    font-weight: 500;
     &:hover {
-      background: darken($color-blue-lite, 3%);
+
     }
   }
 
   &--logout {
     color: $color-red-btn;
-
+    .material-symbols-outlined {
+      color: $color-red-btn !important;
+    }
     &:hover {
-      background: $color-red-lite;
       color: $color-red;
     }
   }
 
   .material-symbols-outlined {
-    font-size: 1.25rem;
+    font-size: 20px;
     width: 24px;
     height: 24px;
     display: flex;
