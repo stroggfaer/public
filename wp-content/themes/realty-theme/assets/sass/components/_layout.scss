@@ -416,7 +416,6 @@ h2.section-title {
   }
 }
 
-
 .parent-menu {
   .category-item.active {
       a {
@@ -434,8 +433,6 @@ h2.section-title {
      }
   }
 }
-
-
 /* У элементов с подкатегориями бордер и отступ */
 .menu-item > ul {
   padding-left: 10px;
@@ -450,4 +447,15 @@ h2.section-title {
 h1.page-title {
   font-size: 24px;
   line-height: 20px;
+}
+
+.avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  background-color: $color-green-light;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }

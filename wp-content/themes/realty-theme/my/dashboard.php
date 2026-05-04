@@ -103,8 +103,11 @@ get_header();
 
                     <div class="my-host-info">
                         <div class="my-host-avatar">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" alt="Хозяин" />
                             <span class="my-host-status"></span>
+                            <div class="avatar-placeholder">
+                                <span class="material-symbols-outlined">person</span>
+                            </div>
+<!--                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" alt="Хозяин" />-->
                         </div>
                         <div class="my-host-details">
                             <div class="my-host-name"><?php esc_html_e( 'Хозяин отвечает', 'realty-theme' ); ?></div>

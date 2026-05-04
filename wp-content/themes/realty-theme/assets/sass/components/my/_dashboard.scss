@@ -1,436 +1,411 @@
-/**
- * Стили главной страницы личного кабинета
- */
-
+// ============================================================
+// _dashboard.scss
+// ============================================================
+body:has(.my-dashboard-layout) {
+  background-color:  #f5f4f2;
+}
 .my-dashboard-layout {
+  --color-bg:            #f5f4f2;
+  --color-white:         #ffffff;
+  --color-primary:       #1a6b5a;
+  --color-primary-dark:  #145446;
+  --color-primary-light: #e8f4f1;
+  --color-accent:        rgb(3 97 95);
+  --color-text:          #1c1c1c;
+  --color-text-muted:    #6b7280;
+  --color-text-light:    #9ca3af;
+  --color-border:        #e5e7eb;
+  --color-star:          #f59e0b;
+  --color-status-bg:     #fff7e6;
+  --color-status-text:   #b45309;
+  --color-status-border: #fde68a;
+  --color-notice-bg:     #f0faf7;
+  --color-notice-border: #b2ddd5;
+  --color-online:        #22c55e;
+  --shadow-card:         0 1px 4px rgba(0,0,0,.06), 0 4px 20px rgba(0,0,0,.07);
+  --shadow-btn:          0 2px 8px rgba(26,107,90,.25);
+  --radius-sm:           6px;
+  --radius-md:           10px;
+  --radius-xl:           20px;
+
   display: flex;
-  min-height: 100vh;
-}
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100%;
 
-.my-main-content {
-  flex: 1;
-  padding: 2rem 3rem;
-  overflow-y: auto;
-
-  @media (max-width: $media-md) {
-    padding: 1.5rem 2rem;
+  // ── Main ────────────────────────────────────────────────────
+  .my-main-content {
+    flex: 1;
+    padding: 15px;
   }
 
-  @media (max-width: $media-sm) {
-    padding: 1rem;
+  .my-page-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 18px;
+    color: var(--color-text);
   }
-}
 
-.my-content-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.my-content-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 2rem;
-  align-items: start;
-
-  @media (max-width: $media-lg) {
-    grid-template-columns: 1fr;
+  // ── Grid ────────────────────────────────────────────────────
+  .my-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 354px;
+    gap: 15px;
+    align-items: start;
   }
-}
 
-.my-content-main {
-  min-width: 0;
-}
-
-.my-content-sidebar {
-  @media (max-width: $media-lg) {
-    display: none;
+  // ── Booking card ────────────────────────────────────────────
+  .my-booking-card {
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
   }
-}
 
-.my-page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: $color-grey-dark-2;
-  margin: 0 0 2rem 0;
-
-  @media (max-width: $media-md) {
-    font-size: 1.75rem;
+  .my-booking-header {
+    display: flex;
+    gap: 20px;
+    padding: 24px;
+    border-bottom: 1px solid var(--color-border);
   }
-}
 
-// Карточка бронирования
-.my-booking-card {
-  background: $color-white;
-  border-radius: $border-radius;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  margin-bottom: 2rem;
-}
+  .my-booking-image {
+    flex-shrink: 0;
+    width: 140px;
+    height: 110px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-border);
 
-.my-booking-header {
-  display: flex;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  border-bottom: 1px solid $color-border;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
 
-  @media (max-width: $media-sm) {
+  .my-booking-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
     flex-direction: column;
-    gap: 1rem;
-  }
-}
-
-.my-booking-image {
-  flex-shrink: 0;
-  width: 160px;
-  height: 160px;
-  border-radius: 12px;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    gap: 6px;
   }
 
-  @media (max-width: $media-sm) {
-    width: 100%;
-    height: 200px;
+  .my-booking-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
   }
-}
 
-.my-booking-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.my-booking-rating {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.my-rating-star {
-  color: $color-orange;
-  font-size: 1rem;
-}
-
-.my-rating-value {
-  font-weight: 600;
-  color: $color-grey-dark-2;
-}
-
-.my-rating-badge {
-  padding: 0.25rem 0.75rem;
-  background: $color-green-light;
-  color: $color-site;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.my-booking-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: $color-grey-dark-2;
-  margin: 0;
-  line-height: 1.4;
-
-  @media (max-width: $media-sm) {
-    font-size: 1.125rem;
+  .my-rating-star {
+    color: var(--color-star);
+    font-size: 18px;
+    line-height: 1;
   }
-}
 
-.my-booking-location {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: $color-dark-grey-2;
-  font-size: 0.9375rem;
-
-  .material-symbols-outlined {
-    font-size: 1.125rem;
-    color: $color-dark-grey;
+  .my-rating-value {
+    font-weight: 600;
+    color: var(--color-text);
   }
-}
 
-.my-booking-status {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-
-  &--pending {
-    background: $color-orange-lite;
-    color: $color-orange;
+  .my-rating-badge {
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
   }
-}
 
-.my-booking-price {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.25rem;
-
-  @media (max-width: $media-sm) {
-    text-align: left;
+  .my-booking-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.3;
+    color: var(--color-text);
   }
-}
 
-.my-price-amount {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: $color-site;
+  .my-booking-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--color-text-muted);
 
-  @media (max-width: $media-sm) {
-    font-size: 1.5rem;
+    .material-symbols-outlined {
+      font-size: 16px;
+      color: var(--color-text-light);
+    }
   }
-}
 
-.my-price-period {
-  font-size: 0.75rem;
-  color: $color-dark-grey;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+  .my-booking-status {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    width: fit-content;
 
-// Детали проживания
-.my-booking-details {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  padding: 1.5rem;
+    &.my-booking-status--pending {
+      background: var(--color-status-bg);
+      color: var(--color-status-text);
+      border: 1px solid var(--color-status-border);
+    }
 
-  @media (max-width: $media-sm) {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    &.my-booking-status--confirmed {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      border: 1px solid var(--color-notice-border);
+    }
   }
-}
 
-.my-details-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.my-details-title {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: $color-dark-grey;
-  margin: 0;
-}
-
-.my-details-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid $color-border-ling;
-
-  &:last-child {
-    border-bottom: none;
+  .my-booking-price {
+    flex-shrink: 0;
+    text-align: right;
+    align-self: flex-start;
   }
-}
 
-.my-details-label {
-  font-size: 0.9375rem;
-  color: $color-dark-grey-2;
-}
+  .my-price-amount {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: -.3px;
+    white-space: nowrap;
+  }
 
-.my-details-value {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: $color-grey-dark-2;
-  text-align: right;
+  .my-price-period {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
 
-  &--link {
-    color: $color-site;
+  // ── Details ─────────────────────────────────────────────────
+  .my-booking-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .my-details-section {
+    padding: 24px 28px;
+
+    & + .my-details-section {
+      border-left: 1px solid var(--color-border);
+    }
+  }
+
+  .my-details-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin: 0 0 16px;
+  }
+
+  .my-details-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .my-details-label {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  .my-details-value {
+    font-weight: 500;
+    color: var(--color-text);
+    text-align: right;
+
+    &.my-details-value--link {
+      color: var(--color-accent);
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .my-details-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 0;
+    transition: opacity .15s;
+
+    .material-symbols-outlined {
+      font-size: 18px;
+    }
+
+    &:hover {
+      opacity: .75;
+    }
+  }
+
+  // ── Actions panel ───────────────────────────────────────────
+  .my-content-sidebar {
+    position: sticky;
+    top: 24px;
+  }
+
+  .my-actions-panel {
+    background: var(--color-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .my-actions-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: var(--color-text);
+  }
+
+  // ── Action buttons ──────────────────────────────────────────
+  .my-action-btn {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 20px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background .18s, box-shadow .18s, transform .1s;
 
-    &:hover {
-      text-decoration: underline;
+    .material-symbols-outlined {
+      font-size: 20px;
     }
-  }
-}
 
-.my-details-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: $color-site;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
+    &:active {
+      transform: scale(.98);
+    }
 
-  &:hover {
-    opacity: 0.8;
-  }
+    &.my-action-btn--primary {
+      background: var(--color-primary);
+      color: var(--color-white);
+      box-shadow: var(--shadow-btn);
 
-  .material-symbols-outlined {
-    font-size: 1.125rem;
-  }
-}
+      &:hover {
+        background: var(--color-primary-dark);
+      }
+    }
 
-// Боковая панель действий
-.my-actions-panel {
-  background: $color-white;
-  border-radius: $border-radius;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: 2rem;
-}
+    &.my-action-btn--secondary {
+      background: var(--color-white);
+      color: var(--color-primary);
+      border: 2px solid var(--color-primary);
 
-.my-actions-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: $color-grey-dark-2;
-  margin: 0 0 0.5rem 0;
-}
-
-.my-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-
-  .material-symbols-outlined {
-    font-size: 1.25rem;
-  }
-
-  &--primary {
-    background: $color-site;
-    color: $color-white;
-
-    &:hover {
-      background: $color-green-dark;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba($color-site, 0.3);
+      &:hover {
+        background: var(--color-primary-light);
+      }
     }
   }
 
-  &--secondary {
-    background: $color-white;
-    color: $color-site;
-    border: 2px solid $color-site;
+  // ── Host info ───────────────────────────────────────────────
+  .my-host-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
 
-    &:hover {
-      background: $color-green-light;
-      transform: translateY(-2px);
+  .my-host-avatar {
+    position: relative;
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
     }
   }
-}
 
-// Информация о хозяине
-.my-host-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 0;
-}
-
-.my-host-avatar {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .my-host-status {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 12px;
+    height: 12px;
+    background: var(--color-online);
+    border: 2px solid var(--color-white);
+    border-radius: 50%;
   }
-}
 
-.my-host-status {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
-  background: $color-green-normal;
-  border: 2px solid $color-white;
-  border-radius: 50%;
-}
+  .my-host-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-.my-host-details {
-  flex: 1;
-}
+  .my-host-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
 
-.my-host-name {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: $color-grey-dark-2;
-  margin-bottom: 0.25rem;
-}
+  .my-host-response {
+    font-size: 13px;
+    color: var(--color-accent);
+  }
 
-.my-host-response {
-  font-size: 0.8125rem;
-  color: $color-dark-grey;
-  line-height: 1.4;
-}
+  // ── Notice ──────────────────────────────────────────────────
+  .my-info-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--color-notice-bg);
+    border: 1px solid var(--color-notice-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+  }
 
-// Информационное уведомление
-.my-info-notice {
-  display: flex;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: $color-blue-light;
-  border-radius: 8px;
-  margin-top: 0.5rem;
-}
+  .my-notice-icon {
+    font-size: 20px;
+    color: var(--color-accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
 
-.my-notice-icon {
-  font-size: 1.25rem;
-  color: $info;
-  flex-shrink: 0;
-}
-
-.my-notice-text {
-  font-size: 0.875rem;
-  color: $color-dark-grey-2;
-  line-height: 1.6;
-  margin: 0;
-}
-
-// Пустое состояние
-.my-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-}
-
-.my-empty-icon {
-  font-size: 4rem;
-  color: $color-dark-grey;
-  margin-bottom: 1.5rem;
-  opacity: 0.5;
-}
-
-.my-empty-text {
-  font-size: 1.125rem;
-  color: $color-dark-grey-2;
-  margin: 0;
+  .my-notice-text {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.55;
+  }
 }
