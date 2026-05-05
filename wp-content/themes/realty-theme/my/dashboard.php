@@ -25,6 +25,11 @@ get_header();
             <div class="my-content-main">
                 <!-- Карточка бронирования -->
                 <?php get_template_part('my/component/card-booking'); ?>
+                <!-- Форма сообщения -->
+                <div class="my-message-section">
+                    <h3 class="my-page-title"><?php esc_html_e( 'Написать хозяину', 'realty-theme' ); ?></h3>
+                    <?php get_template_part('my/component/form-message'); ?>
+                </div>
             </div>
 
             <!-- Правая колонка: Боковая панель действий -->

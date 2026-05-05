@@ -12,64 +12,31 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-/**
- * Рендер формы сообщения
- *
- * @param array $args Аргументы формы
- */
-function my_cabinet_render_form_message( $args = array() ) {
-    $defaults = array(
-        'id' => 'my-cabinet-message-form',
-        'action' => '',
-        'method' => 'post',
-        'submit_text' => __( 'Отправить', 'realty-theme' ),
-        'success_message' => __( 'Сообщение отправлено!', 'realty-theme' ),
-        'error_message' => __( 'Ошибка при отправке сообщения.', 'realty-theme' ),
-    );
-    
-    $args = wp_parse_args( $args, $defaults );
-    
-    ob_start();
-    ?>
+$app_data = array(
+    'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+    'messageNonce' => wp_create_nonce( 'my_cabinet_send_message_nonce' ),
+);
 
-    <form id="<?php echo esc_attr( $args['id'] ); ?>" class="my-cabinet-form-message" action="<?php echo esc_url( $args['action'] ); ?>" method="<?php echo esc_attr( $args['method'] ); ?>">
-        <div class="form-message-content">
-            <div class="form-group">
-                <label for="message-title" class="form-label">
-                    <?php esc_html_e( 'Тема сообщения', 'realty-theme' ); ?>
-                </label>
-                <input 
-                    type="text" 
-                    id="message-title" 
-                    name="message_title" 
-                    class="form-input" 
-                    required
-                    placeholder="<?php esc_attr_e( 'Введите тему сообщения', 'realty-theme' ); ?>"
-                >
-            </div>
+$app_data_json = wp_json_encode( $app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG );
 
-            <div class="form-group">
-                <label for="message-content" class="form-label">
-                    <?php esc_html_e( 'Текст сообщения', 'realty-theme' ); ?>
-                </label>
-                <textarea 
-                    id="message-content" 
-                    name="message_content" 
-                    class="form-input form-textarea" 
-                    rows="5" 
-                    required
-                    placeholder="<?php esc_attr_e( 'Введите текст сообщения', 'realty-theme' ); ?>"
-                ></textarea>
-            </div>
+?>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                    <?php echo esc_html( $args['submit_text'] ); ?>
-                </button>
-            </div>
-        </div>
-    </form>
+<div id="my-cabinet-message-form" class="my-cabinet-form-message">
+    <message-to-host :app-data="appData"></message-to-host>
+</div>
 
-    <?php
-    return ob_get_clean();
-}
+<script type="module">
+    const appData = <?= $app_data_json; ?>;
+    const { createAppModule, MessageToHost } = window.VueAppModule;
+
+    const MessageFormApp = createAppModule({
+        setup() {
+            return {
+                appData,
+            };
+        },
+    });
+
+    MessageFormApp.component('MessageToHost', MessageToHost);
+    MessageFormApp.mount('#my-cabinet-message-form');
+</script>

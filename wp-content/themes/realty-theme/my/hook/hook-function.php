@@ -97,14 +97,6 @@ function my_cabinet_template_include( $template ) {
 }
 add_filter( 'template_include', 'my_cabinet_template_include', 99 );
 
-/**
- * Подключение скриптов модуля "Мой кабинет"
- */
-function my_cabinet_enqueue_scripts() {
-    // Добавьте скрипты при необходимости
-}
-add_action( 'wp_enqueue_scripts', 'my_cabinet_enqueue_scripts' );
-
 // ============================================================
 // Маршрут страницы авторизации /my-auth/
 // ============================================================
@@ -255,6 +247,62 @@ function my_cabinet_disable_admin_bar_for_subscribers() {
     }
 }
 add_action( 'after_setup_theme', 'my_cabinet_disable_admin_bar_for_subscribers' );
+
+/**
+ * AJAX: Отправка сообщения хозяину
+ */
+function my_cabinet_ajax_send_message() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_send_message_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Для отправки сообщения необходимо авторизоваться.' ) );
+    }
+
+    $title   = isset( $_POST['message_title'] ) ? sanitize_text_field( wp_unslash( $_POST['message_title'] ) ) : '';
+    $content = isset( $_POST['message_content'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message_content'] ) ) : '';
+
+    // Валидация
+    if ( empty( $title ) || empty( $content ) ) {
+        wp_send_json_error( array( 'message' => 'Заполните все поля формы.' ) );
+    }
+
+    if ( strlen( $title ) < 3 ) {
+        wp_send_json_error( array( 'message' => 'Тема сообщения должна содержать минимум 3 символа.' ) );
+    }
+
+    if ( strlen( $content ) < 10 ) {
+        wp_send_json_error( array( 'message' => 'Текст сообщения должен содержать минимум 10 символов.' ) );
+    }
+
+    // Получаем ID хозяина (например, из настроек темы или пост-типа)
+    $host_id = get_option( 'my_cabinet_host_user_id', 1 );
+    
+    if ( ! $host_id || ! get_user_by( 'id', $host_id ) ) {
+        wp_send_json_error( array( 'message' => 'Не удалось определить получателя сообщения.' ) );
+    }
+
+    // Отправка уведомления (можно заменить на email или другую систему)
+    $to      = get_the_author_meta( 'user_email', $host_id );
+    $subject = '[' . get_bloginfo( 'name' ) . '] ' . $title;
+    $message = "Пользователь " . wp_get_current_user()->display_name . " отправил сообщение:\n\n" . $content;
+    $headers = array( 'Content-Type: text/plain; charset=UTF-8', 'Reply-To: ' . wp_get_current_user()->user_email );
+
+    $sent = wp_mail( $to, $subject, $message, $headers );
+
+    if ( $sent ) {
+        wp_send_json_success( array( 
+            'message' => 'Сообщение успешно отправлено!',
+        ) );
+    } else {
+        wp_send_json_error( array( 'message' => 'Не удалось отправить сообщение. Попробуйте позже.' ) );
+    }
+}
+add_action( 'wp_ajax_nopriv_my_cabinet_send_message', 'my_cabinet_ajax_send_message' );
+add_action( 'wp_ajax_my_cabinet_send_message',        'my_cabinet_ajax_send_message' );
 
 // ============================================================
 // AJAX: Вход

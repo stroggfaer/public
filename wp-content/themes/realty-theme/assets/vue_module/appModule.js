@@ -6,6 +6,7 @@ import HomePropertyFilter from './src/components/HomePropertyFilter.js';
 import AuthLogin from './src/components/my/AuthLogin.js';
 import AuthRegistration from './src/components/my/AuthRegistration.js';
 import AuthForgot from './src/components/my/AuthForgot.js';
+import MessageToHost from './src/components/my/MessageToHost.js';
 
 
 import useProperty from './src/hooks/useProperty.js';
@@ -32,6 +33,7 @@ import {
   ElMessage,
   ElPopover,
   ElAlert,
+  ElNotification,
 } from 'element-plus';
 import {ApiService} from './src/services/api';
 export function createAppModule(options = {}) {
@@ -58,6 +60,7 @@ export {
   AuthLogin,
   AuthRegistration,
   AuthForgot,
+  MessageToHost,
   GoogleMap,
   ElButton,
   ElDialog,
@@ -70,6 +73,7 @@ export {
   ElPopover,
   ElMessage,
   ElAlert,
+  ElNotification,
   ApiService,
   useProperty,
   usePropertyFilters,

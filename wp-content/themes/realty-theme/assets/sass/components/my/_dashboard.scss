@@ -32,7 +32,6 @@ body:has(.my-dashboard-layout) {
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.5;
-  height: 100%;
 
   // ── Main ────────────────────────────────────────────────────
   .my-main-content {
@@ -407,5 +406,9 @@ body:has(.my-dashboard-layout) {
     color: var(--color-text-muted);
     margin: 0;
     line-height: 1.55;
+  }
+
+  .my-message-section {
+    margin-top: 24px;
   }
 }

@@ -33,5 +33,5 @@ $favicon = esc_url( get_template_directory_uri() ).'/favicon.ico';
 
 <body <?php body_class(is_singular('property') ? 'single-property' : ''); ?> >
 <!--Подключаем интерефейс шапку -->
-<?php  get_template_part( 'template-parts/component/header' ); ?>
+<?php  get_template_part( 'template-parts/component/header'); ?>
 <!--./Подключаем интерефейс шапку -->
