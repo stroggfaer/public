@@ -32,7 +32,7 @@
             });
 
             const result = await response.json();
-
+            console.log('Messages:', result); //
             if (result.success) {
                 renderMessages(result.data.messages);
             } else {

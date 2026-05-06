@@ -309,6 +309,8 @@ function my_cabinet_ajax_send_message() {
     update_post_meta( $message_id, '_is_read', false );
     update_post_meta( $message_id, '_status', 'sent' );
     update_post_meta( $message_id, '_thread_id', $thread_id );
+    // Сохраняем роль отправителя (клиент отправляет с публичной страницы)
+    update_post_meta( $message_id, '_sender_role', 'client' );
 
     // Отправка уведомления на email
     $to      = get_the_author_meta( 'user_email', $host_id );
@@ -572,14 +574,22 @@ function my_cabinet_ajax_get_dialog() {
             
             $message_id = get_the_ID();
             $sender_id = get_post_meta( $message_id, '_sender_id', true );
+            $receiver_id = get_post_meta( $message_id, '_receiver_id', true );
             $is_read = (bool) get_post_meta( $message_id, '_is_read', true );
             $sender = get_userdata( $sender_id );
+            
+            // Получаем сохраненную роль или определяем fallback
+            $sender_role = get_post_meta( $message_id, '_sender_role', true );
+            if ( empty( $sender_role ) ) {
+                // Fallback для старых сообщений: если sender == receiver, то это host
+                $sender_role = ( $sender_id == $receiver_id ) ? 'host' : 'client';
+            }
             
             $messages[] = array(
                 'id' => $message_id,
                 'sender_id' => $sender_id,
                 'sender_name' => $sender ? $sender->display_name : 'Unknown',
-                'sender_role' => $sender_id == get_current_user_id() ? 'host' : 'client',
+                'sender_role' => $sender_role,
                 'content' => get_the_content(),
                 'date' => get_the_date( 'd.m.Y H:i:s' ),
                 'is_read' => $is_read,
@@ -663,6 +673,8 @@ function my_cabinet_ajax_send_reply() {
     update_post_meta( $message_id, '_is_read', false );
     update_post_meta( $message_id, '_status', 'sent' );
     update_post_meta( $message_id, '_thread_id', $thread_id );
+    // Сохраняем роль отправителя (хост отвечает из админки)
+    update_post_meta( $message_id, '_sender_role', 'host' );
 
     // Отправляем email пользователю
     $receiver = get_userdata( $receiver_id );
