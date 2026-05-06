@@ -186,3 +186,144 @@
         box-shadow: unset;
     }
 }
+
+/**
+ * Стили для истории сообщений
+ */
+.messages-history {
+    margin-bottom: 30px;
+    
+    .messages-history-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333333;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 8px;
+        
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        &::-webkit-scrollbar-track {
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 3px;
+            
+            &:hover {
+                background: #a0a0a0;
+            }
+        }
+    }
+    
+    .message-item {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            border-color: #2c6e6a;
+            box-shadow: 0 2px 8px rgba(44, 110, 106, 0.1);
+        }
+        
+        &.message-read {
+            background: #f9f9f9;
+            border-color: #d0d0d0;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            
+            .message-title {
+                font-size: 15px;
+                font-weight: 600;
+                color: #333333;
+                flex: 1;
+            }
+            
+            .message-date {
+                font-size: 13px;
+                color: #999999;
+                white-space: nowrap;
+                margin-left: 12px;
+            }
+        }
+        
+        .message-content {
+            font-size: 14px;
+            color: #555555;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+        
+        .message-status {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            
+            .status-badge,
+            .notification-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            
+            .status-badge {
+                &.status-sent {
+                    background: #E3F2FD;
+                    color: #1976D2;
+                }
+                
+                &.status-delivered {
+                    background: #E8F5E9;
+                    color: #388E3C;
+                }
+                
+                &.status-read {
+                    background: #FFF3E0;
+                    color: #F57C00;
+                }
+            }
+            
+            .notification-badge {
+                &.notification-sent {
+                    background: #E8F5E9;
+                    color: #388E3C;
+                }
+                
+                &.notification-failed {
+                    background: #FFEBEE;
+                    color: #D32F2F;
+                }
+                
+                &.notification-pending {
+                    background: #FFF3E0;
+                    color: #F57C00;
+                }
+            }
+        }
+    }
+}

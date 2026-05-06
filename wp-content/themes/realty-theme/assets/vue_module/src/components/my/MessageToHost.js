@@ -1,4 +1,4 @@
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import {ElNotification} from "element-plus";
 
 export default {
@@ -10,6 +10,34 @@ export default {
   },
   template: `
     <div class="my-message-form">
+      <!-- Список отправленных сообщений -->
+      <div v-if="messages.length > 0" class="messages-history">
+        <h3 class="messages-history-title">История сообщений</h3>
+        <div class="messages-list">
+          <div 
+            v-for="msg in messages" 
+            :key="msg.id" 
+            class="message-item"
+            :class="{ 'message-read': msg.is_read }"
+          >
+            <div class="message-header">
+              <span class="message-title">{{ msg.title }}</span>
+              <span class="message-date">{{ msg.date }}</span>
+            </div>
+            <div class="message-content">{{ msg.content }}</div>
+            <div class="message-status">
+              <span class="status-badge" :class="'status-' + msg.status">
+                {{ getStatusText(msg.status) }}
+              </span>
+              <span class="notification-badge" :class="'notification-' + msg.notification">
+                {{ getNotificationText(msg.notification) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Форма нового сообщения -->
       <el-form
         ref="messageFormRef"
         :model="messageForm"
@@ -86,6 +114,7 @@ export default {
     const messageError = ref('');
     const messageSuccess = ref('');
     const messageFormRef = ref(null);
+    const messages = ref([]);
 
     const templates = [
       { id: 1, label: 'Доступность', text: 'Интересует информация о доступности на выбранные даты.' },
@@ -128,6 +157,46 @@ export default {
       }
     };
 
+    const loadMessages = async () => {
+      try {
+        const body = new URLSearchParams();
+        body.append('action', 'my_cabinet_get_messages');
+        body.append('nonce', props.appData.getMessagesNonce);
+        body.append('limit', '20');
+
+        const response = await fetch(props.appData.ajaxUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          messages.value = result.data.messages;
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки сообщений:', error);
+      }
+    };
+
+    const getStatusText = (status) => {
+      const statusMap = {
+        'sent': 'Отправлено',
+        'delivered': 'Доставлено',
+        'read': 'Прочитано',
+      };
+      return statusMap[status] || status;
+    };
+
+    const getNotificationText = (notification) => {
+      const notificationMap = {
+        'sent': '✓ Email отправлен',
+        'failed': '✗ Ошибка email',
+        'pending': '⏳ Ожидание',
+      };
+      return notificationMap[notification] || notification;
+    };
+
     const sendMessage = () => {
       if (!messageFormRef.value) {
         return;
@@ -158,6 +227,8 @@ export default {
               message: messageSuccess.value,
               type: 'success',
             })
+            // Обновляем список сообщений после отправки
+            await loadMessages();
           } else {
             messageError.value = result.data?.message || 'Ошибка при отправке сообщения';
             ElNotification({
@@ -189,8 +260,17 @@ export default {
       messageFormRef,
       messageRules,
       templates,
+      messages,
       applyTemplate,
+      loadMessages,
+      getStatusText,
+      getNotificationText,
       sendMessage,
     };
+  },
+
+  mounted() {
+    // Загружаем историю сообщений при монтировании компонента
+    this.loadMessages();
   }
 };

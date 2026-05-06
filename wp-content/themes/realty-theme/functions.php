@@ -151,9 +151,14 @@ require get_template_directory() . '/inc/admin/settings/characteristics-settings
 require get_template_directory() . '/inc/admin/settings/property-characteristics-metabox.php';
 // Подключаем универсальную страницу настроек
 require get_template_directory() . '/inc/admin/settings/index-settings.php';
+// Admin: Messages management
+require get_template_directory() . '/inc/admin/messages-admin.php';
 
 // Подключаем модуль "Мой кабинет"
+require get_template_directory() . '/my/cpt/cpt-registration.php';
 require get_template_directory() . '/my/hook/hook-function.php';
+
+
 
 // ============================================================
 // Обратная совместимость - создаём глобальные функции-обёртки

@@ -1,0 +1,540 @@
+/**
+ * Стили для страницы сообщений в админке
+ * Модуль "Мой кабинет" для темы Realty Theme
+ */
+
+/* ============================================
+   Таблица диалогов
+   ============================================ */
+
+.messages-table-wrapper {
+    overflow-x: auto;
+}
+
+.messages-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.messages-table thead {
+    background: #f9f9f9;
+}
+
+.messages-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #ccd0d4;
+    white-space: nowrap;
+}
+
+.messages-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.messages-table tr:hover {
+    background: #f5f5f5;
+}
+
+.messages-table tr.unread {
+    background: #fff8e1;
+    font-weight: 600;
+}
+
+.messages-table tr.unread td {
+    font-weight: 600;
+}
+
+/* Ссылка на логин */
+.messages-table .login-link {
+    color: #0073aa;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.messages-table .login-link:hover {
+    color: #005a87;
+    text-decoration: underline;
+}
+
+/* Бейдж непрочитанных */
+.unread-badge {
+    display: inline-block;
+    background: #dc3232;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+/* Кнопки действий */
+.action-btn {
+    margin-right: 5px;
+}
+
+.btn-view {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
+.btn-view:hover {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+.btn-delete {
+    background: #dc3232;
+    color: #fff;
+    border-color: #dc3232;
+}
+
+.btn-delete:hover {
+    background: #a00;
+    border-color: #a00;
+}
+
+/* Фильтры */
+.messages-filters {
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.messages-filters h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.filters-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.filter-group input {
+    width: 100%;
+    max-width: 300px;
+}
+
+/* ============================================
+   Страница диалога
+   ============================================ */
+
+.dialog-view-page .dialog-info-box {
+    background: #f9f9f9;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Контейнер сообщений */
+#dialog-messages-container,
+.dialog-messages-view {
+    background: #f5f5f5;
+    padding: 20px;
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.loading-messages {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+/* ---- Пузырьки сообщений ---- */
+
+.message-thread-item {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+/* Клиент — слева */
+.message-thread-item.client {
+    align-items: flex-start;
+}
+
+/* Хозяин — справа */
+.message-thread-item.host {
+    align-items: flex-end;
+}
+
+.message-thread-item .message-bubble {
+    max-width: 65%;
+    padding: 12px 18px;
+    border-radius: 16px;
+    line-height: 1.6;
+    font-size: 14px;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+/* Пузырёк клиента — серый, слева */
+.message-thread-item.client .message-bubble {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-top-left-radius: 4px;
+    color: #333;
+}
+
+/* Пузырёк хозяина — синий, справа */
+.message-thread-item.host .message-bubble {
+    background: #0073aa;
+    color: #ffffff;
+    border-top-right-radius: 4px;
+}
+
+/* Мета: имя и дата */
+.message-thread-item .message-meta {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+    padding: 0 4px;
+}
+
+.message-thread-item.host .message-meta {/**
+ * Стили для страницы сообщений в админке
+ * Модуль "Мой кабинет" для темы Realty Theme
+ */
+
+/* ============================================
+   Таблица диалогов
+   ============================================ */
+
+.messages-table-wrapper {
+    overflow-x: auto;
+}
+
+.messages-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.messages-table thead {
+    background: #f9f9f9;
+}
+
+.messages-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #ccd0d4;
+    white-space: nowrap;
+}
+
+.messages-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.messages-table tr:hover {
+    background: #f5f5f5;
+}
+
+.messages-table tr.unread {
+    background: #fff8e1;
+    font-weight: 600;
+}
+
+.messages-table tr.unread td {
+    font-weight: 600;
+}
+
+/* Ссылка на логин */
+.messages-table .login-link {
+    color: #0073aa;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.messages-table .login-link:hover {
+    color: #005a87;
+    text-decoration: underline;
+}
+
+/* Бейдж непрочитанных */
+.unread-badge {
+    display: inline-block;
+    background: #dc3232;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+/* Кнопки действий */
+.action-btn {
+    margin-right: 5px;
+}
+
+.btn-view {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
+.btn-view:hover {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+.btn-delete {
+    background: #dc3232;
+    color: #fff;
+    border-color: #dc3232;
+}
+
+.btn-delete:hover {
+    background: #a00;
+    border-color: #a00;
+}
+
+/* Фильтры */
+.messages-filters {
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.messages-filters h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.filters-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.filter-group input {
+    width: 100%;
+    max-width: 300px;
+}
+
+/* ============================================
+   Страница диалога
+   ============================================ */
+
+.dialog-view-page .dialog-info-box {
+    background: #f9f9f9;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Контейнер сообщений */
+#dialog-messages-container,
+.dialog-messages-view {
+    background: #f5f5f5;
+    padding: 20px;
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.loading-messages {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+/* ---- Пузырьки сообщений ---- */
+
+.message-thread-item {
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: row; /* Изменено на row для расположения рядом */
+    align-items: flex-start;
+}
+
+/* Клиент — слева, блок сообщения */
+.message-thread-item.client {
+    flex: 1; /* Занимает место */
+    margin-right: 20px; /* Отступ между клиентом и хостом */
+}
+
+/* Хозяин — справа, блок сообщения */
+.message-thread-item.host {
+    flex: 1; /* Занимает место */
+}
+
+.message-thread-item .message-bubble {
+    max-width: 100%; /* Теперь занимает всю доступную ширину в своем flex-элементе */
+    padding: 12px 15px;
+    border-radius: 15px;
+    line-height: 1.6;
+    font-size: 14px;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+/* Пузырёк клиента — серый, левый */
+.message-thread-item.client .message-bubble {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-top-left-radius: 4px; /* Острый угол слева для "хвостика" */
+    color: #333;
+}
+
+/* Пузырёк хозяина — синий, правый */
+.message-thread-item.host .message-bubble {
+    background: #0073aa;
+    color: #ffffff;
+    border: 1px solid #005a87; /* Немного более темная граница для контраста */
+    border-top-right-radius: 4px; /* Острый угол справа для "хвостика" */
+}
+
+/* Мета: имя и дата (располагается под пузырьком) */
+.message-thread-item .message-meta {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+    padding: 0 4px;
+    line-height: 1.2;
+}
+
+/* Выравнивание мета-информации */
+.message-thread-item .message-meta {
+    display: flex; /* Используем flex для выравнивания имени и даты */
+    justify-content: space-between; /* Размещаем метки по краям */
+    margin-top: 8px;
+    padding: 0 4px;
+}
+
+.message-thread-item.client .message-meta {
+    /* Для клиента имя будет слева, дата справа (или просто выровненная по левому краю) */
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.message-thread-item.host .message-meta {
+    /* Для хозяина имя будет слева, дата справа */
+    justify-content: space-between;
+    text-align: right;
+}
+
+/* Форма ответа */
+.dialog-reply-box {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.dialog-reply-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.dialog-reply-box textarea {
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.send-status {
+    margin-left: 15px;
+    font-weight: 600;
+}
+
+.send-status.success {
+    color: #46b450;
+}
+
+.send-status.error {
+    color: #dc3232;
+}
+    text-align: right;
+}
+
+/* Форма ответа */
+.dialog-reply-box {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.dialog-reply-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.dialog-reply-box textarea {
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.send-status {
+    margin-left: 15px;
+    font-weight: 600;
+}
+
+.send-status.success {
+    color: #46b450;
+}
+
+.send-status.error {
+    color: #dc3232;
+}

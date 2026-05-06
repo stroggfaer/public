@@ -285,17 +285,46 @@ function my_cabinet_ajax_send_message() {
         wp_send_json_error( array( 'message' => 'Не удалось определить получателя сообщения.' ) );
     }
 
-    // Отправка уведомления (можно заменить на email или другую систему)
+    // Сохраняем сообщение в БД (CPT message)
+    $current_user_id = get_current_user_id();
+    
+    // Создаем thread_id для группировки диалога с этим пользователем
+    $thread_id = 'thread_' . min( $current_user_id, $host_id ) . '_' . max( $current_user_id, $host_id );
+    
+    $message_id = wp_insert_post( array(
+        'post_title'    => $title,
+        'post_content'  => $content,
+        'post_status'   => 'publish',
+        'post_type'     => 'message',
+        'post_author'   => $current_user_id,
+    ) );
+
+    if ( is_wp_error( $message_id ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка при сохранении сообщения.' ) );
+    }
+
+    // Сохраняем мета-данные
+    update_post_meta( $message_id, '_receiver_id', $host_id );
+    update_post_meta( $message_id, '_sender_id', $current_user_id );
+    update_post_meta( $message_id, '_is_read', false );
+    update_post_meta( $message_id, '_status', 'sent' );
+    update_post_meta( $message_id, '_thread_id', $thread_id );
+
+    // Отправка уведомления на email
     $to      = get_the_author_meta( 'user_email', $host_id );
     $subject = '[' . get_bloginfo( 'name' ) . '] ' . $title;
     $message = "Пользователь " . wp_get_current_user()->display_name . " отправил сообщение:\n\n" . $content;
     $headers = array( 'Content-Type: text/plain; charset=UTF-8', 'Reply-To: ' . wp_get_current_user()->user_email );
 
-    $sent = wp_mail( $to, $subject, $message, $headers );
+    $email_sent = wp_mail( $to, $subject, $message, $headers );
 
-    if ( $sent ) {
+    // Обновляем статус отправки email
+    update_post_meta( $message_id, '_notification_status', $email_sent ? 'sent' : 'failed' );
+
+    if ( $message_id ) {
         wp_send_json_success( array( 
             'message' => 'Сообщение успешно отправлено!',
+            'message_id' => $message_id,
         ) );
     } else {
         wp_send_json_error( array( 'message' => 'Не удалось отправить сообщение. Попробуйте позже.' ) );
@@ -303,6 +332,412 @@ function my_cabinet_ajax_send_message() {
 }
 add_action( 'wp_ajax_nopriv_my_cabinet_send_message', 'my_cabinet_ajax_send_message' );
 add_action( 'wp_ajax_my_cabinet_send_message',        'my_cabinet_ajax_send_message' );
+
+// ============================================================
+// AJAX: Получение истории сообщений пользователя
+// ============================================================
+
+/**
+ * AJAX: Получение списка сообщений текущего пользователя
+ */
+function my_cabinet_ajax_get_messages() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_get_messages_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $current_user_id = get_current_user_id();
+    $limit = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 20;
+    $offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
+
+    // Запрос сообщений, где пользователь - отправитель
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'author'         => $current_user_id,
+        'posts_per_page' => $limit,
+        'offset'         => $offset,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    $query = new WP_Query( $args );
+    $messages = array();
+
+    if ( $query->have_posts() ) {
+        while ( $query->have_posts() ) {
+            $query->the_post();
+            
+            $message_id = get_the_ID();
+            $messages[] = array(
+                'id'           => $message_id,
+                'title'        => get_the_title(),
+                'content'      => get_the_content(),
+                'date'         => get_the_date( 'd.m.Y H:i' ),
+                'status'       => get_post_meta( $message_id, '_status', true ),
+                'is_read'      => (bool) get_post_meta( $message_id, '_is_read', true ),
+                'notification' => get_post_meta( $message_id, '_notification_status', true ),
+            );
+        }
+        wp_reset_postdata();
+    }
+
+    wp_send_json_success( array(
+        'messages' => $messages,
+        'total'    => $query->found_posts,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_get_messages', 'my_cabinet_ajax_get_messages' );
+
+// ============================================================
+// AJAX: Получение списка диалогов (для админки)
+// ============================================================
+
+/**
+ * AJAX: Получение списка диалогов с группировкой по пользователям
+ */
+function my_cabinet_ajax_get_dialogs() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_get_dialogs_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности.' ) );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => 'Недостаточно прав.' ) );
+    }
+
+    $filters = array(
+        'date' => isset( $_POST['filter_date'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_date'] ) ) : '',
+        'login' => isset( $_POST['filter_login'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_login'] ) ) : '',
+        'subject' => isset( $_POST['filter_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_subject'] ) ) : '',
+    );
+
+    // Получаем все сообщения
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    $query = new WP_Query( $args );
+    $dialogs = array();
+
+    // DEBUG логирование
+    error_log( 'my_cabinet_ajax_get_dialogs: Found ' . $query->found_posts . ' messages' );
+
+    if ( $query->have_posts() ) {
+        while ( $query->have_posts() ) {
+            $query->the_post();
+            
+            $message_id = get_the_ID();
+            $sender_id = get_post_meta( $message_id, '_sender_id', true );
+            $receiver_id = get_post_meta( $message_id, '_receiver_id', true );
+            $thread_id = get_post_meta( $message_id, '_thread_id', true );
+            
+            // Fallback: если thread_id пустой, создаем его
+            if ( empty( $thread_id ) && $sender_id && $receiver_id ) {
+                $thread_id = 'thread_' . min( $sender_id, $receiver_id ) . '_' . max( $sender_id, $receiver_id );
+                // Сохраняем для будущих запросов
+                update_post_meta( $message_id, '_thread_id', $thread_id );
+            }
+            
+            $is_read = (bool) get_post_meta( $message_id, '_is_read', true );
+            $host_id = get_current_user_id();
+            
+            // Группируем по thread_id
+            if ( ! isset( $dialogs[ $thread_id ] ) ) {
+                $sender = get_userdata( $sender_id );
+                
+                // Считаем непрочитанные ТОЛЬКО если:
+                // 1. Хозяин - получатель (receiver_id = host_id)
+                // 2. Отправитель НЕ хозяин (sender_id != host_id)
+                // 3. Сообщение не прочитано
+                $is_unread = ( $receiver_id == $host_id && $sender_id != $host_id && ! $is_read ) ? 1 : 0;
+                
+                $dialogs[ $thread_id ] = array(
+                    'thread_id' => $thread_id,
+                    'sender_id' => $sender_id,
+                    'sender_login' => $sender ? $sender->user_login : 'Unknown',
+                    'sender_name' => $sender ? $sender->display_name : 'Unknown',
+                    'sender_email' => $sender ? $sender->user_email : '',
+                    'last_message_id' => $message_id,
+                    'last_subject' => get_the_title(),
+                    'last_date' => get_the_date( 'd.m.Y H:i:s' ),
+                    'last_timestamp' => get_the_date( 'U' ),
+                    'unread_count' => $is_unread,
+                );
+            } else {
+                // Обновляем счетчик непрочитанных (только от клиентов)
+                if ( $receiver_id == $host_id && $sender_id != $host_id && ! $is_read ) {
+                    $dialogs[ $thread_id ]['unread_count']++;
+                }
+            }
+        }
+        wp_reset_postdata();
+    }
+
+    // Применяем фильтры
+    if ( $filters['date'] ) {
+        $date_timestamp = strtotime( $filters['date'] );
+        if ( $date_timestamp === false ) {
+            error_log( 'my_cabinet_ajax_get_dialogs: Invalid date filter: ' . $filters['date'] );
+        } else {
+            $filter_date = date( 'd.m.Y', $date_timestamp );
+            $dialogs = array_filter( $dialogs, function( $dialog ) use ( $filter_date ) {
+                return strpos( $dialog['last_date'], $filter_date ) === 0;
+            } );
+        }
+    }
+
+    if ( $filters['login'] ) {
+        $login_lower = strtolower( $filters['login'] );
+        $dialogs = array_filter( $dialogs, function( $dialog ) use ( $login_lower ) {
+            return strpos( strtolower( $dialog['sender_login'] ), $login_lower ) !== false ||
+                   strpos( strtolower( $dialog['sender_email'] ), $login_lower ) !== false;
+        } );
+    }
+
+    if ( $filters['subject'] ) {
+        $subject_lower = strtolower( $filters['subject'] );
+        $dialogs = array_filter( $dialogs, function( $dialog ) use ( $subject_lower ) {
+            return strpos( strtolower( $dialog['last_subject'] ), $subject_lower ) !== false;
+        } );
+    }
+
+    // Сортируем по дате (новые первые)
+    usort( $dialogs, function( $a, $b ) {
+        return $b['last_timestamp'] - $a['last_timestamp'];
+    } );
+
+    // DEBUG логирование
+    error_log( 'my_cabinet_ajax_get_dialogs: Returning ' . count( $dialogs ) . ' dialogs' );
+
+    wp_send_json_success( array(
+        'dialogs' => array_values( $dialogs ),
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_get_dialogs', 'my_cabinet_ajax_get_dialogs' );
+
+// ============================================================
+// AJAX: Получение диалога (переписка с пользователем)
+// ============================================================
+
+/**
+ * AJAX: Получение всех сообщений диалога
+ */
+function my_cabinet_ajax_get_dialog() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_get_dialog_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности.' ) );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => 'Недостаточно прав.' ) );
+    }
+
+    $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
+
+    if ( empty( $thread_id ) ) {
+        wp_send_json_error( array( 'message' => 'Не указан thread_id.' ) );
+    }
+
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+    );
+
+    $query = new WP_Query( $args );
+    $messages = array();
+    $message_ids_to_mark = array();
+
+    if ( $query->have_posts() ) {
+        while ( $query->have_posts() ) {
+            $query->the_post();
+            
+            $message_id = get_the_ID();
+            $sender_id = get_post_meta( $message_id, '_sender_id', true );
+            $is_read = (bool) get_post_meta( $message_id, '_is_read', true );
+            $sender = get_userdata( $sender_id );
+            
+            $messages[] = array(
+                'id' => $message_id,
+                'sender_id' => $sender_id,
+                'sender_name' => $sender ? $sender->display_name : 'Unknown',
+                'sender_role' => $sender_id == get_current_user_id() ? 'host' : 'client',
+                'content' => get_the_content(),
+                'date' => get_the_date( 'd.m.Y H:i:s' ),
+                'is_read' => $is_read,
+            );
+
+            // Отмечаем непрочитанные сообщения как прочитанные
+            if ( ! $is_read && $sender_id != get_current_user_id() ) {
+                $message_ids_to_mark[] = $message_id;
+            }
+        }
+        wp_reset_postdata();
+    }
+
+    // Отмечаем как прочитанные
+    foreach ( $message_ids_to_mark as $msg_id ) {
+        update_post_meta( $msg_id, '_is_read', true );
+    }
+
+    wp_send_json_success( array(
+        'messages' => $messages,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_get_dialog', 'my_cabinet_ajax_get_dialog' );
+
+// ============================================================
+// AJAX: Отправка ответа из админки
+// ============================================================
+
+/**
+ * AJAX: Отправка ответа хоста пользователю
+ */
+function my_cabinet_ajax_send_reply() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_send_reply_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности.' ) );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => 'Недостаточно прав.' ) );
+    }
+
+    $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
+    $content = isset( $_POST['content'] ) ? sanitize_textarea_field( wp_unslash( $_POST['content'] ) ) : '';
+
+    if ( empty( $thread_id ) || empty( $content ) ) {
+        wp_send_json_error( array( 'message' => 'Заполните все поля.' ) );
+    }
+
+    if ( strlen( $content ) < 3 ) {
+        wp_send_json_error( array( 'message' => 'Сообщение слишком короткое.' ) );
+    }
+
+    // Извлекаем ID пользователя из thread_id
+    // Формат: thread_{user_id}_{host_id}
+    $parts = explode( '_', $thread_id );
+    $receiver_id = isset( $parts[1] ) ? absint( $parts[1] ) : 0;
+    
+    if ( $receiver_id == get_current_user_id() ) {
+        $receiver_id = isset( $parts[2] ) ? absint( $parts[2] ) : 0;
+    }
+
+    if ( ! $receiver_id ) {
+        wp_send_json_error( array( 'message' => 'Не удалось определить получателя.' ) );
+    }
+
+    // Создаем сообщение
+    $host_id = get_current_user_id();
+    $message_id = wp_insert_post( array(
+        'post_title'    => 'Ответ',
+        'post_content'  => $content,
+        'post_status'   => 'publish',
+        'post_type'     => 'message',
+        'post_author'   => $host_id,
+    ) );
+
+    if ( is_wp_error( $message_id ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка при отправке.' ) );
+    }
+
+    update_post_meta( $message_id, '_receiver_id', $receiver_id );
+    update_post_meta( $message_id, '_sender_id', $host_id );
+    update_post_meta( $message_id, '_is_read', false );
+    update_post_meta( $message_id, '_status', 'sent' );
+    update_post_meta( $message_id, '_thread_id', $thread_id );
+
+    // Отправляем email пользователю
+    $receiver = get_userdata( $receiver_id );
+    if ( $receiver ) {
+        $to = $receiver->user_email;
+        $subject = '[' . get_bloginfo( 'name' ) . '] Новый ответ на ваше сообщение';
+        $message = "Здравствуйте, " . $receiver->display_name . "!\n\n";
+        $message .= "Вам поступил ответ:\n\n" . $content . "\n\n";
+        $message .= "С уважением,\n" . get_bloginfo( 'name' );
+        $headers = array( 'Content-Type: text/plain; charset=UTF-8' );
+        
+        wp_mail( $to, $subject, $message, $headers );
+    }
+
+    wp_send_json_success( array(
+        'message' => 'Ответ отправлен!',
+        'message_id' => $message_id,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_send_reply', 'my_cabinet_ajax_send_reply' );
+
+// ============================================================
+// AJAX: Удаление сообщения
+// ============================================================
+
+/**
+ * AJAX: Удаление диалога
+ */
+function my_cabinet_ajax_delete_dialog() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_delete_message_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности.' ) );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => 'Недостаточно прав.' ) );
+    }
+
+    $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
+
+    if ( empty( $thread_id ) ) {
+        wp_send_json_error( array( 'message' => 'Не указан thread_id.' ) );
+    }
+
+    // Получаем все сообщения диалога
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+    );
+
+    $query = new WP_Query( $args );
+    $deleted = 0;
+
+    if ( $query->have_posts() ) {
+        while ( $query->have_posts() ) {
+            $query->the_post();
+            wp_delete_post( get_the_ID(), true );
+            $deleted++;
+        }
+        wp_reset_postdata();
+    }
+
+    wp_send_json_success( array(
+        'message' => "Диалог удален ($deleted сообщений).",
+        'deleted' => $deleted,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_delete_dialog', 'my_cabinet_ajax_delete_dialog' );
 
 // ============================================================
 // AJAX: Вход
