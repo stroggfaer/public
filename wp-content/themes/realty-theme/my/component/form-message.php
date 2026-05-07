@@ -13,8 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $app_data = array(
-    'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
-    'messageNonce' => wp_create_nonce( 'my_cabinet_send_message_nonce' ),
+    'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
+    'messageNonce'       => wp_create_nonce( 'my_cabinet_send_message_nonce' ),
+    'getMessagesNonce'   => wp_create_nonce( 'my_cabinet_get_messages_nonce' ),
 );
 
 $app_data_json = wp_json_encode( $app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG );

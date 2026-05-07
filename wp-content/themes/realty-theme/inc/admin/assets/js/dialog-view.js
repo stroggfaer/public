@@ -32,7 +32,6 @@
             });
 
             const result = await response.json();
-            console.log('Messages:', result); //
             if (result.success) {
                 renderMessages(result.data.messages);
             } else {
@@ -55,10 +54,7 @@
             return;
         }
 
-        console.log('Messages:', messages); // Debug
-
         container.innerHTML = messages.map(msg => {
-            console.log('Message role:', msg.sender_role, 'Sender:', msg.sender_name); // Debug
             return `
             <div class="message-thread-item ${msg.sender_role}">
                 <div class="message-bubble">${msg.content}</div>
@@ -69,8 +65,10 @@
             `;
         }).join('');
 
-        // Прокрутка вниз
-        container.scrollTop = container.scrollHeight;
+        // Прокрутка вниз к последнему сообщению (с небольшой задержкой для гарантии рендера)
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 50);
     }
 
     /**
