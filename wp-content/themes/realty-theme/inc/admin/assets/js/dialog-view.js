@@ -65,7 +65,7 @@
             `;
         }).join('');
 
-        // Прокрутка вниз к последнему сообщению (с небольшой задержкой для гарантии рендера)
+        // Прокрутка вниз после рендера сообщений
         setTimeout(() => {
             container.scrollTop = container.scrollHeight;
         }, 50);
@@ -107,10 +107,10 @@
                 textarea.value = '';
                 statusSpan.textContent = '✓ Отправлено!';
                 statusSpan.className = 'send-status success';
-                
-                // Перезагружаем сообщения
+                            
+                // Перезагружаем сообщения (CSS автоматически разместит снизу)
                 loadDialogMessages();
-                
+                            
                 // Очищаем статус через 3 секунды
                 setTimeout(() => {
                     statusSpan.textContent = '';

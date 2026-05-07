@@ -670,7 +670,7 @@ function my_cabinet_ajax_send_reply() {
 
     update_post_meta( $message_id, '_receiver_id', $receiver_id );
     update_post_meta( $message_id, '_sender_id', $host_id );
-    update_post_meta( $message_id, '_is_read', false );
+    update_post_meta( $message_id, '_is_read', true ); // Хост сам отправил, значит прочитано
     update_post_meta( $message_id, '_status', 'sent' );
     update_post_meta( $message_id, '_thread_id', $thread_id );
     // Сохраняем роль отправителя (хост отвечает из админки)

@@ -2613,7 +2613,7 @@ article.post .the-content {
   color: #333333;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
 }
 .messages-history .messages-list {
   display: -webkit-box;
@@ -2656,7 +2656,7 @@ article.post .the-content {
           box-shadow: 0 2px 8px rgba(44, 110, 106, 0.1);
 }
 .messages-history .message-item.message-read {
-  background: #f9f9f9;
+  background: #fff;
   border-color: #d0d0d0;
 }
 .messages-history .message-item .message-header {
