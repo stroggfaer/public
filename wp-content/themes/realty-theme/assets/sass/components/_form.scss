@@ -325,7 +325,6 @@
     }
 }
 
-
 // Property Filter Styles
 .main-search-form-container {
     background-color: #fff;
@@ -489,4 +488,176 @@ header.site-header {
         }
     }
 }
+
+//
+.el-autocomplete__popper, .el-picker__popper,.el-popover {
+    border-radius: 16px !important;
+    overflow: hidden;
+    .el-popper__arrow {
+        display: none;
+    }
+}
+
+.input-group__com.guests-group {
+    .guests-placeholder {
+        cursor: pointer;
+    }
+    .guest-controls-wrapper {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff;
+        border: 1px solid $color-medium-grey-2;
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 12px;
+        z-index: 100;
+        width: 300px;
+        box-shadow: 0 9px 8px rgba(0,0,0,0.5);
+        &.open {
+            display: block;
+        }
+    }
+}
+
+// Счетчик
+.guest-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    .guest-control {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid $color-medium-grey-2;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        &:last-child {
+            border-bottom: none;
+            padding-bottom: 0px;
+            margin-bottom: 0px;
+        }
+        .flex-label {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            .guest-label {
+                font-size: 16px;
+                font-weight: 400;
+                color: $color-black-lite;
+            }
+            .guest-desc {
+                font-size: 12px;
+                font-weight: 400;
+                color: $color-dark-grey;
+                line-height: 20px;
+            }
+        }
+
+        .guest-input {
+
+        }
+    }
+}
+
+// old
+.input-group__com {
+    flex: 1;
+    width: 100%;
+    min-width: 150px;
+    position: relative;
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    input,
+    select {
+        width: 100%;
+        padding: 12px 12px 12px 35px; // Increased left padding to accommodate icon
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .input-with-icon {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        .icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: $color-dark-grey;
+            z-index: 2;
+            font-size: 24px;
+        }
+        .input__com {
+            padding-left: 45px;
+        }
+    }
+
+    .input__com {
+        display: inline-block;
+        height: 38px;
+        padding: 6px 10px;
+        border: 1px solid #e5e8f0;
+        background-color: $color-input-bg;
+        border-radius: 12px;
+        font-size: 16px;
+    }
+    //автокомплемит
+    .location-suggestions {
+        position: absolute;
+        background: #fff;
+        width: 100%;
+        max-width: 300px;
+        border-radius: 12px;
+        margin-top: 12px;
+        max-height: 300px;
+        overflow: auto;
+        border: 1px solid $color-medium-grey-2;
+        box-shadow: 0 9px 8px rgba(0,0,0,0.5);
+        z-index: 100;
+        text-align: left;
+        .location-suggestion,.no-results {
+            padding: 15px;
+            color: $color-black-medium;
+        }
+        .location-suggestion {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 0 0.5px #f3f3f3;
+            @include ease();
+            .icon {
+                opacity: .6;
+            }
+            &:has(.icon) {
+                padding: 15px 10px;
+            }
+            &:hover {
+                color: $color-site;
+                background: $color-medium-grey-3;
+            }
+            &.active {
+                color: $color-site;
+                background: $color_green-light;
+            }
+        }
+        .no-results {
+            text-align: center;
+            color: $color-light-grey !important;
+            box-shadow: none;
+            cursor: auto;
+        }
+    }
+}
+
+// new el
+.el-input-group__com {}
 
