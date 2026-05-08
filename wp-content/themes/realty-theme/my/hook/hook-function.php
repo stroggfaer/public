@@ -596,7 +596,8 @@ function my_cabinet_ajax_get_dialog() {
             );
 
             // Отмечаем непрочитанные сообщения как прочитанные
-            if ( ! $is_read && $sender_id != get_current_user_id() ) {
+            // Логика: помечаем только входящие (где текущий пользователь = receiver)
+            if ( ! $is_read && $receiver_id == get_current_user_id() ) {
                 $message_ids_to_mark[] = $message_id;
             }
         }

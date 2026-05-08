@@ -10,14 +10,12 @@ $color-medium-grey-2: rgb(226 232 240 / 1);
 $color-medium-grey-3: #e5e7eb;
 $color-grey-dark-2: #262626;
 $color-grey-3: #9ca3af;
-
 $color-black-lite: #4f4f4f;
 $color-black: rgba(19, 22, 22);
 $color-black-label: rgb(30, 41, 59);
 $color-black-medium: #333333;
 $color-black-line: #595959;
 $color-white: white;
-
 $color-green-medium: rgba(183, 235, 143, 1); //#F6FFED;
 $color-green-dark: #2A4B15;
 $color-green-lite: #F6FFED;
@@ -91,6 +89,8 @@ $input-border: #D5D5D5;
 $background-content: #fff;
 //input
 $color-input-bg: $color-medium-grey;
+
+$text-color: $color-black;
 //
 $media-desktop: 1920px;
 $media-book-win10: 1280px;

@@ -6,11 +6,13 @@
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadDialogMessages();
-
-        // Обработчик отправки ответа
-        document.getElementById('dialog-send-btn').addEventListener('click', sendReply);
+    document.addEventListener('DOMContentLoaded', async function() {
+        const dialogSendBtn = document.getElementById('dialog-send-btn');
+        if (dialogSendBtn) {
+            await loadDialogMessages();
+            // Обработчик отправки ответа
+            dialogSendBtn?.addEventListener('click', sendReply);
+        }
     });
 
     /**

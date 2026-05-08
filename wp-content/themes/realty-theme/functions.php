@@ -66,6 +66,9 @@ function naked_scripts()  {
     // стили Element Plus
     wp_enqueue_style('element-plus', get_template_directory_uri() . '/assets/vue_module/cdn/element-plus/index.css', array(), NAKED_VERSION, 'all');
     wp_enqueue_style('main.min.css', get_stylesheet_directory_uri() . '/dist/css/main.min.css');
+    
+    // Временно подключаем основной CSS с стилями для формы поиска
+   // wp_enqueue_style('main-styles.css', get_stylesheet_directory_uri() . '/assets/css/___main.css');
 
     // Подключаем стили Splide для галереи на странице недвижимости
     if (is_singular('property')) {

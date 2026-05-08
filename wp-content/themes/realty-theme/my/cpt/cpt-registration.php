@@ -41,7 +41,7 @@ function my_cabinet_register_message_cpt() {
         'supports'              => array( 'title', 'editor' ),
         'hierarchical'          => false,
         'public'                => false,
-        'show_ui'               => true,
+        'show_ui'               => false,
         'show_in_menu'          => true,
         'menu_position'         => 25,
         'menu_icon'             => 'dashicons-email',

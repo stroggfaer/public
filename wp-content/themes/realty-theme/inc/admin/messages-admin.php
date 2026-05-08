@@ -30,11 +30,16 @@ function my_cabinet_add_messages_menu() {
         6  // После Недвижимость (position 5)
     );
 
+    // Получаем счетчик непрочитанных
+    $unread_count = my_cabinet_get_unread_messages_count();
+
+    $menu_title = $unread_count > 0 ? 'Сообщения <span class="awaiting-mod">' . $unread_count . '</span>' : 'Сообщения';
+
     // Подпункт "Сообщения"
     add_submenu_page(
         'booking',
         'Сообщения',
-        'Сообщения',
+        $menu_title,
         'manage_options',
         'booking-messages',
         'my_cabinet_messages_page'
@@ -121,23 +126,28 @@ function my_cabinet_enqueue_messages_assets( $hook ) {
 add_action( 'admin_enqueue_scripts', 'my_cabinet_enqueue_messages_assets' );
 
 /**
- * Добавление счетчика непрочитанных сообщений в меню
+ * Обновление счетчика непрочитанных при загрузке админки
  */
-function my_cabinet_add_unread_count_to_menu() {
-    global $menu;
+function my_cabinet_update_unread_count() {
+    global $submenu;
     
     $unread_count = my_cabinet_get_unread_messages_count();
     
-    if ( $unread_count > 0 ) {
-        foreach ( $menu as $key => $value ) {
-            if ( 'booking' === $menu[ $key ][2] ) {
-                $menu[ $key ][0] .= ' <span class="awaiting-mod">' . $unread_count . '</span>';
+    if ( $unread_count > 0 && isset( $submenu['booking'] ) ) {
+        // Обновляем подпункт "Сообщения" в меню "Бронирование"
+        foreach ( $submenu['booking'] as $key => $item ) {
+            // Ищем подпункт booking-messages
+            if ( 'booking-messages' === $item[2] ) {
+                // Проверяем, не добавлен ли уже счетчик
+                if ( strpos( $item[0], 'awaiting-mod' ) === false ) {
+                    $submenu['booking'][ $key ][0] = 'Сообщения <span class="awaiting-mod">' . $unread_count . '</span>';
+                }
                 break;
             }
         }
     }
 }
-add_action( 'admin_menu', 'my_cabinet_add_unread_count_to_menu', 999 );
+add_action( 'in_admin_header', 'my_cabinet_update_unread_count', 1 );
 
 /**
  * Отображение страницы сообщений
@@ -228,23 +238,22 @@ function my_cabinet_get_unread_messages_count() {
                 'value'   => $host_id,
                 'compare' => '=',
             ),
-            // Только непрочитанные
+            // Только непрочитанные (ищем '0' или false)
             array(
                 'key'     => '_is_read',
-                'value'   => '0',
-                'compare' => '=',
-            ),
-            // Исключаем сообщения, где хозяин - отправитель
-            array(
-                'key'     => '_sender_id',
-                'value'   => $host_id,
+                'value'   => '1',
                 'compare' => '!=',
             ),
         ),
     );
 
     $query = new WP_Query( $args );
-    return $query->found_posts;
+    $unread_count = $query->found_posts;
+    
+    // Debug
+    error_log( "Unread messages count: $unread_count for host_id: $host_id" );
+    
+    return $unread_count;
 }
 
 /**
