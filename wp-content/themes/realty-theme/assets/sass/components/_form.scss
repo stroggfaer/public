@@ -324,3 +324,169 @@
         }
     }
 }
+
+
+// Property Filter Styles
+.main-search-form-container {
+    background-color: #fff;
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 8px 14px;
+    border-radius: 100px;
+    height: 70px;
+    .property-filter-form {
+        display: flex;
+        width: 100%;
+        .filter-row {
+            display: flex;
+            gap: 5px;
+            width: 100%;
+            align-items: center;
+            .input-group__com {
+                .input-with-icon {
+                    .input__com {
+                        background: none;
+                        border: none;
+                        height: 50px;
+                    }
+                    .guests-placeholder {
+                        pointer-events: none;
+                    }
+                }
+            }
+        }
+
+        .button__com.lg {
+            padding: 15px 20px;
+            min-height: 48px;
+        }
+        // new
+        .el-autocomplete {
+            max-width: 300px;
+            .el-input {
+                border: none;
+            }
+            .el-input__wrapper {
+                box-shadow: unset;
+            }
+            .el-input__inner {
+                border: none;
+                height: 50px;
+                font-size: 16px;
+                font-weight: 500;
+            }
+            .el-input__prefix-inner>:last-child {
+                margin-right: 4px;
+            }
+        }
+        .el-date-editor--daterange {
+            height: 50px;
+            max-width: 230px;
+            box-shadow: unset !important;
+            .el-input__wrapper {
+                box-shadow: unset;
+            }
+            .el-range-input {
+                border: none;
+                height: 50px;
+                font-size: 16px;
+                font-weight: 500;
+            }
+        }
+        .el-input .el-input__icon,.el-date-editor .el-range__close-icon {
+            font-size: 24px;
+        }
+        .line {
+            height: 40px;
+            width: 1px;
+            background: var(--el-text-color-placeholder);
+            opacity: .4;
+        }
+        .filter-actions {
+            display: block;
+            margin: 0px;
+        }
+    }
+
+    @media screen and (max-width: $media-md) {
+
+    }
+}
+// шапка
+header.site-header {
+    .main-search-form-container {
+        border: 1px solid $color-grey;
+        height: 50px;
+        padding: 4px 12px;
+        max-width: 50%;
+        --el-input-com-height: 28px;
+
+        .material-symbols-outlined {
+            font-size: 20px !important;
+        }
+        .property-filter-form {
+            height: 40px;
+            align-items: center;
+            .filter-row {
+                margin: 0px;
+                .input-group__com {
+                    .input-with-icon {
+                        .input__com {
+                            height: var(--el-input-com-height);
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
+            .el-input.is-disabled .el-input__wrapper {
+                background-color: transparent;
+            }
+            // new
+            .el-autocomplete {
+                max-width: 200px;
+                .el-input__wrapper {
+                    padding-left: 0;
+                }
+                .el-input__inner {
+                    height: var(--el-input-com-height);
+                    font-size: 14px;
+                }
+            }
+            .el-date-editor--daterange {
+                height: var(--el-input-com-height);
+                max-width: 190px;
+                .el-input__wrapper {
+                    box-shadow: unset;
+                }
+                .el-range-input {
+                    height: var(--el-input-com-height);
+                    font-size: 14px;
+                }
+            }
+            .el-input .el-input__icon,.el-date-editor .el-range__close-icon {
+                font-size: 16px;
+            }
+            .button__com {
+                .material-symbols-outlined {
+                    font-size: 18px;
+                }
+                padding: 8px;
+                border-radius: 100px;
+                min-height: var(--el-input-com-height);
+                min-width: var(--el-input-com-height);
+                .text-b {
+                    display: none;
+                }
+            }
+            .line {
+                height: 20px;
+            }
+            .el-input__wrapper {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+        }
+    }
+}
+
