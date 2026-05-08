@@ -68,13 +68,13 @@ function naked_scripts()  {
     wp_enqueue_style('main.min.css', get_stylesheet_directory_uri() . '/dist/css/main.min.css');
     
     // Временно подключаем основной CSS с стилями для формы поиска
-   // wp_enqueue_style('main-styles.css', get_stylesheet_directory_uri() . '/assets/css/___main.css');
+    //wp_enqueue_style('main-styles.css', get_stylesheet_directory_uri() . '/assets/css/___main.css');
 
     // Подключаем стили Splide для галереи на странице недвижимости
     if (is_singular('property')) {
         wp_enqueue_style('splide-core', get_template_directory_uri() . '/js/slider/splide.min.css', array(), NAKED_VERSION, 'all');
     }
-//    wp_enqueue_style('main.css', get_stylesheet_directory_uri() . '/assets/css/main.css');
+    //wp_enqueue_style('main.css', get_stylesheet_directory_uri() . '/assets/css/main.css');
     /*----End CSS----*/
     wp_enqueue_script( 'naked-jquery', 'https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js', array( 'jquery' ), NAKED_VERSION, true );
 	// Подключаем Vue.js и Vuex после jQuery
