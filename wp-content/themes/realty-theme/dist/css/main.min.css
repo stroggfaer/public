@@ -2343,6 +2343,12 @@ article.post .the-content {
   padding: 20px;
   border-radius: 20px;
 }
+.property-filters-sidebar .price-range-wrapper .price-input {
+  --el-input-border-color: #D8D8DA;
+}
+.property-filters-sidebar .price-range-wrapper .price-input .el-input__wrapper {
+  width: 100%;
+}
 .property-filters-sidebar .el-form-item__content {
   display: block;
 }
@@ -3599,10 +3605,6 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   display: inline-block !important;
   width: calc(50% - 4px) !important;
   max-width: calc(50% - 4px) !important;
-}
-
-.price-range-wrapper .price-inputs-row .el-input {
-  width: 100% !important;
 }
 
 .property-filter-sidebar-wrap {

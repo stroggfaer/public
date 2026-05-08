@@ -526,6 +526,12 @@ article.post .the-content {
   flex: 0 0 288px;
   padding: 20px;
   border-radius: 20px;
+  .price-range-wrapper .price-input {
+    --el-input-border-color: #{$color-readonly-grey};
+  }
+  .price-range-wrapper .price-input .el-input__wrapper {
+    width: 100%;
+  }
   .el-form-item__content {
      display: block;
   }
