@@ -39,9 +39,9 @@ debug.log
 wp-content/debug.log
 
 # Custom theme assets (if compiled)
-wp-content/themes/realty-theme/assets/css/main.css
+wp-content/themes/realty-theme/assets/css/*
 wp-content/themes/realty-theme/assets/vue_module/bundle.js
-
+wp-content/themes/realty-theme/dist/*
 # SASS/SCSS cache
 .sass-cache/
 .kilocode/
