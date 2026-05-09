@@ -502,7 +502,7 @@
     // Стилизация Input строго внутри Form Item
     .el-input {
       --el-input-bg-color: #f5f7f9;
-      --el-input-border-color: transparent;
+      --el-input-border-color: #{$color-readonly-grey};
       // Убираем системные стрелочки у input type="number"
       input::-webkit-outer-spin-button,
       input::-webkit-inner-spin-button {

@@ -481,7 +481,7 @@ body, html {
 }
 .el-form .el-form-item .el-input {
   --el-input-bg-color: #f5f7f9;
-  --el-input-border-color: transparent;
+  --el-input-border-color: #D8D8DA;
 }
 .el-form .el-form-item .el-input input::-webkit-outer-spin-button,
 .el-form .el-form-item .el-input input::-webkit-inner-spin-button {
@@ -2343,9 +2343,6 @@ article.post .the-content {
   padding: 20px;
   border-radius: 20px;
 }
-.property-filters-sidebar .price-range-wrapper .price-input {
-  --el-input-border-color: #D8D8DA;
-}
 .property-filters-sidebar .price-range-wrapper .price-input .el-input__wrapper {
   width: 100%;
 }
@@ -3657,6 +3654,7 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   border-top: 1px solid rgb(226, 232, 240);
   -ms-flex-negative: 0;
       flex-shrink: 0;
+  margin-top: auto;
 }
 .footer .footer__bottom {
   display: -webkit-box;

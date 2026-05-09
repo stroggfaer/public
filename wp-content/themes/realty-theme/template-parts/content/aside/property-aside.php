@@ -11,6 +11,22 @@ $pod = $args['pod'] ?? null;
 $price_raw = $pod ? $pod->field('price') : 0;
 $price_formatted = $price_raw ? number_format((float) $price_raw, 0, '.', ' ') . ' ₽' : '—';
 
+// Получаем имя хозяина из учетной записи WordPress
+$owner_name = '';
+if ( $pod && $pod->id() ) {
+	$author_id = get_post_field( 'post_author', $pod->id() );
+	if ( $author_id ) {
+		$first_name = get_the_author_meta( 'first_name', (int) $author_id );
+		$last_name = get_the_author_meta( 'last_name', (int) $author_id );
+		
+		if ( $first_name || $last_name ) {
+			$owner_name = trim( $first_name . ' ' . $last_name );
+		} else {
+			$owner_name = get_the_author_meta( 'display_name', (int) $author_id );
+		}
+	}
+}
+
 $period_label = '';
 
 if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
@@ -46,7 +62,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
             <span class="material-symbols-outlined">person</span>
         </div>
         <div class="host-details">
-            <h3>Хозяин: Сара</h3>
+            <h3>Хозяин: <?php echo $owner_name ? esc_html( $owner_name ) : 'Хост'; ?></h3>
             <div class="hint">Отвечает в течение часа</div>
         </div>
     </div>
