@@ -218,6 +218,11 @@ export default {
     const guestsPopover = () => {}
 
     const initFormData = (newVal) => {
+      if (!newVal) return;
+      
+      console.log('[HomePropertyFilter] initFormData called with:', newVal);
+      console.log('[HomePropertyFilter] guestsConfig:', guestsConfig.value);
+      
       if (props.location) {
         locationInput.value = props.location.name;
         locationSlug.value = props.location.slug;
@@ -231,7 +236,10 @@ export default {
       // Инициализируем динамические значения гостей
       const guests = guestsConfig.value;
       guests.forEach(guest => {
-        guestValues.value[guest.name] = newVal[guest.name] ?? guest.min;
+        const valueFromUrl = newVal[guest.name];
+        const defaultValue = guest.min;
+        guestValues.value[guest.name] = valueFromUrl ?? defaultValue;
+        console.log(`[HomePropertyFilter] Guest ${guest.name}: URL=${valueFromUrl}, default=${defaultValue}, final=${guestValues.value[guest.name]}`);
       });
 
       // Синхронизируем dateRange для ElDatePicker
@@ -240,6 +248,8 @@ export default {
       } else {
         dateRange.value = [];
       }
+      
+      console.log('[HomePropertyFilter] Final guestValues:', guestValues.value);
     }
 
     // Автоматически обновляем текст при изменении гостей

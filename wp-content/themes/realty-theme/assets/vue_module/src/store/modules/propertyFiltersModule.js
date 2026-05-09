@@ -23,12 +23,26 @@ const ALLOWED_KEYS = [
     'price_max',
     'checkin_date',
     'checkout_date',
-    'adults',
-    'children',
+    // adults и children удалены отсюда - они теперь обрабатываются через isGuestKey()
     'characteristics',
     'characteristics_logic',
     'property_types',
 ];
+
+// Проверка является ли ключ динамическим типом гостя
+function isGuestKey(key) {
+    // Разрешаем любые ключи которые не являются стандартными полями
+    const nonGuestKeys = [
+        'locationInput', 'locationSlug', 'location', 'location_slug',
+        'price_min', 'price_max',
+        'checkin_date', 'checkout_date',
+        // adults и children удалены - теперь они обрабатываются как динамические guest keys
+        'characteristics', 'characteristics_logic',
+        'property_types',
+        'page', 'per_page', 'paged', 'orderby', 'order'
+    ];
+    return !nonGuestKeys.includes(key);
+}
 function normalizeFilters(input = {}) {
     const map = {
         location: 'locationInput',
@@ -39,11 +53,12 @@ function normalizeFilters(input = {}) {
     Object.keys(input).forEach(key => {
         const newKey = map[key] || key;
 
-        if (!ALLOWED_KEYS.includes(newKey)) return;
+        // Разрешаем стандартные ключи ИЛИ динамические guest типы
+        if (!ALLOWED_KEYS.includes(newKey) && !isGuestKey(newKey)) return;
         let value = input[key];
 
-        if (['price_min', 'price_max', 'adults', 'children'].includes(newKey)) {
-            value = Number(value);
+        if (['price_min', 'price_max', 'adults', 'children'].includes(newKey) || isGuestKey(newKey)) {
+            value = Number(value) || 0;
         }
         
         // Обработка массивов (characteristics)

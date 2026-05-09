@@ -78,9 +78,27 @@ export default function usePropertyFilters(params = {}) {
             throw new Error('Некорректный диапазон цены');
         }
 
-        // гости (на будущее)
-        if (f.adults < 1) {
-            throw new Error('Должен быть хотя бы 1 взрослый');
+        // гости - проверяем что есть хотя бы один гость любого типа (динамически)
+        let totalGuests = 0;
+        
+        // Суммируем все числовые поля которые НЕ являются стандартными полями
+        const standardFields = [
+            'locationInput', 'locationSlug', 
+            'price_min', 'price_max', 
+            'checkin_date', 'checkout_date', 
+            'characteristics', 'characteristics_logic', 
+            'property_types',
+            'page', 'per_page', 'paged'
+        ];
+        
+        Object.keys(f).forEach(key => {
+            if (!standardFields.includes(key) && typeof f[key] === 'number' && f[key] > 0) {
+                totalGuests += f[key];
+            }
+        });
+        
+        if (totalGuests < 1) {
+            throw new Error('Должен быть хотя бы 1 гость');
         }
 
         return true;

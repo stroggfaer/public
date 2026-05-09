@@ -123,14 +123,39 @@ class PropertyFeature {
             ];
         }
 
-        // Гости
-        if (!empty($params['adults'])) {
+        // Гости - суммируем все типы гостей динамически
+        $guest_types = get_option('property_guest_types', []);
+        
+        // Debug: логируем что происходит
+        error_log('[Property Filter] Guest types from option: ' . print_r($guest_types, true));
+        error_log('[Property Filter] Params received: ' . print_r(array_keys($params), true));
+        
+        // Если настройки еще не созданы, используем пустой массив (не хардкод!)
+        $total_guests = 0;
+        
+        if (!empty($guest_types) && is_array($guest_types)) {
+            foreach ($guest_types as $guest_type) {
+                $guest_name = $guest_type['name'] ?? '';
+                if (!empty($guest_name) && !empty($params[$guest_name])) {
+                    $guest_value = intval($params[$guest_name]);
+                    $total_guests += $guest_value;
+                    error_log("[Property Filter] Adding guest type '{$guest_name}': {$guest_value}");
+                }
+            }
+        }
+        
+        error_log("[Property Filter] Total guests calculated: {$total_guests}");
+        
+        if ($total_guests > 0) {
             $meta_query[] = [
                 'key' => 'guests_count',
-                'value' => intval($params['adults']),
+                'value' => $total_guests,
                 'compare' => '>=',
                 'type' => 'NUMERIC',
             ];
+            error_log("[Property Filter] Meta query added: guests_count >= {$total_guests}");
+        } else {
+            error_log("[Property Filter] No guest filter applied (total_guests = 0)");
         }
 
         if (!empty($meta_query)) {
@@ -239,19 +264,33 @@ class PropertyFeature {
 
 
         // 2. Базовые значения + overrides
-        $filters = array_merge([
+        // Динамически добавляем guest типы из настроек
+        $guest_types = get_option('property_guest_types', []);
+        $defaults = [
                 'location'      => $location,
                 'location_slug' => $location_slug,
                 'checkin_date'  => '',
                 'checkout_date' => '',
-                'adults'        => ($context === 'post') ? 0 : 1,
-                'children'      => 0,
                 'price_min'     => 0,
                 'price_max'     => 0,
                 'paged'         => 1,
                 'characteristics' => [],
                 'property_types'  => [],
-        ], $overrides);
+        ];
+        
+        // Добавляем динамические guest типы с дефолтными значениями
+        if (!empty($guest_types) && is_array($guest_types)) {
+            foreach ($guest_types as $guest_type) {
+                $guest_name = $guest_type['name'] ?? '';
+                $guest_min = $guest_type['min'] ?? 0;
+                if (!empty($guest_name)) {
+                    // Для GET контекста используем min, для POST - 0
+                    $defaults[$guest_name] = ($context === 'get') ? $guest_min : 0;
+                }
+            }
+        }
+        
+        $filters = array_merge($defaults, $overrides);
 
         // 3. Локация — самая сложная часть, делаем аккуратно
         $loc_raw = $source['location']      ?? $filters['location'];
@@ -281,13 +320,26 @@ class PropertyFeature {
         }
 
         // 5. Числовые поля с минимальными значениями
+        // Динамически собираем все guest типы
         $numeric_fields = [
-                'adults'    => ['min' => ($context === 'get' ? 1 : 0), 'default' => ($context === 'get' ? 1 : 0)],
-                'children'  => ['min' => 0, 'default' => 0],
                 'price_min' => ['min' => 0],
                 'price_max' => ['min' => 0],
                 'paged'     => ['min' => 1],
         ];
+        
+        // Добавляем guest типы в numeric_fields
+        if (!empty($guest_types) && is_array($guest_types)) {
+            foreach ($guest_types as $guest_type) {
+                $guest_name = $guest_type['name'] ?? '';
+                $guest_min = $guest_type['min'] ?? 0;
+                if (!empty($guest_name)) {
+                    $numeric_fields[$guest_name] = [
+                        'min' => ($context === 'get') ? $guest_min : 0,
+                        'default' => ($context === 'get') ? $guest_min : 0
+                    ];
+                }
+            }
+        }
 
         foreach ($numeric_fields as $key => $rules) {
             $val = $source[$key] ?? $filters[$key];
@@ -298,8 +350,19 @@ class PropertyFeature {
         }
 
         // 6. Защита от мусора
-        $filters = array_filter($filters, function ($v, $k) {
-            if (in_array($k, ['paged', 'adults', 'children', 'price_min', 'price_max'])) {
+        // Динамически собираем ключи для фильтрации
+        $numeric_keys_to_filter = ['paged', 'price_min', 'price_max'];
+        if (!empty($guest_types) && is_array($guest_types)) {
+            foreach ($guest_types as $guest_type) {
+                $guest_name = $guest_type['name'] ?? '';
+                if (!empty($guest_name)) {
+                    $numeric_keys_to_filter[] = $guest_name;
+                }
+            }
+        }
+        
+        $filters = array_filter($filters, function ($v, $k) use ($numeric_keys_to_filter) {
+            if (in_array($k, $numeric_keys_to_filter)) {
                 return $v > 0; // убираем нулевые числовые, если не нужны
             }
             // Не удаляем массивы (characteristics)
@@ -422,23 +485,22 @@ class PropertyFeature {
             ];
         }
 
-        // Гости - динамическая обработка
-        $guest_types = get_option('property_guest_types', [
-            ['name' => 'adults', 'label' => 'Взрослые'],
-            ['name' => 'children', 'label' => 'Дети'],
-        ]);
+        // Гости - динамическая обработка (без хардкода!)
+        $guest_types = get_option('property_guest_types', []);
         
-        foreach ($guest_types as $guest_type) {
-            $guest_name = $guest_type['name'] ?? '';
-            $guest_label = $guest_type['label'] ?? $guest_name;
-            
-            if (!empty($params[$guest_name])) {
-                $filters[] = [
-                    'key' => $guest_name,
-                    'label' => $guest_label,
-                    'value' => $params[$guest_name],
-                    'type' => 'guests',
-                ];
+        if (!empty($guest_types) && is_array($guest_types)) {
+            foreach ($guest_types as $guest_type) {
+                $guest_name = $guest_type['name'] ?? '';
+                $guest_label = $guest_type['label'] ?? $guest_name;
+                
+                if (!empty($guest_name) && !empty($params[$guest_name])) {
+                    $filters[] = [
+                        'key' => $guest_name,
+                        'label' => $guest_label,
+                        'value' => $params[$guest_name],
+                        'type' => 'guests',
+                    ];
+                }
             }
         }
 
@@ -522,10 +584,25 @@ class PropertyFeature {
                     'type' => 'NUMERIC',
                 ];
             }
-            if (!empty($params['adults'])) {
+            
+            // Гости - суммируем все типы гостей динамически
+            $guest_types = get_option('property_guest_types', []);
+            
+            $total_guests = 0;
+            
+            if (!empty($guest_types) && is_array($guest_types)) {
+                foreach ($guest_types as $guest_type) {
+                    $guest_name = $guest_type['name'] ?? '';
+                    if (!empty($guest_name) && !empty($params[$guest_name])) {
+                        $total_guests += intval($params[$guest_name]);
+                    }
+                }
+            }
+            
+            if ($total_guests > 0) {
                 $meta_query[] = [
                     'key' => 'guests_count',
-                    'value' => intval($params['adults']),
+                    'value' => $total_guests,
                     'compare' => '>=',
                     'type' => 'NUMERIC',
                 ];
