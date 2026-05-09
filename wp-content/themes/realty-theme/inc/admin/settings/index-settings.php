@@ -56,6 +56,7 @@ function realty_theme_register_settings() {
     // Настройки фильтрации
     register_setting( 'realty_theme_filter_settings', 'property_active_filters' );
     register_setting( 'realty_theme_filter_settings', 'property_price_range' );
+    register_setting( 'realty_theme_filter_settings', 'property_guest_types' );
 
     // Настройки карты
     register_setting( 'realty_theme_maps_settings', 'google_maps_api_key' );
@@ -122,6 +123,9 @@ function realty_theme_settings_page() {
         if ( $active_tab === 'filter' && realty_verify_filter_nonce() ) {
             realty_theme_save_filter_settings();
             $message = __( 'Настройки фильтрации успешно сохранены!', 'realty-theme' );
+        } elseif ( $active_tab === 'guest-types' && realty_verify_filter_nonce() ) {
+            realty_theme_save_guest_types_settings();
+            $message = __( 'Типы гостей успешно сохранены!', 'realty-theme' );
         } elseif ( $active_tab === 'maps' && realty_verify_maps_nonce() ) {
             realty_theme_save_maps_settings();
             $message = __( 'Настройки карты успешно сохранены!', 'realty-theme' );
@@ -154,6 +158,9 @@ function realty_theme_settings_page() {
             </a>
             <a href="?post_type=property&page=realty-theme-settings&tab=filter" class="nav-tab <?php echo 'filter' === $active_tab ? 'nav-tab-active' : ''; ?>">
                 <?php esc_html_e( 'Фильтрация', 'realty-theme' ); ?>
+            </a>
+            <a href="?post_type=property&page=realty-theme-settings&tab=guest-types" class="nav-tab <?php echo 'guest-types' === $active_tab ? 'nav-tab-active' : ''; ?>">
+                <?php esc_html_e( 'Типы гостей', 'realty-theme' ); ?>
             </a>
             <a href="?post_type=property&page=realty-theme-settings&tab=maps" class="nav-tab <?php echo 'maps' === $active_tab ? 'nav-tab-active' : ''; ?>">
                 <?php esc_html_e( 'API Карта', 'realty-theme' ); ?>
@@ -227,10 +234,11 @@ function realty_theme_settings_page() {
 function realty_theme_get_settings_tab_path( $tab ) {
     $dir = get_template_directory() . '/inc/admin/settings/';
     $files = array(
-        'home'   => $dir . 'home-settings.php',
-        'theme'  => $dir . 'theme-settings.php',
-        'filter' => $dir . 'filter-settings.php',
-        'maps'   => $dir . 'maps-settings.php',
+        'home'        => $dir . 'home-settings.php',
+        'theme'       => $dir . 'theme-settings.php',
+        'filter'      => $dir . 'filter-settings.php',
+        'guest-types' => $dir . 'guest-types-settings.php',
+        'maps'        => $dir . 'maps-settings.php',
     );
 
     return isset( $files[ $tab ] ) ? $files[ $tab ] : '';
@@ -264,6 +272,103 @@ function realty_theme_save_filter_settings() {
         );
         update_option( 'property_price_range', $price_range );
     }
+}
+
+/**
+ * Сохранение настроек типов гостей
+ *
+ * @since 1.0.0
+ */
+function realty_theme_save_guest_types_settings() {
+    // Проверка nonce
+    if ( ! realty_verify_filter_nonce() ) {
+        error_log( 'Guest types save: Nonce verification failed' );
+        return;
+    }
+
+    if ( ! isset( $_POST['property_guest_types'] ) || ! is_array( $_POST['property_guest_types'] ) ) {
+        error_log( 'Guest types save: No property_guest_types in POST or not array' );
+        error_log( 'POST data: ' . print_r( $_POST, true ) );
+        return;
+    }
+    
+    error_log( 'Guest types save: Processing ' . count( $_POST['property_guest_types'] ) . ' guest types' );
+
+    $guest_types = array();
+    $names_seen = array();
+    $enabled_count = 0;
+    $max_types = 3;
+
+    foreach ( $_POST['property_guest_types'] as $index => $guest ) {
+        // Проверка на удаление
+        if ( isset( $guest['enabled'] ) && $guest['enabled'] === '0' ) {
+            continue;
+        }
+
+        // Проверка лимита
+        if ( $enabled_count >= $max_types ) {
+            break;
+        }
+
+        // Санитизация и валидация
+        $name = isset( $guest['name'] ) ? sanitize_key( $guest['name'] ) : '';
+        $label = isset( $guest['label'] ) ? sanitize_text_field( wp_unslash( $guest['label'] ) ) : '';
+        $desc = isset( $guest['desc'] ) ? sanitize_text_field( wp_unslash( $guest['desc'] ) ) : '';
+        $min = isset( $guest['min'] ) ? max( 0, intval( $guest['min'] ) ) : 0;
+        $max = isset( $guest['max'] ) ? max( 1, intval( $guest['max'] ) ) : 10;
+
+        // Валидация обязательных полей
+        if ( empty( $name ) || empty( $label ) ) {
+            continue;
+        }
+
+        // Проверка уникальности name
+        if ( in_array( $name, $names_seen, true ) ) {
+            continue;
+        }
+        $names_seen[] = $name;
+
+        // Проверка min < max
+        if ( $min >= $max ) {
+            $min = 0;
+            $max = max( 10, $min + 1 );
+        }
+
+        $guest_types[] = array(
+            'name'    => $name,
+            'label'   => $label,
+            'desc'    => $desc,
+            'min'     => $min,
+            'max'     => $max,
+            'enabled' => true,
+        );
+
+        $enabled_count++;
+    }
+
+    // Если ничего не сохранено, используем дефолт
+    if ( empty( $guest_types ) ) {
+        $guest_types = array(
+            array(
+                'name'    => 'adults',
+                'label'   => 'Взрослые',
+                'desc'    => 'от 13 лет',
+                'min'     => 1,
+                'max'     => 10,
+                'enabled' => true,
+            ),
+            array(
+                'name'    => 'children',
+                'label'   => 'Дети',
+                'desc'    => 'от 2 до 12 лет',
+                'min'     => 0,
+                'max'     => 8,
+                'enabled' => true,
+            ),
+        );
+    }
+
+    update_option( 'property_guest_types', $guest_types );
 }
 
 /**

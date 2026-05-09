@@ -422,23 +422,24 @@ class PropertyFeature {
             ];
         }
 
-        // Гости
-        if (!empty($params['adults'])) {
-            $filters[] = [
-                'key' => 'adults',
-                'label' => 'Взрослые',
-                'value' => $params['adults'],
-                'type' => 'guests',
-            ];
-        }
-
-        if (isset($params['children'])) {
-            $filters[] = [
-                'key' => 'children',
-                'label' => 'Дети',
-                'value' => $params['children'],
-                'type' => 'guests',
-            ];
+        // Гости - динамическая обработка
+        $guest_types = get_option('property_guest_types', [
+            ['name' => 'adults', 'label' => 'Взрослые'],
+            ['name' => 'children', 'label' => 'Дети'],
+        ]);
+        
+        foreach ($guest_types as $guest_type) {
+            $guest_name = $guest_type['name'] ?? '';
+            $guest_label = $guest_type['label'] ?? $guest_name;
+            
+            if (!empty($params[$guest_name])) {
+                $filters[] = [
+                    'key' => $guest_name,
+                    'label' => $guest_label,
+                    'value' => $params[$guest_name],
+                    'type' => 'guests',
+                ];
+            }
         }
 
         return $filters;
@@ -726,7 +727,23 @@ class PropertyFeature {
 
         $config = [
                 'price_range' => $price_range,
-                'guests' => ['adults'=> ['min'=>1,'max'=>10],'children' => ['min'=>0,'max'=>8]],
+                'guests' => array_values(get_option('property_guest_types', [
+                    // Fallback defaults if option doesn't exist
+                    [
+                        'name' => 'adults',
+                        'label' => 'Взрослые',
+                        'desc' => 'от 13 лет',
+                        'min' => 1,
+                        'max' => 10,
+                    ],
+                    [
+                        'name' => 'children',
+                        'label' => 'Дети',
+                        'desc' => 'от 2 до 12 лет',
+                        'min' => 0,
+                        'max' => 8,
+                    ]
+                ])),
                 'filter_characteristics' => realty_get_filter_characteristics(),
                 'property_types' => realty_get_property_types_for_filter(),
                 'location' => $location
@@ -802,10 +819,23 @@ class PropertyFeature {
         }
 
         $config = [
-            'guests' => [
-                'adults' => ['min' => 1, 'max' => 10],
-                'children' => ['min' => 0, 'max' => 8]
-            ]
+            'guests' => array_values(get_option('property_guest_types', [
+                // Fallback defaults if option doesn't exist
+                [
+                    'name' => 'adults',
+                    'label' => 'Взрослые',
+                    'desc' => 'от 13 лет',
+                    'min' => 1,
+                    'max' => 10,
+                ],
+                [
+                    'name' => 'children',
+                    'label' => 'Дети',
+                    'desc' => 'от 2 до 12 лет',
+                    'min' => 0,
+                    'max' => 8,
+                ]
+            ]))
         ];
 
         $data = [

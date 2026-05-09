@@ -45,7 +45,7 @@ export default {
             :prefix-icon="{ render: DateRangeIcon }"/>
         <div class="line"></div>
         <!-- Гости -->
-        <div v-if="activeFilters.includes('adults') || activeFilters.includes('children')" class="input-group__com guests-group">
+        <div v-if="hasGuestFilters" class="input-group__com guests-group">
           <el-popover
             v-model:visible="guestsPopoverVisible"
             placement="bottom-start"
@@ -64,37 +64,24 @@ export default {
                 >
               </div>
             </template>
-            
+            <!-- Guest control - динамический рендер -->
             <div class="guest-controls">
-              <div v-if="activeFilters.includes('adults')" class="guest-control">
+              <div v-for="guest in guestsConfig" :key="guest.name" class="guest-control">
                 <div class="flex-label">
-                  <span class="guest-label">Взрослые</span>
-                  <span class="guest-desc">от 13 лет</span>
+                  <span class="guest-label">{{ guest.label }}</span>
+                  <span class="guest-desc" v-if="guest.desc">{{ guest.desc }}</span>
                 </div>
                 <div class="guest-input">
                   <el-input-number
-                    v-model="adults"
-                    :min="config.guests.adults.min"
-                    :max="config.guests.adults.max"
-                    :controls="true"
-                  />
-                </div>
-              </div>
-              <div v-if="activeFilters.includes('children')" class="guest-control">
-                <div class="flex-label">
-                  <span class="guest-label">Дети</span>
-                  <span class="guest-desc">от 2 до 12 лет</span>
-                </div>
-                <div class="guest-input">
-                  <el-input-number
-                    v-model="children"
-                    :min="config.guests.children.min"
-                    :max="config.guests.children.max"
+                    v-model="guestValues[guest.name]"
+                    :min="guest.min"
+                    :max="guest.max"
                     :controls="true"
                   />
                 </div>
               </div>
             </div>
+            <!-- ./Guest control-->
           </el-popover>
         </div>
       </div>
@@ -116,10 +103,10 @@ export default {
     config: {
       type: Object,
       default: () => ({
-        guests: {
-          adults: { min: 1, max: 10 },
-          children: { min: 0, max: 8 }
-        }
+        guests: [
+          { name: 'adults', label: 'Взрослые', desc: 'от 13 лет', min: 1, max: 10 },
+          { name: 'children', label: 'Дети', desc: 'от 2 до 12 лет', min: 0, max: 8 }
+        ]
       })
     },
     ajaxUrl: {
@@ -161,13 +148,22 @@ export default {
     const dateRange = ref([]);
     const checkinDate = ref('');
     const checkoutDate = ref('');
-    const adults = ref(1);
-    const children = ref(0);
+    const guestValues = ref({}); // Динамические значения гостей: { adults: 1, children: 0, ... }
     const guestsPopoverVisible = ref(false);
 
     const disabledLocation = computed(() => {
       return Boolean(props.location);
     })
+
+    // Получаем конфигурацию гостей из props
+    const guestsConfig = computed(() => {
+      return Array.isArray(props.config.guests) ? props.config.guests : [];
+    });
+
+    // Проверяем, есть ли фильтры гостей
+    const hasGuestFilters = computed(() => {
+      return guestsConfig.value.length > 0;
+    });
 
     // Локальная обертка для handleLocationSelect
     function localHandleLocationSelect(item) {
@@ -192,25 +188,31 @@ export default {
     const guestsDisplayText = ref('Гости');
 
     function updateGuestsDisplay() {
-      const total = adults.value + children.value;
-      if (total > 0) {
-        // Показываем детальную информацию: "2 взрослых, 1 ребенок"
-        const parts = [];
-
-        if (adults.value > 0) {
-          const adultObj = declension(['взрослых', 'взрослый', 'взрослых'], adults.value);
-          parts.push(`${adults.value} ${adultObj.text}`);
-        }
-        
-        if (children.value > 0) {
-          const childrenObj = declension(['детей', 'ребенок', 'ребенка'], children.value);
-          parts.push(`${children.value} ${childrenObj.text}`);
-        }
-        guestsDisplayText.value = parts.join(', ');
-      } else {
+      const guests = guestsConfig.value;
+      if (guests.length === 0) {
         guestsDisplayText.value = 'Гости';
+        return;
       }
-      console.log('updateGuestsDisplay вызван, adults =', adults.value);
+
+      // Собираем все значения гостей
+      const parts = [];
+      guests.forEach(guest => {
+        const value = guestValues.value[guest.name] || 0;
+        if (value > 0 && guest.name === 'adults') {
+          // Специальная обработка для взрослых (сохраняем склонения)
+          const adultObj = declension(['взрослых', 'взрослый', 'взрослых'], value);
+          parts.push(`${value} ${adultObj.text}`);
+        } else if (value > 0 && guest.name === 'children') {
+          // Специальная обработка для детей (сохраняем склонения)
+          const childrenObj = declension(['детей', 'ребенок', 'ребенка'], value);
+          parts.push(`${value} ${childrenObj.text}`);
+        } else if (value > 0) {
+          // Для других типов гостей просто показываем label + значение
+          parts.push(`${guest.label}: ${value}`);
+        }
+      });
+
+      guestsDisplayText.value = parts.length > 0 ? parts.join(', ') : 'Гости';
     }
 
     const guestsPopover = () => {}
@@ -225,8 +227,12 @@ export default {
       }
       checkinDate.value = newVal.checkin_date;
       checkoutDate.value = newVal.checkout_date;
-      adults.value = newVal.adults;
-      children.value = newVal.children;
+
+      // Инициализируем динамические значения гостей
+      const guests = guestsConfig.value;
+      guests.forEach(guest => {
+        guestValues.value[guest.name] = newVal[guest.name] ?? guest.min;
+      });
 
       // Синхронизируем dateRange для ElDatePicker
       if (newVal.checkin_date && newVal.checkout_date) {
@@ -237,9 +243,9 @@ export default {
     }
 
     // Автоматически обновляем текст при изменении гостей
-    watch([adults, children], () => {
+    watch(guestValues, () => {
       updateGuestsDisplay();
-    });
+    }, { deep: true });
 
     watch(filters, (newVal) => {
       initFormData(newVal);
@@ -261,13 +267,12 @@ export default {
         params.append('checkout_date', checkoutDate.value);
       }
 
-      if (adults.value) {
-        params.append('adults', adults.value);
-      }
-
-      if (children.value) {
-        params.append('children', children.value);
-      }
+      // Динамическая отправка всех типов гостей
+      Object.entries(guestValues.value).forEach(([name, val]) => {
+        if (val > 0) {
+          params.append(name, val);
+        }
+      });
 
       const archiveUrl = '/property/' + (params.toString() ? '?' + params.toString() : '');
       window.location.href = archiveUrl;
@@ -285,8 +290,9 @@ export default {
       dateRange,
       checkinDate,
       checkoutDate,
-      adults,
-      children,
+      guestValues,
+      guestsConfig,
+      hasGuestFilters,
       guestsPopoverVisible,
       guestsDisplayText,
       disabledLocation,

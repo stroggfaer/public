@@ -56,7 +56,11 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
             <span class="reviews-count">(124)</span>
         </div>
     </div>
+    <!--Дата заезда-->
+    <div class="checkin-date">
 
+    </div>
+    <!--./Дата заезда-->
     <div class="host-info">
         <div class="avatar-placeholder">
             <span class="material-symbols-outlined">person</span>
