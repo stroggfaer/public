@@ -56,11 +56,49 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
             <span class="reviews-count">(124)</span>
         </div>
     </div>
-    <!--Дата заезда-->
-    <div class="checkin-date">
-
+    <!--Дата заезда и контакт (Vue 3)-->
+    <?php
+    // Подготовка данных для Vue
+    $booking_app_data = array(
+        'ajaxUrl'       => admin_url('admin-ajax.php'),
+        'nonce'         => wp_create_nonce('property_filter_nonce'),
+        'propertyId'    => $pod ? $pod->id() : 0,
+        'ownerId'       => $author_id ?? 0,
+        'config'        => array(
+            'guests' => get_option('property_guest_types', array(
+                array('name' => 'adults', 'label' => 'Взрослые', 'desc' => 'от 13 лет', 'min' => 1, 'max' => 10),
+                array('name' => 'children', 'label' => 'Дети', 'desc' => 'от 2 до 12 лет', 'min' => 0, 'max' => 8)
+            ))
+        )
+    );
+    $booking_app_data_json = wp_json_encode($booking_app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+    ?>
+    <div id="property-booking-sidebar" class="checkin-date" data-app="<?php echo esc_attr($booking_app_data_json); ?>">
+        <property-booking-sidebar 
+            :ajax-url="appData.ajaxUrl"
+            :nonce="appData.nonce"
+            :property-id="appData.propertyId"
+            :owner-id="appData.ownerId"
+            :config="appData.config"
+        ></property-booking-sidebar>
     </div>
-    <!--./Дата заезда-->
+
+    <script type="module">
+        const bookingAppData = JSON.parse(document.getElementById('property-booking-sidebar').dataset.app);
+        const { createAppModule, PropertyBookingSidebar } = window.VueAppModule;
+        
+        const BookingSidebarApp = createAppModule({
+            setup() {
+                return {
+                    appData: bookingAppData
+                };
+            }
+        });
+        
+        BookingSidebarApp.component('property-booking-sidebar', PropertyBookingSidebar);
+        BookingSidebarApp.mount('#property-booking-sidebar');
+    </script>
+    <!--./Дата заезда и контакт-->
     <div class="host-info">
         <div class="avatar-placeholder">
             <span class="material-symbols-outlined">person</span>
@@ -72,7 +110,6 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
     </div>
 
     <div class="contact-card-wrap">
-        <button class="button__com contact-button">Написать хозяину</button>
         <button class="button__com outline info-button">Узнать о длительном проживании</button>
     </div>
 

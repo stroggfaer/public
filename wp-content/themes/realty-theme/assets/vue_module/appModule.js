@@ -2,6 +2,7 @@ import store from './src/store/index.js';
 import HelloWorld from './src/components/HelloWord.js';
 import PropertyFilter from './src/components/PropertyFilter.js';
 import HomePropertyFilter from './src/components/HomePropertyFilter.js';
+import PropertyBookingSidebar from './src/components/PropertyBookingSidebar.js';
 
 import AuthLogin from './src/components/my/AuthLogin.js';
 import AuthRegistration from './src/components/my/AuthRegistration.js';
@@ -57,6 +58,7 @@ export {
   HelloWorld,
   PropertyFilter,
   HomePropertyFilter,
+  PropertyBookingSidebar,
   AuthLogin,
   AuthRegistration,
   AuthForgot,
