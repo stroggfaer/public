@@ -288,7 +288,14 @@ function my_cabinet_dialog_view_page( $thread_id ) {
     $first_message = $query->posts[0];
     $sender_id = get_post_meta( $first_message->ID, '_sender_id', true );
     $receiver_id = get_post_meta( $first_message->ID, '_receiver_id', true );
+    $property_id = (int) get_post_meta( $first_message->ID, '_property_id', true );
     $sender = get_userdata( $sender_id );
+    
+    // Получаем booking meta
+    $checkin_date = get_post_meta( $first_message->ID, '_checkin_date', true );
+    $checkout_date = get_post_meta( $first_message->ID, '_checkout_date', true );
+    $adults = (int) get_post_meta( $first_message->ID, '_adults', true );
+    $children = (int) get_post_meta( $first_message->ID, '_children', true );
     
     // URL для возврата
     $back_url = admin_url( 'admin.php?page=booking-messages' );
@@ -301,23 +308,144 @@ function my_cabinet_dialog_view_page( $thread_id ) {
         <a href="<?php echo esc_url( $back_url ); ?>" class="page-title-action">← Назад к списку</a>
         <hr class="wp-header-end">
 
-        <div class="dialog-info-box">
-            <strong>Логин:</strong> <?php echo $sender ? esc_html( $sender->user_login ) : '—'; ?> | 
-            <strong>Email:</strong> <?php echo $sender ? esc_html( $sender->user_email ) : '—'; ?> | 
-            <strong>ID диалога:</strong> <?php echo esc_html( $thread_id ); ?>
-        </div>
+        <div class="dialog-view-layout">
+            <!-- Левая колонка: Чат (70%) -->
+            <div class="dialog-chat-column">
+                <div class="dialog-info-box">
+                    <strong>Логин:</strong> <?php echo $sender ? esc_html( $sender->user_login ) : '—'; ?> | 
+                    <strong>Email:</strong> <?php echo $sender ? esc_html( $sender->user_email ) : '—'; ?> | 
+                    <strong>ID диалога:</strong> <?php echo esc_html( $thread_id ); ?>
+                </div>
 
-        <div id="dialog-messages-container" class="dialog-messages-view">
-            <div class="loading-messages">Загрузка сообщений...</div>
-        </div>
+                <div id="dialog-messages-container" class="dialog-messages-view">
+                    <div class="loading-messages">Загрузка сообщений...</div>
+                </div>
 
-        <div class="dialog-reply-box">
-            <h3>Ответить</h3>
-            <textarea id="dialog-reply-textarea" rows="5" placeholder="Введите ваше сообщение..."></textarea>
-            <button type="button" id="dialog-send-btn" class="button button-primary button-hero">
-                Отправить сообщение
-            </button>
-            <span id="dialog-send-status" class="send-status"></span>
+                <div class="dialog-reply-box">
+                    <h3>Ответить</h3>
+                    <textarea id="dialog-reply-textarea" rows="5" placeholder="Введите ваше сообщение..."></textarea>
+                    <button type="button" id="dialog-send-btn" class="button button-primary button-hero">
+                        Отправить сообщение
+                    </button>
+                    <span id="dialog-send-status" class="send-status"></span>
+                </div>
+            </div>
+
+            <!-- Правая колонка: Карточка недвижимости (30%) -->
+            <div class="dialog-sidebar-column">
+                <?php if ( $property_id > 0 ) : ?>
+                    <?php
+                    // Получаем данные объекта
+                    $property_post = get_post( $property_id );
+                    $property_title = $property_post ? $property_post->post_title : '';
+                    $property_url = $property_post ? get_permalink( $property_id ) : '';
+                    $property_thumbnail = get_the_post_thumbnail( $property_id, 'medium', array( 'class' => 'property-card-image' ) );
+                    $property_price = get_post_meta( $property_id, 'price', true );
+                    
+                    // Получаем локацию
+                    $location_terms = get_the_terms( $property_id, 'location' );
+                    $location_name = '';
+                    if ( $location_terms && ! is_wp_error( $location_terms ) ) {
+                        $location_name = $location_terms[0]->name;
+                    }
+                    ?>
+                    
+                    <div class="property-card-sidebar">
+                        <h3 class="property-card-title">
+                            <span class="dashicons dashicons-admin-home"></span>
+                            Объект недвижимости
+                        </h3>
+                        
+                        <?php if ( $property_thumbnail ) : ?>
+                            <div class="property-card-image-wrapper">
+                                <?php echo $property_thumbnail; ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="property-card-content">
+                            <h4 class="property-name">
+                                <a href="<?php echo esc_url( $property_url ); ?>" target="_blank">
+                                    <?php echo esc_html( $property_title ); ?>
+                                    <span class="dashicons dashicons-external"></span>
+                                </a>
+                            </h4>
+                            
+                            <?php if ( $location_name ) : ?>
+                                <div class="property-location">
+                                    <span class="dashicons dashicons-location"></span>
+                                    <?php echo esc_html( $location_name ); ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ( $property_price ) : ?>
+                                <div class="property-price">
+                                    <span class="price-label">Цена:</span>
+                                    <span class="price-value"><?php echo number_format( (float) $property_price, 0, '.', ' ' ); ?> ₽</span>
+                                    <?php
+                                    $period = get_post_meta( $property_id, 'hours_limit', true );
+                                    if ( $period ) {
+                                        echo '<span class="price-period">/' . esc_html( $period ) . '</span>';
+                                    }
+                                    ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ( $property_url ) : ?>
+                                <a href="<?php echo esc_url( $property_url ); ?>" target="_blank" class="button property-view-btn">
+                                    Открыть объект →
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <?php if ( $checkin_date || $checkout_date || $adults || $children ) : ?>
+                        <div class="booking-dates-card">
+                            <h3 class="booking-card-title">
+                                <span class="dashicons dashicons-calendar-alt"></span>
+                                Даты бронирования
+                            </h3>
+                            
+                            <?php if ( $checkin_date ) : ?>
+                                <div class="booking-date-row">
+                                    <span class="date-label">Заезд:</span>
+                                    <span class="date-value"><?php echo date_i18n( 'd F Y', strtotime( $checkin_date ) ); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ( $checkout_date ) : ?>
+                                <div class="booking-date-row">
+                                    <span class="date-label">Выезд:</span>
+                                    <span class="date-value"><?php echo date_i18n( 'd F Y', strtotime( $checkout_date ) ); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ( $adults > 0 || $children > 0 ) : ?>
+                                <div class="booking-guests-row">
+                                    <span class="guests-label">Гости:</span>
+                                    <span class="guests-value">
+                                        <?php
+                                        $guests_parts = array();
+                                        if ( $adults > 0 ) {
+                                            $guests_parts[] = $adults . ' взросл.';
+                                        }
+                                        if ( $children > 0 ) {
+                                            $guests_parts[] = $children . ' дет.';
+                                        }
+                                        echo esc_html( implode( ', ', $guests_parts ) );
+                                        ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                <?php else : ?>
+                    <div class="no-property-info">
+                        <span class="dashicons dashicons-warning"></span>
+                        <p>Это сообщение не привязано к объекту недвижимости</p>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
     <?php

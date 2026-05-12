@@ -116,6 +116,38 @@ function my_cabinet_register_message_cpt() {
         'sanitize_callback' => 'sanitize_text_field',
         'show_in_rest'      => true,
     ) );
+
+    register_meta( 'post', '_checkin_date', array(
+        'object_subtype'    => 'message',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => true,
+    ) );
+
+    register_meta( 'post', '_checkout_date', array(
+        'object_subtype'    => 'message',
+        'type'              => 'string',
+        'single'            => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'show_in_rest'      => true,
+    ) );
+
+    register_meta( 'post', '_adults', array(
+        'object_subtype'    => 'message',
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+        'show_in_rest'      => true,
+    ) );
+
+    register_meta( 'post', '_children', array(
+        'object_subtype'    => 'message',
+        'type'              => 'integer',
+        'single'            => true,
+        'sanitize_callback' => 'absint',
+        'show_in_rest'      => true,
+    ) );
 }
 add_action( 'init', 'my_cabinet_register_message_cpt' );
 

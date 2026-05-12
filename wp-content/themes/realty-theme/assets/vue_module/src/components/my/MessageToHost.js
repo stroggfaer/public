@@ -240,6 +240,10 @@ export default {
             message_content: messageForm.content,
             property_id: props.appData.propertyId || 0,
             owner_id: props.appData.ownerId || 0,
+            checkin_date: props.appData.checkinDate || '',
+            checkout_date: props.appData.checkoutDate || '',
+            adults: bookingContext.value?.adults || 0,
+            children: bookingContext.value?.children || 0,
           });
 
           if (result.success) {

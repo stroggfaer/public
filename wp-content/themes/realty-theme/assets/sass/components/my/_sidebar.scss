@@ -4,6 +4,7 @@
 
 .my-sidebar {
   width: 240px;
+  flex: 0 0 240px;
   background: $color-white;
   display: flex;
   flex-direction: column;

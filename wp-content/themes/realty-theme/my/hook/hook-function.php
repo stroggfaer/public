@@ -278,18 +278,43 @@ function my_cabinet_ajax_send_message() {
         wp_send_json_error( array( 'message' => 'Текст сообщения должен содержать минимум 10 символов.' ) );
     }
 
-    // Получаем ID хозяина (например, из настроек темы или пост-типа)
-    $host_id = get_option( 'my_cabinet_host_user_id', 1 );
+    // Получаем ID хозяина из запроса или fallback на настройки
+    $property_id = isset( $_POST['property_id'] ) ? absint( $_POST['property_id'] ) : 0;
+    $owner_id = isset( $_POST['owner_id'] ) ? absint( $_POST['owner_id'] ) : 0;
     
-    if ( ! $host_id || ! get_user_by( 'id', $host_id ) ) {
-        wp_send_json_error( array( 'message' => 'Не удалось определить получателя сообщения.' ) );
+    // Если owner_id не передан, берем из настроек (fallback)
+    if ( ! $owner_id ) {
+        $owner_id = get_option( 'my_cabinet_host_user_id', 1 );
+    }
+    
+    // Валидация owner_id
+    if ( ! $owner_id || ! get_user_by( 'id', $owner_id ) ) {
+        wp_send_json_error( array( 'message' => 'Получатель не найден.' ) );
+    }
+    
+    // Получаем booking meta (если есть)
+    $checkin_date = isset( $_POST['checkin_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkin_date'] ) ) : '';
+    $checkout_date = isset( $_POST['checkout_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkout_date'] ) ) : '';
+    $adults = isset( $_POST['adults'] ) ? absint( $_POST['adults'] ) : 0;
+    $children = isset( $_POST['children'] ) ? absint( $_POST['children'] ) : 0;
+    
+    // Валидация дат (если указаны)
+    if ( ! empty( $checkin_date ) && ! empty( $checkout_date ) ) {
+        if ( strtotime( $checkin_date ) >= strtotime( $checkout_date ) ) {
+            wp_send_json_error( array( 'message' => 'Дата заезда должна быть раньше выезда.' ) );
+        }
     }
 
     // Сохраняем сообщение в БД (CPT message)
     $current_user_id = get_current_user_id();
     
-    // Создаем thread_id для группировки диалога с этим пользователем
-    $thread_id = 'thread_' . min( $current_user_id, $host_id ) . '_' . max( $current_user_id, $host_id );
+    // Формируем thread_id по правилу: thread_{property_id}_{sender_id}_{owner_id}
+    if ( $property_id > 0 ) {
+        $thread_id = 'thread_' . $property_id . '_' . $current_user_id . '_' . $owner_id;
+    } else {
+        // Для общих сообщений без property
+        $thread_id = 'thread_0_' . min( $current_user_id, $owner_id ) . '_' . max( $current_user_id, $owner_id );
+    }
     
     $message_id = wp_insert_post( array(
         'post_title'    => $title,
@@ -304,18 +329,49 @@ function my_cabinet_ajax_send_message() {
     }
 
     // Сохраняем мета-данные
-    update_post_meta( $message_id, '_receiver_id', $host_id );
+    update_post_meta( $message_id, '_receiver_id', $owner_id );
     update_post_meta( $message_id, '_sender_id', $current_user_id );
+    update_post_meta( $message_id, '_property_id', $property_id );
     update_post_meta( $message_id, '_is_read', false );
     update_post_meta( $message_id, '_status', 'sent' );
     update_post_meta( $message_id, '_thread_id', $thread_id );
     // Сохраняем роль отправителя (клиент отправляет с публичной страницы)
     update_post_meta( $message_id, '_sender_role', 'client' );
+    
+    // Сохраняем booking meta (если есть)
+    if ( ! empty( $checkin_date ) ) {
+        update_post_meta( $message_id, '_checkin_date', $checkin_date );
+    }
+    if ( ! empty( $checkout_date ) ) {
+        update_post_meta( $message_id, '_checkout_date', $checkout_date );
+    }
+    if ( $adults > 0 ) {
+        update_post_meta( $message_id, '_adults', $adults );
+    }
+    if ( $children > 0 ) {
+        update_post_meta( $message_id, '_children', $children );
+    }
 
     // Отправка уведомления на email
-    $to      = get_the_author_meta( 'user_email', $host_id );
+    $to      = get_the_author_meta( 'user_email', $owner_id );
     $subject = '[' . get_bloginfo( 'name' ) . '] ' . $title;
     $message = "Пользователь " . wp_get_current_user()->display_name . " отправил сообщение:\n\n" . $content;
+    
+    // Добавляем info об объекте и датах в email
+    if ( $property_id > 0 ) {
+        $property_title = get_the_title( $property_id );
+        $message .= "\n\n---\nОбъект: " . $property_title . " (ID: " . $property_id . ")";
+    }
+    if ( ! empty( $checkin_date ) && ! empty( $checkout_date ) ) {
+        $message .= "\nДаты: " . date( 'd.m.Y', strtotime( $checkin_date ) ) . " - " . date( 'd.m.Y', strtotime( $checkout_date ) );
+    }
+    if ( $adults > 0 || $children > 0 ) {
+        $guests = array();
+        if ( $adults > 0 ) $guests[] = $adults . ' взросл.';
+        if ( $children > 0 ) $guests[] = $children . ' дет.';
+        $message .= "\nГости: " . implode( ', ', $guests );
+    }
+    
     $headers = array( 'Content-Type: text/plain; charset=UTF-8', 'Reply-To: ' . wp_get_current_user()->user_email );
 
     $email_sent = wp_mail( $to, $subject, $message, $headers );
@@ -376,14 +432,32 @@ function my_cabinet_ajax_get_messages() {
             $query->the_post();
             
             $message_id = get_the_ID();
+            $property_id = (int) get_post_meta( $message_id, '_property_id', true );
+            $property_title = '';
+            $property_url = '';
+            
+            // Получаем информацию об объекте (если есть)
+            if ( $property_id > 0 ) {
+                $property_title = get_the_title( $property_id );
+                $property_url = get_permalink( $property_id );
+            }
+            
             $messages[] = array(
-                'id'           => $message_id,
-                'title'        => get_the_title(),
-                'content'      => get_the_content(),
-                'date'         => get_the_date( 'd.m.Y H:i' ),
-                'status'       => get_post_meta( $message_id, '_status', true ),
-                'is_read'      => (bool) get_post_meta( $message_id, '_is_read', true ),
-                'notification' => get_post_meta( $message_id, '_notification_status', true ),
+                'id'                => $message_id,
+                'title'             => get_the_title(),
+                'content'           => get_the_content(),
+                'date'              => get_the_date( 'd.m.Y H:i' ),
+                'status'            => get_post_meta( $message_id, '_status', true ),
+                'is_read'           => (bool) get_post_meta( $message_id, '_is_read', true ),
+                'notification'      => get_post_meta( $message_id, '_notification_status', true ),
+                'property_id'       => $property_id,
+                'property_title'    => $property_title,
+                'property_url'      => $property_url,
+                'thread_id'         => get_post_meta( $message_id, '_thread_id', true ),
+                'checkin_date'      => get_post_meta( $message_id, '_checkin_date', true ),
+                'checkout_date'     => get_post_meta( $message_id, '_checkout_date', true ),
+                'adults'            => (int) get_post_meta( $message_id, '_adults', true ),
+                'children'          => (int) get_post_meta( $message_id, '_children', true ),
             );
         }
         wp_reset_postdata();
@@ -395,6 +469,123 @@ function my_cabinet_ajax_get_messages() {
     ) );
 }
 add_action( 'wp_ajax_my_cabinet_get_messages', 'my_cabinet_ajax_get_messages' );
+
+// ============================================================
+// AJAX: Получение списка диалогов пользователя с объектами
+// ============================================================
+
+/**
+ * AJAX: Получение списка диалогов текущего пользователя с информацией об объектах
+ * Используется на dashboard при заходе без GET параметров
+ */
+function my_cabinet_ajax_get_user_threads() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_get_threads_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $current_user_id = get_current_user_id();
+
+    // Получаем все сообщения пользователя
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'meta_query'     => array(
+            'relation' => 'AND',
+            array(
+                'key'     => '_sender_id',
+                'value'   => $current_user_id,
+                'compare' => '=',
+            ),
+            array(
+                'key'     => '_property_id',
+                'value'   => 0,
+                'compare' => '>',
+            ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    );
+
+    $query = new WP_Query( $args );
+    $threads = array();
+    $seen_properties = array();
+
+    if ( $query->have_posts() ) {
+        while ( $query->have_posts() ) {
+            $query->the_post();
+            
+            $message_id = get_the_ID();
+            $property_id = (int) get_post_meta( $message_id, '_property_id', true );
+            $thread_id = get_post_meta( $message_id, '_thread_id', true );
+            
+            // Группируем по property_id (берем первое сообщение для каждого объекта)
+            if ( ! in_array( $property_id, $seen_properties ) ) {
+                $seen_properties[] = $property_id;
+                
+                // Получаем данные объекта
+                $property_post = get_post( $property_id );
+                if ( ! $property_post ) {
+                    continue;
+                }
+                
+                $property_title = $property_post->post_title;
+                $property_thumbnail = get_the_post_thumbnail_url( $property_id, 'thumbnail' );
+                $property_url = get_permalink( $property_id );
+                
+                // Получаем локацию
+                $location_terms = get_the_terms( $property_id, 'location' );
+                $location_name = '';
+                if ( $location_terms && ! is_wp_error( $location_terms ) ) {
+                    $location_name = $location_terms[0]->name;
+                }
+                
+                // Получаем адрес
+                $address = get_post_meta( $property_id, 'address', true );
+                
+                // Получаем booking meta из первого сообщения
+                $checkin_date = get_post_meta( $message_id, '_checkin_date', true );
+                $checkout_date = get_post_meta( $message_id, '_checkout_date', true );
+                
+                // Форматируем даты
+                $dates_display = '';
+                if ( $checkin_date && $checkout_date ) {
+                    $dates_display = date_i18n( 'd.m.Y', strtotime( $checkin_date ) ) . ' - ' . date_i18n( 'd.m.Y', strtotime( $checkout_date ) );
+                }
+                
+                // Определяем статус (пока всегда "Ожидание", можно расширить)
+                $status = 'Ожидание';
+                
+                $threads[] = array(
+                    'property_id'       => $property_id,
+                    'property_title'    => $property_title,
+                    'property_image'    => $property_thumbnail ?: '',
+                    'property_url'      => $property_url,
+                    'location'          => $location_name,
+                    'address'           => $address ?: '',
+                    'checkin_date'      => $checkin_date,
+                    'checkout_date'     => $checkout_date,
+                    'dates_display'     => $dates_display,
+                    'status'            => $status,
+                    'thread_id'         => $thread_id,
+                );
+            }
+        }
+        wp_reset_postdata();
+    }
+
+    wp_send_json_success( array(
+        'threads' => $threads,
+        'total'   => count( $threads ),
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_get_user_threads', 'my_cabinet_ajax_get_user_threads' );
 
 // ============================================================
 // AJAX: Получение списка диалогов (для админки)
@@ -575,6 +766,7 @@ function my_cabinet_ajax_get_dialog() {
             $message_id = get_the_ID();
             $sender_id = get_post_meta( $message_id, '_sender_id', true );
             $receiver_id = get_post_meta( $message_id, '_receiver_id', true );
+            $property_id = (int) get_post_meta( $message_id, '_property_id', true );
             $is_read = (bool) get_post_meta( $message_id, '_is_read', true );
             $sender = get_userdata( $sender_id );
             
@@ -585,6 +777,14 @@ function my_cabinet_ajax_get_dialog() {
                 $sender_role = ( $sender_id == $receiver_id ) ? 'host' : 'client';
             }
             
+            // Получаем info об объекте (если есть)
+            $property_title = '';
+            $property_url = '';
+            if ( $property_id > 0 ) {
+                $property_title = get_the_title( $property_id );
+                $property_url = get_permalink( $property_id );
+            }
+            
             $messages[] = array(
                 'id' => $message_id,
                 'sender_id' => $sender_id,
@@ -593,6 +793,13 @@ function my_cabinet_ajax_get_dialog() {
                 'content' => get_the_content(),
                 'date' => get_the_date( 'd.m.Y H:i:s' ),
                 'is_read' => $is_read,
+                'property_id' => $property_id,
+                'property_title' => $property_title,
+                'property_url' => $property_url,
+                'checkin_date' => get_post_meta( $message_id, '_checkin_date', true ),
+                'checkout_date' => get_post_meta( $message_id, '_checkout_date', true ),
+                'adults' => (int) get_post_meta( $message_id, '_adults', true ),
+                'children' => (int) get_post_meta( $message_id, '_children', true ),
             );
 
             // Отмечаем непрочитанные сообщения как прочитанные
@@ -643,16 +850,59 @@ function my_cabinet_ajax_send_reply() {
     }
 
     // Извлекаем ID пользователя из thread_id
-    // Формат: thread_{user_id}_{host_id}
+    // Формат: thread_{property_id}_{client_id}_{owner_id} или thread_0_{min}_{max}
     $parts = explode( '_', $thread_id );
-    $receiver_id = isset( $parts[1] ) ? absint( $parts[1] ) : 0;
     
-    if ( $receiver_id == get_current_user_id() ) {
-        $receiver_id = isset( $parts[2] ) ? absint( $parts[2] ) : 0;
+    // Определяем format thread_id
+    $property_id = 0;
+    $receiver_id = 0;
+    
+    if ( count( $parts ) >= 4 && $parts[1] !== '0' ) {
+        // Новый format: thread_{property_id}_{client_id}_{owner_id}
+        $property_id = absint( $parts[1] );
+        $client_id = absint( $parts[2] );
+        $owner_id = absint( $parts[3] );
+        
+        // Хост отвечает, значит receiver = client
+        $receiver_id = $client_id;
+    } else {
+        // Старый format: thread_0_{min}_{max} или thread_{min}_{max}
+        $id1 = absint( $parts[1] );
+        $id2 = absint( $parts[2] );
+        
+        if ( $id1 == get_current_user_id() ) {
+            $receiver_id = $id2;
+        } else {
+            $receiver_id = $id1;
+        }
     }
 
     if ( ! $receiver_id ) {
         wp_send_json_error( array( 'message' => 'Не удалось определить получателя.' ) );
+    }
+    
+    // Получаем property_id и booking meta из первого сообщения диалога
+    $first_message_property_id = 0;
+    $first_message_args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+    );
+    
+    $first_query = new WP_Query( $first_message_args );
+    if ( $first_query->have_posts() ) {
+        $first_query->the_post();
+        $first_message_property_id = (int) get_post_meta( get_the_ID(), '_property_id', true );
+        wp_reset_postdata();
     }
 
     // Создаем сообщение
@@ -671,11 +921,23 @@ function my_cabinet_ajax_send_reply() {
 
     update_post_meta( $message_id, '_receiver_id', $receiver_id );
     update_post_meta( $message_id, '_sender_id', $host_id );
+    update_post_meta( $message_id, '_property_id', $first_message_property_id );
     update_post_meta( $message_id, '_is_read', true ); // Хост сам отправил, значит прочитано
     update_post_meta( $message_id, '_status', 'sent' );
     update_post_meta( $message_id, '_thread_id', $thread_id );
     // Сохраняем роль отправителя (хост отвечает из админки)
     update_post_meta( $message_id, '_sender_role', 'host' );
+    
+    // Копируем booking meta из первого сообщения (если есть)
+    if ( $first_message_property_id > 0 ) {
+        $first_message_meta = array( '_checkin_date', '_checkout_date', '_adults', '_children' );
+        foreach ( $first_message_meta as $meta_key ) {
+            $meta_value = get_post_meta( $first_query->post->ID, $meta_key, true );
+            if ( ! empty( $meta_value ) ) {
+                update_post_meta( $message_id, $meta_key, $meta_value );
+            }
+        }
+    }
 
     // Отправляем email пользователю
     $receiver = get_userdata( $receiver_id );

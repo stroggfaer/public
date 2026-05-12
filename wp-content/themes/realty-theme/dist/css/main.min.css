@@ -3969,6 +3969,9 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
  */
 .my-sidebar {
   width: 240px;
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 240px;
+          flex: 0 0 240px;
   background: #fff;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -4481,6 +4484,174 @@ body:has(.my-dashboard-layout) {
 }
 .my-dashboard-layout .my-message-section {
   margin-top: 24px;
+}
+.my-dashboard-layout .my-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  color: var(--color-text);
+}
+.my-dashboard-layout .my-threads-container {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  -webkit-box-shadow: var(--shadow-card);
+          box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.my-dashboard-layout .my-threads-loading {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+.my-dashboard-layout .my-threads-loading .spinning {
+  font-size: 48px;
+  -webkit-animation: spin 1s linear infinite;
+          animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+.my-dashboard-layout .my-threads-loading p {
+  margin: 0;
+  font-size: 14px;
+}
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+.my-dashboard-layout .my-threads-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.my-dashboard-layout .my-threads-table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid var(--color-border);
+}
+.my-dashboard-layout .my-threads-table thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.my-dashboard-layout .my-threads-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  -webkit-transition: background 0.15s;
+  transition: background 0.15s;
+}
+.my-dashboard-layout .my-threads-table tbody tr:last-child {
+  border-bottom: none;
+}
+.my-dashboard-layout .my-threads-table tbody tr:hover {
+  background: #f9fafb;
+}
+.my-dashboard-layout .my-threads-table tbody td {
+  padding: 16px;
+  vertical-align: middle;
+}
+.my-dashboard-layout .my-threads-table .col-preview {
+  width: 80px;
+}
+.my-dashboard-layout .my-threads-table .col-preview .thread-property-img {
+  width: 70px;
+  height: 55px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+.my-dashboard-layout .my-threads-table .col-preview .no-image {
+  font-size: 40px;
+  color: var(--color-text-light);
+}
+.my-dashboard-layout .my-threads-table .col-name .thread-property-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+.my-dashboard-layout .my-threads-table .col-name .thread-property-link:hover {
+  text-decoration: underline;
+}
+.my-dashboard-layout .my-threads-table .col-city {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.my-dashboard-layout .my-threads-table .col-address {
+  font-size: 13px;
+  max-width: 200px;
+}
+.my-dashboard-layout .my-threads-table .col-dates {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.my-dashboard-layout .my-threads-table .col-status .status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-dashboard-layout .my-threads-table .col-status .status-badge.status-ожидание {
+  background: #fff7e6;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.my-dashboard-layout .my-threads-table .col-status .status-badge.status-подтверждено {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-notice-border);
+}
+.my-dashboard-layout .my-threads-table .col-status .status-badge.status-отклонено {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.my-dashboard-layout .my-threads-table .col-actions .thread-view-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.my-dashboard-layout .my-threads-placeholder {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  -webkit-box-shadow: var(--shadow-card);
+          box-shadow: var(--shadow-card);
+  padding: 60px 40px;
+  text-align: center;
+}
+.my-dashboard-layout .my-threads-placeholder .my-empty-icon {
+  font-size: 64px;
+  color: var(--color-text-light);
+  margin-bottom: 16px;
+}
+.my-dashboard-layout .my-threads-placeholder h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+.my-dashboard-layout .my-threads-placeholder p {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 24px;
 }
 
 /**
