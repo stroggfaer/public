@@ -21,6 +21,10 @@ import ru from 'element-plus/es/locale/lang/ru';
 import moment from 'moment';
 import 'moment/locale/ru';
 moment.locale('ru');
+import dayjs from 'dayjs'
+import 'dayjs/locale/ru'
+
+dayjs.locale('ru')
 import {
   ElConfigProvider,
   ElButton,

@@ -412,6 +412,7 @@ function my_cabinet_ajax_get_messages() {
     $current_user_id = get_current_user_id();
     $limit = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 20;
     $offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
+    $property_id = isset( $_POST['property_id'] ) ? absint( $_POST['property_id'] ) : 0;
 
     // Запрос сообщений, где пользователь - отправитель
     $args = array(
@@ -424,8 +425,24 @@ function my_cabinet_ajax_get_messages() {
         'order'          => 'DESC',
     );
 
+    // Фильтрация по property_id (если указан)
+    if ( $property_id > 0 ) {
+        $args['meta_query'] = array(
+            array(
+                'key'     => '_property_id',
+                'value'   => $property_id,
+                'compare' => '=',
+            ),
+        );
+    }
+
     $query = new WP_Query( $args );
     $messages = array();
+
+    // DEBUG: Log the query
+    if ( $property_id > 0 ) {
+        error_log( 'my_cabinet_ajax_get_messages: Filtering by property_id=' . $property_id . ', found=' . $query->found_posts );
+    }
 
     if ( $query->have_posts() ) {
         while ( $query->have_posts() ) {

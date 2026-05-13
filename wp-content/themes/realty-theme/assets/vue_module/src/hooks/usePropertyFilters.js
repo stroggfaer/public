@@ -303,6 +303,23 @@ export default function usePropertyFilters(params = {}) {
         return moment(date).isBefore(moment(), 'day');
     }
 
+    function getDefaultDates() {
+        const today = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+        return {
+            checkin: formatDate(today),
+            checkout: formatDate(nextWeek)
+        };
+    }
+
     return {
         filters,
         priceRangeValue,
@@ -322,5 +339,6 @@ export default function usePropertyFilters(params = {}) {
         validate,
         initFilters,
         initFiltersFromStore,
+        getDefaultDates
     };
 }

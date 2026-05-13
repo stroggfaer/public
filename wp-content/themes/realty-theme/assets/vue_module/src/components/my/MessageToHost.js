@@ -164,6 +164,11 @@ export default {
         body.append('action', 'my_cabinet_get_messages');
         body.append('nonce', props.appData.getMessagesNonce);
         body.append('limit', '20');
+        
+        // Передаем property_id для фильтрации сообщений
+        if (props.appData.propertyId) {
+          body.append('property_id', props.appData.propertyId);
+        }
 
         const response = await fetch(props.appData.ajaxUrl, {
           method: 'POST',

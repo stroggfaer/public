@@ -127,7 +127,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
                 // Формируем URL для перехода в диалог
                 const getThreadUrl = (thread) => {
-                    return `/my/dashboard/?property_id=${thread.property_id}&checkin_date=${thread.checkin_date}&checkout_date=${thread.checkout_date}`;
+                    const params = new URLSearchParams();
+                    params.append('property_id', thread.property_id);
+                    if (thread.checkin_date) params.append('checkin_date', thread.checkin_date);
+                    if (thread.checkout_date) params.append('checkout_date', thread.checkout_date);
+                    return `/my/dashboard/?${params.toString()}`;
                 };
 
                 onMounted(() => {
