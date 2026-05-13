@@ -4107,6 +4107,16 @@ body:has(.my-dashboard-layout) {
   font-weight: 700;
   margin: 0 0 18px;
   color: var(--color-text);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 8px;
+}
+.my-dashboard-layout .my-page-title a {
+  line-height: 0;
 }
 .my-dashboard-layout .my-content-grid {
   display: grid;

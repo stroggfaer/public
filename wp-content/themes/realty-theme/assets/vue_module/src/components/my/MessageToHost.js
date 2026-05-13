@@ -10,28 +10,6 @@ export default {
   },
   template: `
     <div class="my-message-form">
-      <!-- Booking Context Info -->
-      <div v-if="appData.context === 'booking_inquiry' && bookingContext" class="booking-context-info">
-        <div class="booking-context-header">
-          <span class="material-symbols-outlined">calendar_today</span>
-          <h3>Детали бронирования</h3>
-        </div>
-        <div class="booking-context-details">
-          <div class="booking-detail-row">
-            <span class="detail-label">Заезд:</span>
-            <span class="detail-value">{{ bookingContext.checkinDateFormatted }}</span>
-          </div>
-          <div class="booking-detail-row">
-            <span class="detail-label">Выезд:</span>
-            <span class="detail-value">{{ bookingContext.checkoutDateFormatted }}</span>
-          </div>
-          <div class="booking-detail-row" v-if="bookingContext.guestsText">
-            <span class="detail-label">Гости:</span>
-            <span class="detail-value">{{ bookingContext.guestsText }}</span>
-          </div>
-        </div>
-      </div>
-
       <!-- Список отправленных сообщений -->
       <div v-if="messages.length > 0" class="messages-history">
         <h3 class="messages-history-title">История сообщений</h3>
