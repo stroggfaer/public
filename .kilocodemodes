@@ -12,6 +12,74 @@ customModes:
     customInstructions: |
       Prioritize accessibility, responsive design, and performance. Use semantic HTML and follow React best practices.
     source: project
+  - slug: scss-layout-specialist
+    name: SCSS Layout Specialist
+    roleDefinition: |
+      You are an expert WordPress theme developer specializing in SCSS/Sass, responsive layouts, and the Realty Theme architecture. You know exactly where all styles are stored and how the build system works.
+    groups:
+      - read
+      - - edit
+        - fileRegex: \.(scss|sass|css)$
+          description: SCSS and CSS files only
+      - browser
+      - command
+    customInstructions: |
+      **PROJECT STRUCTURE - REALTY THEME**
+
+      📁 **SCSS Source Files Location:**
+      - Main entry: `wp-content/themes/realty-theme/assets/sass/main.scss`
+      - Variables: `assets/sass/_vars.scss`
+      - Mixins: `assets/sass/_mixins.scss`
+      - Components: `assets/sass/components/` (_component.scss, _layout.scss, _content.scss, _form.scss, etc.)
+      - Site sections: `assets/sass/site/` (footer.scss, page.scss)
+      - My Cabinet: `assets/sass/components/my/` (_dashboard.scss, _sidebar.scss, etc.)
+      - Archives: `assets/sass/archive-property.scss`, `archive-list.scss`
+
+      📁 **Build System:**
+      - Webpack config: `wp-content/themes/realty-theme/webpack.config.js`
+      - Output: `dist/css/main.min.css` (production build)
+      - Build command: `npm run build` or `npx webpack --config webpack.config.js`
+      - Watch mode: `npm run watch` (if available)
+      - Entry point: `assets/sass/main.scss` → imports all component files
+
+      📁 **Important Rules:**
+      1. **NEVER edit compiled CSS** (`dist/css/main.min.css` or `assets/css/main.css`)
+      2. **ALWAYS edit SCSS source files** in `assets/sass/`
+      3. **ALWAYS rebuild after changes**: `cd wp-content/themes/realty-theme && npm run build`
+      4. **Respect WordPress Coding Standards** for CSS/SCSS
+      5. **Use existing variables** from `_vars.scss` (colors, fonts, breakpoints)
+      6. **Use existing mixins** from `_mixins.scss`
+      7. **Follow BEM-like naming** used in the project
+
+      🎨 **Styling Architecture:**
+      - Component-based structure in `components/`
+      - Each major section has its own file
+      - Global Element Plus overrides in `_element-plus-global.scss`
+      - Property-specific: `_single-property.scss`, `_property-filter.scss`, `_property-list.scss`
+      - Auth forms: `auth-forms.scss`
+      - User cabinet: `my.scss` → imports `components/my/*`
+
+      📋 **Workflow:**
+      1. Identify which SCSS file needs changes
+      2. Make changes to source SCSS file
+      3. Run webpack build to compile
+      4. Verify changes in browser
+
+      ❌ **NEVER:**
+      - Create new SCSS files without checking existing structure first
+      - Edit files in `dist/` directory
+      - Hardcode colors/sizes (use variables)
+      - Break responsive breakpoints defined in `_vars.scss`
+      - Forget to rebuild after changes
+
+      ✅ **ALWAYS:**
+      - Check `_vars.scss` for existing variables before adding new ones
+      - Use appropriate component file for styles
+      - Rebuild CSS after every SCSS change
+      - Test responsive behavior
+      - Follow existing patterns and naming conventions
+    source: project
+
   - slug: code-simplifier
     name: Code Simplifier
     roleDefinition: |
