@@ -2364,6 +2364,72 @@ article.post .the-content {
   background: #4f4f4f;
 }
 
+.from-input__com {
+  position: relative;
+  width: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+.from-input__com .material-symbols-outlined,
+.from-input__com .icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  color: #a0a0a0;
+  z-index: 2;
+  font-size: 20px;
+  pointer-events: none;
+}
+.from-input__com .input__com {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 40px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333333;
+  background-color: transparent;
+  -webkit-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+  -webkit-box-shadow: none;
+          box-shadow: none;
+  line-height: 1.5;
+}
+.from-input__com .input__com:hover {
+  border-color: #a0a0a0;
+}
+.from-input__com .input__com:focus, .from-input__com .input__com.is-focus {
+  border-color: #2c6e6a;
+  outline: none;
+  -webkit-box-shadow: unset !important;
+          box-shadow: unset !important;
+}
+.from-input__com .input__com::-webkit-input-placeholder {
+  color: #999999;
+}
+.from-input__com .input__com::-moz-placeholder {
+  color: #999999;
+}
+.from-input__com .input__com:-ms-input-placeholder {
+  color: #999999;
+}
+.from-input__com .input__com::-ms-input-placeholder {
+  color: #999999;
+}
+.from-input__com .input__com::placeholder {
+  color: #999999;
+}
+.from-input__com .input__com[readonly] {
+  cursor: pointer;
+}
+
 /**
  * Универсальные стили формы
  */
@@ -2902,6 +2968,27 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   display: none;
 }
 
+.booking-date-picker {
+  border-radius: 8px !important;
+  -webkit-box-shadow: 0 0 0 1px #d0d0d0 inset !important;
+          box-shadow: 0 0 0 1px #d0d0d0 inset !important;
+}
+.booking-date-picker.el-range-editor.el-input__wrapper {
+  padding: 0 12px 0 15px;
+}
+.booking-date-picker .el-range-input {
+  font-size: 14px !important;
+  color: #333333 !important;
+}
+.booking-date-picker.is-active {
+  -webkit-box-shadow: 0 0 0 1px #2c6e6a inset !important;
+          box-shadow: 0 0 0 1px #2c6e6a inset !important;
+}
+.booking-date-picker:hover {
+  -webkit-box-shadow: 0 0 0 1px #a0a0a0 inset !important;
+          box-shadow: 0 0 0 1px #a0a0a0 inset !important;
+}
+
 .input-group__com.guests-group .guests-placeholder {
   cursor: pointer;
 }
@@ -3020,7 +3107,7 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 }
 .input-group__com .input__com {
   display: inline-block;
-  height: 38px;
+  height: 40px;
   padding: 6px 10px;
   border: 1px solid #e5e8f0;
   background-color: #F8F8F8;
@@ -3431,6 +3518,10 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   margin-top: 15px;
   padding-top: 15px;
   border-top: 1px solid rgb(243, 244, 246);
+}
+
+.property-booking-sidebar .booking-dates, .property-booking-sidebar .booking-guests {
+  margin-bottom: 8px;
 }
 
 /**

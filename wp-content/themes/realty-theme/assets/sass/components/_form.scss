@@ -1,3 +1,57 @@
+// Универсальный инпут для форм
+.from-input__com {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+
+    .material-symbols-outlined,
+    .icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0a0a0;
+        z-index: 2;
+        font-size: 20px;
+        pointer-events: none;
+    }
+
+    .input__com {
+        width: 100%;
+        height: 40px;
+        padding: 0 12px 0 40px;
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 400;
+        color: #333333;
+        background-color: transparent;
+        transition: all 0.2s ease;
+        box-shadow: none;
+        line-height: 1.5;
+
+        &:hover {
+            border-color: #a0a0a0;
+        }
+
+        &:focus,
+        &.is-focus {
+            border-color: #2c6e6a;
+            outline: none;
+            box-shadow: unset !important;
+        }
+
+        &::placeholder {
+            color: #999999;
+        }
+
+        &[readonly] {
+            cursor: pointer;
+        }
+    }
+}
+
 /**
  * Универсальные стили формы
  */
@@ -498,6 +552,26 @@ header.site-header {
     }
 }
 
+// Исправление артефактов для Date Picker в сайдбаре
+.booking-date-picker {
+    border-radius: 8px !important;
+    box-shadow: 0 0 0 1px #d0d0d0 inset !important;
+    &.el-range-editor.el-input__wrapper {
+        padding: 0 12px 0 15px;
+    }
+
+    .el-range-input {
+        font-size: 14px !important;
+        color: #333333 !important;
+    }
+    &.is-active {
+        box-shadow: 0 0 0 1px #2c6e6a inset !important;
+    }
+    &:hover {
+        box-shadow: 0 0 0 1px #a0a0a0 inset !important;
+    }
+}
+
 .input-group__com.guests-group {
     .guests-placeholder {
         cursor: pointer;
@@ -601,7 +675,7 @@ header.site-header {
 
     .input__com {
         display: inline-block;
-        height: 38px;
+        height: 40px;
         padding: 6px 10px;
         border: 1px solid #e5e8f0;
         background-color: $color-input-bg;

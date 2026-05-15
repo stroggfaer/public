@@ -80,6 +80,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
             :property-id="appData.propertyId"
             :owner-id="appData.ownerId"
             :config="appData.config"
+            :name-user="'<?php echo $owner_name ? esc_html( $owner_name ) : 'Хост'; ?>'"
         ></property-booking-sidebar>
     </div>
 
@@ -98,23 +99,5 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
         BookingSidebarApp.component('property-booking-sidebar', PropertyBookingSidebar);
         BookingSidebarApp.mount('#property-booking-sidebar');
     </script>
-    <!--./Дата заезда и контакт-->
-    <div class="host-info">
-        <div class="avatar-placeholder">
-            <span class="material-symbols-outlined">person</span>
-        </div>
-        <div class="host-details">
-            <h3>Хозяин: <?php echo $owner_name ? esc_html( $owner_name ) : 'Хост'; ?></h3>
-            <div class="hint">Отвечает в течение часа</div>
-        </div>
-    </div>
 
-    <div class="contact-card-wrap">
-        <button class="button__com outline info-button">Узнать о длительном проживании</button>
-    </div>
-
-    <div class="card-footer">
-        <span class="material-symbols-outlined security-icon">verified_user</span>
-        <p>Личность подтверждена и безопасная переписка</p>
-    </div>
 </div>

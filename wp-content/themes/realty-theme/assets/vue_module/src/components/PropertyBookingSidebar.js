@@ -25,7 +25,11 @@ export default {
     config: {
       type: Object,
       default: () => ({})
-    }
+    },
+    nameUser: {
+      type: String,
+    },
+
   },
 
   template: `
@@ -43,6 +47,7 @@ export default {
           @change="handleDateChange"
           :prefix-icon="{ render: DateRangeIcon }"
           class="booking-date-picker"
+          size="large"
         />
       </div>
 
@@ -55,15 +60,9 @@ export default {
           trigger="click"
         >
           <template #reference>
-            <div class="input-with-icon guests-trigger">
+            <div class="input-with-icon guests-trigger from-input__com">
               <span class="material-symbols-outlined">group</span>
-              <input
-                type="text"
-                readonly
-                :value="guestsDisplayText"
-                class="input__com guests-placeholder"
-                :placeholder="guestsDisplayText"
-              >
+              <input type="text" readonly :value="guestsDisplayText" class="input__com guests-placeholder" :placeholder="guestsDisplayText">
             </div>
           </template>
           
@@ -87,13 +86,27 @@ export default {
         </el-popover>
       </div>
 
-      <!-- Contact Button -->
-      <button 
-        class="button__com contact-button booking-contact-btn" 
-        @click="handleContactHost"
-      >
-        Написать хозяину
-      </button>
+      
+      <!--./Дата заезда и контакт-->
+      <div class="host-info">
+        <div class="avatar-placeholder">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+        <div class="host-details">
+          <h3>Хозяин: {{nameUser}}</h3>
+          <div class="hint">Отвечает в течение часа</div>
+        </div>
+      </div>
+      
+      <div class="contact-card-wrap">
+        <button class="button__com contact-button booking-contact-btn" @click="handleContactHost">Написать хозяину</button>
+        <button class="button__com outline info-button">Узнать о длительном проживании</button>
+      </div>
+
+      <div class="card-footer">
+        <span class="material-symbols-outlined security-icon">verified_user</span>
+        <p>Личность подтверждена и безопасная переписка</p>
+      </div>
     </div>
   `,
 
