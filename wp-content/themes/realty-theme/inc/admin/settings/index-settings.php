@@ -272,6 +272,12 @@ function realty_theme_save_filter_settings() {
         );
         update_option( 'property_price_range', $price_range );
     }
+
+    // Сохраняем текст о длительном проживании
+    if ( isset( $_POST['property_long_stay_info_text'] ) ) {
+        $long_stay_text = wp_kses_post( wp_unslash( $_POST['property_long_stay_info_text'] ) );
+        update_option( 'property_long_stay_info_text', $long_stay_text );
+    }
 }
 
 /**

@@ -69,7 +69,8 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
                 array('name' => 'adults', 'label' => 'Взрослые', 'desc' => 'от 13 лет', 'min' => 1, 'max' => 10),
                 array('name' => 'children', 'label' => 'Дети', 'desc' => 'от 2 до 12 лет', 'min' => 0, 'max' => 8)
             ))
-        )
+        ),
+        'longStayInfoText' => get_option('property_long_stay_info_text', 'Длительное проживание — это возможность арендовать жилье на срок от 1 месяца и более.'),
     );
     $booking_app_data_json = wp_json_encode($booking_app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     ?>
@@ -81,6 +82,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
             :owner-id="appData.ownerId"
             :config="appData.config"
             :name-user="'<?php echo $owner_name ? esc_html( $owner_name ) : 'Хост'; ?>'"
+            :long-stay-info-text="appData.longStayInfoText"
         ></property-booking-sidebar>
     </div>
 

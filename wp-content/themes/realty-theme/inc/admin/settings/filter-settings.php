@@ -45,6 +45,19 @@ function realty_get_price_range() {
     
     return wp_parse_args( $range, $default );
 }
+
+/**
+ * Получает текст о длительном проживании
+ *
+ * @return string Текст о длительном проживании
+ */
+function realty_get_long_stay_info_text() {
+    $default_text = 'Длительное проживание — это возможность арендовать жилье на срок от 1 месяца и более. При долгосрочной аренде вы можете рассчитывать на специальные условия и скидки от хозяина недвижимости. Свяжитесь с хозяином для уточнения деталей.';
+    
+    $text = get_option( 'property_long_stay_info_text', $default_text );
+    
+    return $text;
+}
 ?>
 <h2><?php esc_html_e( 'Настройки фильтрации недвижимости', 'realty-theme' ); ?></h2>
 
@@ -128,6 +141,26 @@ function realty_get_price_range() {
                 </tr>
             </table>
             <p class="description"><?php esc_html_e( 'Настройте минимальную, максимальную цену и шаг изменения цены в фильтре.', 'realty-theme' ); ?></p>
+        </td>
+    </tr>
+</table>
+
+<h3><?php esc_html_e( 'Информационные модальные окна', 'realty-theme' ); ?></h3>
+<table class="form-table" role="presentation">
+    <tr>
+        <th scope="row"><?php esc_html_e( 'Текст о длительном проживании:', 'realty-theme' ); ?></th>
+        <td>
+            <?php
+            $long_stay_text = realty_get_long_stay_info_text();
+            ?>
+            <textarea 
+                name="property_long_stay_info_text" 
+                id="property_long_stay_info_text" 
+                rows="6" 
+                class="large-text"
+                placeholder="<?php esc_attr_e( 'Введите информацию о длительном проживании...', 'realty-theme' ); ?>"
+            ><?php echo esc_textarea( $long_stay_text ); ?></textarea>
+            <p class="description"><?php esc_html_e( 'Этот текст будет отображаться в модальном окне при нажатии кнопки "Узнать о длительном проживании" на странице объекта.', 'realty-theme' ); ?></p>
         </td>
     </tr>
 </table>

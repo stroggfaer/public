@@ -29,6 +29,10 @@ export default {
     nameUser: {
       type: String,
     },
+    longStayInfoText: {
+      type: String,
+      default: 'Длительное проживание — это возможность арендовать жилье на срок от 1 месяца и более.'
+    },
 
   },
 
@@ -100,13 +104,23 @@ export default {
       
       <div class="contact-card-wrap">
         <button class="button__com contact-button booking-contact-btn" @click="handleContactHost">Написать хозяину</button>
-        <button class="button__com outline info-button">Узнать о длительном проживании</button>
+        <button class="button__com outline info-button" @click="handleLongStayInfo">Узнать о длительном проживании</button>
       </div>
 
       <div class="card-footer">
         <span class="material-symbols-outlined security-icon">verified_user</span>
         <p>Личность подтверждена и безопасная переписка</p>
       </div>
+
+      <!-- Модальное окно "Узнать о длительном проживании" -->
+      <el-dialog
+        v-model="longStayDialogVisible"
+        title="Длительное проживание"
+        width="500px"
+        :close-on-click-modal="true"
+      >
+        <div class="long-stay-info" v-html="longStayInfoText"></div>
+      </el-dialog>
     </div>
   `,
 
@@ -139,6 +153,7 @@ export default {
     const guestValues = ref({});
     const guestsPopoverVisible = ref(false);
     const guestsDisplayText = ref('Гости');
+    const longStayDialogVisible = ref(false);
 
     // Получаем конфигурацию гостей из props
     const guestsConfig = computed(() => {
@@ -228,6 +243,11 @@ export default {
       window.location.href = '/my/dashboard/?' + params.toString();
     }
 
+    // Обработка кнопки "Узнать о длительном проживании"
+    function handleLongStayInfo() {
+      longStayDialogVisible.value = true;
+    }
+
     // Watch для обновления текста гостей
     watch(guestValues, () => {
       updateGuestsDisplay();
@@ -254,7 +274,9 @@ export default {
       updateGuestsDisplay,
       initGuestValues,
       handleContactHost,
-      DateRangeIcon
+      DateRangeIcon,
+      longStayDialogVisible,
+      handleLongStayInfo
     };
   }
 };
