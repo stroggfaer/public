@@ -152,6 +152,8 @@ require get_template_directory() . '/inc/admin/shared/const_params.php';
 require get_template_directory() . '/inc/admin/settings/characteristics-settings.php';
 // Метабокс характеристик
 require get_template_directory() . '/inc/admin/settings/property-characteristics-metabox.php';
+// Метабокс длительного проживания
+require get_template_directory() . '/inc/admin/settings/property-long-stay-metabox.php';
 // Подключаем универсальную страницу настроек
 require get_template_directory() . '/inc/admin/settings/index-settings.php';
 // Admin: Messages management

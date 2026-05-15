@@ -70,7 +70,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
                 array('name' => 'children', 'label' => 'Дети', 'desc' => 'от 2 до 12 лет', 'min' => 0, 'max' => 8)
             ))
         ),
-        'longStayInfoText' => get_option('property_long_stay_info_text', 'Длительное проживание — это возможность арендовать жилье на срок от 1 месяца и более.'),
+        'longStayInfoText' => realty_get_property_long_stay_text($pod ? $pod->id() : 0),
     );
     $booking_app_data_json = wp_json_encode($booking_app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     ?>

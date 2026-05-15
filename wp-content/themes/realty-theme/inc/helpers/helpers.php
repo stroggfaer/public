@@ -842,3 +842,26 @@ function location_thumbnail_template(WP_Term $term): string {
 
     return $thumbnail;
 }
+
+/**
+ * Получает текст о длительном проживании для конкретного объекта недвижимости
+ * 
+ * Сначала проверяет индивидуальный текст объекта, затем fallback на дефолтный
+ *
+ * @param int $property_id ID объекта недвижимости
+ * @return string Текст о длительном проживании
+ */
+function realty_get_property_long_stay_text( $property_id = 0 ) {
+    // Проверяем индивидуальный текст объекта
+    if ( $property_id > 0 ) {
+        $property_text = get_post_meta( $property_id, 'property_long_stay_info_text', true );
+        if ( ! empty( $property_text ) ) {
+            return $property_text;
+        }
+    }
+    
+    // Fallback на дефолтный текст из настроек
+    $default_text = 'Длительное проживание — это возможность арендовать жилье на срок от 1 месяца и более. При долгосрочной аренде вы можете рассчитывать на специальные условия и скидки от хозяина недвижимости. Свяжитесь с хозяином для уточнения деталей.';
+    
+    return get_option( 'property_long_stay_info_text', $default_text );
+}
