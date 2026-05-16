@@ -120,6 +120,7 @@ function my_cabinet_enqueue_messages_assets( $hook ) {
             'threadId' => $thread_id,
             'getDialogNonce' => wp_create_nonce( 'my_cabinet_get_dialog_nonce' ),
             'sendReplyNonce' => wp_create_nonce( 'my_cabinet_send_reply_nonce' ),
+            'updateBookingNonce' => wp_create_nonce( 'my_cabinet_update_booking_nonce' ),
         ) );
     }
 }
@@ -294,8 +295,11 @@ function my_cabinet_dialog_view_page( $thread_id ) {
     // Получаем booking meta
     $checkin_date = get_post_meta( $first_message->ID, '_checkin_date', true );
     $checkout_date = get_post_meta( $first_message->ID, '_checkout_date', true );
-    $adults = (int) get_post_meta( $first_message->ID, '_adults', true );
-    $children = (int) get_post_meta( $first_message->ID, '_children', true );
+    
+    // Используем хелпер для получения гостей
+    $guests_data = realty_get_guests_values_from_message( $first_message->ID );
+    $guests_values = $guests_data['values'];
+    $has_guests = $guests_data['has_guests'];
     
     // URL для возврата
     $back_url = admin_url( 'admin.php?page=booking-messages' );
@@ -398,44 +402,124 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                         </div>
                     </div>
                     
-                    <?php if ( $checkin_date || $checkout_date || $adults || $children ) : ?>
+                    <?php if ( $checkin_date || $checkout_date || $has_guests ) : ?>
+                        <?php
+                        // Получаем статус бронирования
+                        $booking_status = get_post_meta( $first_message->ID, '_booking_status', true );
+                        if ( empty( $booking_status ) ) {
+                            $booking_status = 'new';
+                        }
+                        
+                        // Используем хелпер для статусов
+                        $booking_statuses = realty_get_booking_statuses();
+                        $current_status = realty_get_booking_status_data( $booking_status );
+                        
+                        // Форматируем даты для input type="date"
+                        $checkin_date_formatted = $checkin_date ? date( 'Y-m-d', strtotime( $checkin_date ) ) : '';
+                        $checkout_date_formatted = $checkout_date ? date( 'Y-m-d', strtotime( $checkout_date ) ) : '';
+                        ?>
+                        
                         <div class="booking-dates-card">
                             <h3 class="booking-card-title">
                                 <span class="dashicons dashicons-calendar-alt"></span>
                                 Даты бронирования
                             </h3>
                             
-                            <?php if ( $checkin_date ) : ?>
-                                <div class="booking-date-row">
-                                    <span class="date-label">Заезд:</span>
-                                    <span class="date-value"><?php echo date_i18n( 'd F Y', strtotime( $checkin_date ) ); ?></span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if ( $checkout_date ) : ?>
-                                <div class="booking-date-row">
-                                    <span class="date-label">Выезд:</span>
-                                    <span class="date-value"><?php echo date_i18n( 'd F Y', strtotime( $checkout_date ) ); ?></span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if ( $adults > 0 || $children > 0 ) : ?>
-                                <div class="booking-guests-row">
-                                    <span class="guests-label">Гости:</span>
-                                    <span class="guests-value">
-                                        <?php
-                                        $guests_parts = array();
-                                        if ( $adults > 0 ) {
-                                            $guests_parts[] = $adults . ' взросл.';
-                                        }
-                                        if ( $children > 0 ) {
-                                            $guests_parts[] = $children . ' дет.';
-                                        }
-                                        echo esc_html( implode( ', ', $guests_parts ) );
-                                        ?>
+                            <!-- Режим просмотра -->
+                            <div class="booking-view-mode" id="booking-view-mode">
+                                <?php if ( $checkin_date ) : ?>
+                                    <div class="booking-date-row">
+                                        <span class="date-label">Заезд:</span>
+                                        <span class="date-value"><?php echo date_i18n( 'd F Y', strtotime( $checkin_date ) ); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if ( $checkout_date ) : ?>
+                                    <div class="booking-date-row">
+                                        <span class="date-label">Выезд:</span>
+                                        <span class="date-value"><?php echo date_i18n( 'd F Y', strtotime( $checkout_date ) ); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if ( $has_guests ) : ?>
+                                    <div class="booking-guests-row">
+                                        <span class="guests-label">Гости:</span>
+                                        <span class="guests-value">
+                                            <?php
+                                            $guests_parts = array();
+                                            foreach ( $guests_values as $guest_name => $guest_data ) {
+                                                if ( $guest_data['value'] > 0 ) {
+                                                    $guests_parts[] = $guest_data['value'] . ' ' . $guest_data['label'];
+                                                }
+                                            }
+                                            echo esc_html( implode( ', ', $guests_parts ) );
+                                            ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- Статус бронирования -->
+                                <div class="booking-status-row">
+                                    <span class="status-label">Статус:</span>
+                                    <span class="booking-status-badge booking-status--<?php echo esc_attr( $current_status['class'] ); ?>">
+                                        <?php echo esc_html( $current_status['label'] ); ?>
                                     </span>
                                 </div>
-                            <?php endif; ?>
+                                
+                                <div class="booking-edit-actions">
+                                    <button type="button" id="booking-edit-btn" class="button">
+                                        <span class="dashicons dashicons-edit"></span> Редактировать
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Режим редактирования (скрыт по умолчанию) -->
+                            <div class="booking-edit-mode" id="booking-edit-mode" style="display: none;">
+                                <div class="booking-edit-field">
+                                    <label for="edit-checkin-date">Заезд:</label>
+                                    <input type="date" id="edit-checkin-date" name="checkin_date" value="<?php echo esc_attr( $checkin_date_formatted ); ?>" />
+                                </div>
+                                
+                                <div class="booking-edit-field">
+                                    <label for="edit-checkout-date">Выезд:</label>
+                                    <input type="date" id="edit-checkout-date" name="checkout_date" value="<?php echo esc_attr( $checkout_date_formatted ); ?>" />
+                                </div>
+                                
+                                <?php foreach ( $guests_values as $guest_name => $guest_data ) : ?>
+                                <div class="booking-edit-field">
+                                    <label for="edit-<?php echo esc_attr( $guest_name ); ?>"><?php echo esc_html( $guest_data['label'] ); ?>:</label>
+                                    <input type="number" 
+                                           id="edit-<?php echo esc_attr( $guest_name ); ?>" 
+                                           name="<?php echo esc_attr( $guest_name ); ?>" 
+                                           value="<?php echo esc_attr( $guest_data['value'] ); ?>" 
+                                           min="<?php echo esc_attr( $guest_data['min'] ); ?>" 
+                                           max="<?php echo esc_attr( $guest_data['max'] ); ?>" />
+                                </div>
+                                <?php endforeach; ?>
+                                
+                                <div class="booking-edit-field">
+                                    <label for="edit-booking-status">Статус:</label>
+                                    <select id="edit-booking-status" name="booking_status">
+                                        <?php foreach ( $booking_statuses as $status_key => $status_data ) : ?>
+                                            <option value="<?php echo esc_attr( $status_key ); ?>" <?php selected( $booking_status, $status_key ); ?>>
+                                                <?php echo esc_html( $status_data['label'] ); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <div class="booking-edit-actions">
+                                    <button type="button" id="booking-save-btn" class="button button-primary">
+                                        <span class="dashicons dashicons-saved"></span> Сохранить
+                                    </button>
+                                    <button type="button" id="booking-cancel-btn" class="button">
+                                        Отмена
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden поле для message_id -->
+                            <input type="hidden" id="booking-message-id" value="<?php echo esc_attr( $first_message->ID ); ?>" />
                         </div>
                     <?php endif; ?>
                     

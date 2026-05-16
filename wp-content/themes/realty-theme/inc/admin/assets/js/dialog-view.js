@@ -13,6 +13,9 @@
             // Обработчик отправки ответа
             dialogSendBtn?.addEventListener('click', sendReply);
         }
+        
+        // Инициализация редактирования бронирования
+        initBookingEdit();
     });
 
     /**
@@ -126,6 +129,204 @@
             statusSpan.textContent = '✗ Ошибка сети';
             statusSpan.className = 'send-status error';
         }
+    }
+
+    // ============================================================
+    // Редактирование бронирования
+    // ============================================================
+
+    /**
+     * Инициализация редактирования бронирования
+     */
+    function initBookingEdit() {
+        const editBtn = document.getElementById('booking-edit-btn');
+        const saveBtn = document.getElementById('booking-save-btn');
+        const cancelBtn = document.getElementById('booking-cancel-btn');
+        
+        if (editBtn) {
+            editBtn.addEventListener('click', toggleEditMode);
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', saveBookingDetails);
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', cancelEdit);
+        }
+    }
+
+    /**
+     * Переключение в режим редактирования
+     */
+    function toggleEditMode() {
+        const viewMode = document.getElementById('booking-view-mode');
+        const editMode = document.getElementById('booking-edit-mode');
+        
+        if (viewMode && editMode) {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+        }
+    }
+
+    /**
+     * Отмена редактирования
+     */
+    function cancelEdit() {
+        const viewMode = document.getElementById('booking-view-mode');
+        const editMode = document.getElementById('booking-edit-mode');
+        
+        if (viewMode && editMode) {
+            editMode.style.display = 'none';
+            viewMode.style.display = 'block';
+        }
+    }
+
+    /**
+     * Сохранение деталей бронирования
+     */
+    async function saveBookingDetails() {
+        // Подтверждение
+        const confirmed = confirm('Вы точно хотите сохранить изменения?\n\nКлиент увидит обновлённые данные в личном кабинете.');
+        if (!confirmed) {
+            return;
+        }
+        
+        const messageId = document.getElementById('booking-message-id')?.value;
+        const checkinDate = document.getElementById('edit-checkin-date')?.value;
+        const checkoutDate = document.getElementById('edit-checkout-date')?.value;
+        const bookingStatus = document.getElementById('edit-booking-status')?.value;
+        
+        // Собираем все поля гостей динамически
+        const guestFields = document.querySelectorAll('.booking-edit-field input[type="number"][id^="edit-"]');
+        const guestsData = {};
+        guestFields.forEach(field => {
+            const guestName = field.id.replace('edit-', '');
+            guestsData[guestName] = field.value;
+        });
+        
+        if (!messageId) {
+            alert('Ошибка: не найден ID сообщения');
+            return;
+        }
+        
+        // Валидация дат
+        if (checkinDate && checkoutDate && checkinDate >= checkoutDate) {
+            alert('Дата заезда должна быть раньше даты выезда');
+            return;
+        }
+        
+        const saveBtn = document.getElementById('booking-save-btn');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Сохранение...';
+        }
+        
+        const body = new URLSearchParams();
+        body.append('action', 'my_cabinet_update_booking_details');
+        body.append('nonce', dialogViewData.updateBookingNonce);
+        body.append('message_id', messageId);
+        body.append('thread_id', dialogViewData.threadId);
+        body.append('checkin_date', checkinDate);
+        body.append('checkout_date', checkoutDate);
+        body.append('booking_status', bookingStatus);
+        
+        // Добавляем данные гостей динамически
+        for (const [guestName, guestValue] of Object.entries(guestsData)) {
+            body.append(guestName, guestValue);
+        }
+        
+        try {
+            const response = await fetch(dialogViewData.ajaxUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString(),
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Обновляем UI
+                updateBookingUI(result.data);
+                
+                // Показываем уведомление
+                showNotification('Изменения сохранены', 'success');
+                
+                // Возвращаемся в режим просмотра
+                cancelEdit();
+            } else {
+                alert('Ошибка: ' + (result.data.message || 'Не удалось сохранить изменения'));
+            }
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+            alert('Ошибка сети при сохранении');
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<span class="dashicons dashicons-saved"></span> Сохранить';
+            }
+        }
+    }
+
+    /**
+     * Обновление UI после сохранения
+     */
+    function updateBookingUI(data) {
+        // Обновляем даты в режиме просмотра
+        const viewMode = document.getElementById('booking-view-mode');
+        if (!viewMode) return;
+        
+        // Обновляем дату заезда
+        const checkinValue = viewMode.querySelector('.booking-date-row:nth-child(1) .date-value');
+        if (checkinValue && data.checkin_date_formatted) {
+            checkinValue.textContent = data.checkin_date_formatted;
+        }
+        
+        // Обновляем дату выезда
+        const checkoutValue = viewMode.querySelector('.booking-date-row:nth-child(2) .date-value');
+        if (checkoutValue && data.checkout_date_formatted) {
+            checkoutValue.textContent = data.checkout_date_formatted;
+        }
+        
+        // Обновляем гостей динамически
+        const guestsValue = viewMode.querySelector('.booking-guests-row .guests-value');
+        if (guestsValue && data.guests_values && data.guests_labels) {
+            const guestsParts = [];
+            for (const [guestName, guestValue] of Object.entries(data.guests_values)) {
+                if (guestValue > 0) {
+                    guestsParts.push(guestValue + ' ' + data.guests_labels[guestName]);
+                }
+            }
+            guestsValue.textContent = guestsParts.join(', ');
+        }
+        
+        // Обновляем статус
+        const statusBadge = viewMode.querySelector('.booking-status-badge');
+        if (statusBadge && data.status_label && data.status_class) {
+            statusBadge.textContent = data.status_label;
+            // Убираем старые классы статусов и добавляем новый
+            statusBadge.className = 'booking-status-badge booking-status--' + data.status_class;
+        }
+    }
+
+    /**
+     * Показ уведомления
+     */
+    function showNotification(message, type) {
+        // Создаём элемент уведомления
+        const notification = document.createElement('div');
+        notification.className = 'booking-notification booking-notification-' + type;
+        notification.innerHTML = '<span class="dashicons dashicons-yes-alt"></span> ' + message;
+        
+        // Вставляем после заголовка
+        const pageTitle = document.querySelector('.wp-heading-inline');
+        if (pageTitle && pageTitle.parentNode) {
+            pageTitle.parentNode.insertBefore(notification, pageTitle.nextSibling);
+        }
+        
+        // Автоматически скрываем через 3 секунды
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
 })();

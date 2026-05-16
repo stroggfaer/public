@@ -421,7 +421,8 @@
 }
 
 .booking-date-row,
-.booking-guests-row {
+.booking-guests-row,
+.booking-status-row {
     padding: 12px 16px;
     border-bottom: 1px solid #eee;
     display: flex;
@@ -430,12 +431,14 @@
 }
 
 .booking-date-row:last-child,
-.booking-guests-row:last-child {
+.booking-guests-row:last-child,
+.booking-status-row:last-child {
     border-bottom: none;
 }
 
 .date-label,
-.guests-label {
+.guests-label,
+.status-label {
     font-size: 13px;
     color: #666;
     font-weight: 600;
@@ -445,6 +448,126 @@
 .guests-value {
     font-size: 13px;
     color: #333;
+}
+
+/* Бейдж статуса бронирования */
+.booking-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Классы для статусов */
+.booking-status-badge.booking-status--pending {
+    background-color: #f0ad4e;
+}
+
+.booking-status-badge.booking-status--confirmed {
+    background-color: #5cb85c;
+}
+
+.booking-status-badge.booking-status--checkin {
+    background-color: #5bc0de;
+}
+
+.booking-status-badge.booking-status--completed {
+    background-color: #777777;
+}
+
+.booking-status-badge.booking-status--cancelled {
+    background-color: #d9534f;
+}
+
+/* Кнопки редактирования */
+.booking-edit-actions {
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.booking-edit-actions .button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-top: -2px;
+}
+
+/* Поля редактирования */
+.booking-edit-mode {
+    padding: 12px 16px;
+}
+
+.booking-edit-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
+.booking-edit-field label {
+    min-width: 80px;
+    font-size: 13px;
+    color: #666;
+    font-weight: 600;
+}
+
+.booking-edit-field input[type="date"],
+.booking-edit-field input[type="number"],
+.booking-edit-field select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.booking-edit-field input[type="date"]:focus,
+.booking-edit-field input[type="number"]:focus,
+.booking-edit-field select:focus {
+    border-color: #0073aa;
+    outline: none;
+    box-shadow: 0 0 0 1px #0073aa;
+}
+
+.booking-edit-field input[type="number"] {
+    max-width: 80px;
+}
+
+.booking-edit-field select {
+    max-width: 200px;
+}
+
+/* Уведомление */
+.booking-notification {
+    position: fixed;
+    top: 50px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-weight: 600;
+    z-index: 10000;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.booking-notification-success {
+    background: #46b450;
+    color: #fff;
+}
+
+.booking-notification .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 6px;
 }
 
 /* Информационный блок без объекта */

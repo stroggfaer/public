@@ -977,6 +977,161 @@ function my_cabinet_ajax_send_reply() {
 add_action( 'wp_ajax_my_cabinet_send_reply', 'my_cabinet_ajax_send_reply' );
 
 // ============================================================
+// AJAX: Обновление деталей бронирования
+// ============================================================
+
+/**
+ * AJAX: Обновление дат, гостей и статуса бронирования
+ * Только хост (владелец объекта) или админ может редактировать
+ */
+function my_cabinet_ajax_update_booking_details() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_update_booking_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка прав
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => 'Недостаточно прав.' ) );
+    }
+
+    $message_id = isset( $_POST['message_id'] ) ? absint( $_POST['message_id'] ) : 0;
+    $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
+    $checkin_date = isset( $_POST['checkin_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkin_date'] ) ) : '';
+    $checkout_date = isset( $_POST['checkout_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkout_date'] ) ) : '';
+    $booking_status = isset( $_POST['booking_status'] ) ? sanitize_text_field( wp_unslash( $_POST['booking_status'] ) ) : 'new';
+    
+    // Получаем типы гостей из настроек через хелпер
+    $guest_types_config = realty_get_guest_types_config();
+    
+    // Собираем значения гостей из POST с валидацией
+    $guests_values = array();
+    $guests_labels = array();
+    if ( ! empty( $guest_types_config ) && is_array( $guest_types_config ) ) {
+        foreach ( $guest_types_config as $guest_type ) {
+            if ( empty( $guest_type['enabled'] ) ) {
+                continue;
+            }
+            $guest_name = $guest_type['name'];
+            $guest_value = isset( $_POST[ $guest_name ] ) ? absint( $_POST[ $guest_name ] ) : 0;
+            $guest_min = $guest_type['min'] ?? 0;
+            $guest_max = $guest_type['max'] ?? 10;
+            
+            // Валидация
+            $guest_value = max( $guest_min, min( $guest_max, $guest_value ) );
+            
+            $guests_values[ $guest_name ] = $guest_value;
+            $guests_labels[ $guest_name ] = $guest_type['label'];
+        }
+    }
+
+    if ( ! $message_id ) {
+        wp_send_json_error( array( 'message' => 'Не указан ID сообщения.' ) );
+    }
+
+    // Валидация статуса
+    $valid_statuses = array( 'new', 'confirmed', 'checkin', 'completed', 'cancelled' );
+    if ( ! in_array( $booking_status, $valid_statuses, true ) ) {
+        wp_send_json_error( array( 'message' => 'Некорректный статус бронирования.' ) );
+    }
+
+    // Валидация дат
+    if ( ! empty( $checkin_date ) && ! empty( $checkout_date ) ) {
+        if ( strtotime( $checkin_date ) >= strtotime( $checkout_date ) ) {
+            wp_send_json_error( array( 'message' => 'Дата заезда должна быть раньше даты выезда.' ) );
+        }
+    }
+
+    // Проверяем, что сообщение существует
+    $message = get_post( $message_id );
+    if ( ! $message || $message->post_type !== 'message' ) {
+        wp_send_json_error( array( 'message' => 'Сообщение не найдено.' ) );
+    }
+
+    // Обновляем мета-поля
+    if ( ! empty( $checkin_date ) ) {
+        update_post_meta( $message_id, '_checkin_date', $checkin_date );
+    }
+    if ( ! empty( $checkout_date ) ) {
+        update_post_meta( $message_id, '_checkout_date', $checkout_date );
+    }
+    
+    // Обновляем гостей динамически
+    foreach ( $guests_values as $guest_name => $guest_value ) {
+        update_post_meta( $message_id, '_' . $guest_name, $guest_value );
+    }
+    
+    update_post_meta( $message_id, '_booking_status', $booking_status );
+
+    // Если это первое сообщение треда, обновляем и все последующие сообщения
+    // (чтобы статус отображался корректно в ЛК клиента)
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+    );
+
+    $query = new WP_Query( $args );
+    if ( $query->have_posts() ) {
+        $first_message_id = $query->posts[0]->ID;
+        if ( $first_message_id === $message_id ) {
+            // Обновляем статус во всех сообщениях треда
+            while ( $query->have_posts() ) {
+                $query->the_post();
+                update_post_meta( get_the_ID(), '_booking_status', $booking_status );
+                update_post_meta( get_the_ID(), '_checkin_date', $checkin_date );
+                update_post_meta( get_the_ID(), '_checkout_date', $checkout_date );
+                foreach ( $guests_values as $guest_name => $guest_value ) {
+                    update_post_meta( get_the_ID(), '_' . $guest_name, $guest_value );
+                }
+            }
+            wp_reset_postdata();
+        }
+    }
+
+    // Массив статусов для ответа (используем хелпер)
+    $booking_statuses = realty_get_booking_statuses();
+    $status_data = realty_get_booking_status_data( $booking_status );
+
+    // Форматируем ответ
+    $checkin_date_formatted = ! empty( $checkin_date ) ? date_i18n( 'd F Y', strtotime( $checkin_date ) ) : '';
+    $checkout_date_formatted = ! empty( $checkout_date ) ? date_i18n( 'd F Y', strtotime( $checkout_date ) ) : '';
+    
+    // Формируем текст гостей динамически
+    $guests_parts = array();
+    foreach ( $guests_values as $guest_name => $guest_value ) {
+        if ( $guest_value > 0 ) {
+            $guests_parts[] = $guest_value . ' ' . $guests_labels[ $guest_name ];
+        }
+    }
+    $guests_text = implode( ', ', $guests_parts );
+
+    wp_send_json_success( array(
+        'message'              => 'Изменения сохранены',
+        'checkin_date'         => $checkin_date,
+        'checkout_date'        => $checkout_date,
+        'checkin_date_formatted'  => $checkin_date_formatted,
+        'checkout_date_formatted' => $checkout_date_formatted,
+        'guests_values'        => $guests_values,
+        'guests_labels'        => $guests_labels,
+        'guests_text'          => $guests_text,
+        'booking_status'       => $booking_status,
+        'status_label'         => $status_data['label'],
+        'status_class'         => $status_data['class'],
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_update_booking_details', 'my_cabinet_ajax_update_booking_details' );
+
+// ============================================================
 // AJAX: Удаление сообщения
 // ============================================================
 

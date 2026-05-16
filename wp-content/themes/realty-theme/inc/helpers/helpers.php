@@ -865,3 +865,117 @@ function realty_get_property_long_stay_text( $property_id = 0 ) {
     
     return get_option( 'property_long_stay_info_text', $default_text );
 }
+
+
+/**
+ * Получить статусы бронирования
+ * 
+ * Возвращает массив статусов для использования в админке и на фронте
+ * 
+ * @return array Массив статусов с ключами: label, class
+ */
+function realty_get_booking_statuses() {
+    return array(
+        'new'       => array( 'label' => 'Новая заявка', 'class' => 'pending' ),
+        'confirmed' => array( 'label' => 'Подтверждено', 'class' => 'confirmed' ),
+        'checkin'   => array( 'label' => 'Заселение', 'class' => 'checkin' ),
+        'completed' => array( 'label' => 'Завершено', 'class' => 'completed' ),
+        'cancelled' => array( 'label' => 'Отменено', 'class' => 'cancelled' ),
+    );
+}
+
+/**
+ * Получить данные конкретного статуса бронирования
+ * 
+ * @param string $status_key Ключ статуса
+ * @return array Данные статуса или дефолтный
+ */
+function realty_get_booking_status_data( $status_key ) {
+    $statuses = realty_get_booking_statuses();
+    return isset( $statuses[ $status_key ] ) ? $statuses[ $status_key ] : $statuses['new'];
+}
+
+/**
+ * Получить типы гостей из настроек
+ * 
+ * Возвращает массив типов гостей с fallback на дефолтные значения
+ * 
+ * @return array Массив типов гостей
+ */
+function realty_get_guest_types_config() {
+    return get_option( 'property_guest_types', array(
+        array( 'name' => 'adults', 'label' => 'Взрослые', 'desc' => 'от 13 лет', 'min' => 1, 'max' => 10, 'enabled' => true ),
+        array( 'name' => 'children', 'label' => 'Дети', 'desc' => 'от 2 до 12 лет', 'min' => 0, 'max' => 8, 'enabled' => true ),
+    ) );
+}
+
+/**
+ * Получить значения гостей из мета-полей сообщения
+ * 
+ * @param int $message_id ID сообщения
+ * @return array Массив значений гостей [ 'adults' => 2, 'children' => 1, ... ]
+ */
+function realty_get_guests_values_from_message( $message_id ) {
+    $guest_types = realty_get_guest_types_config();
+    $guests_values = array();
+    $guests_labels = array();
+    $has_guests = false;
+    
+    if ( ! empty( $guest_types ) && is_array( $guest_types ) ) {
+        foreach ( $guest_types as $guest_type ) {
+            if ( empty( $guest_type['enabled'] ) ) {
+                continue;
+            }
+            $guest_name = $guest_type['name'];
+            $guest_value = (int) get_post_meta( $message_id, '_' . $guest_name, true );
+            $guests_values[ $guest_name ] = array(
+                'value' => $guest_value,
+                'label' => $guest_type['label'],
+                'min'   => $guest_type['min'] ?? 0,
+                'max'   => $guest_type['max'] ?? 10,
+            );
+            $guests_labels[ $guest_name ] = $guest_type['label'];
+            if ( $guest_value > 0 ) {
+                $has_guests = true;
+            }
+        }
+    }
+    
+    // Legacy support для старых сообщений с adults/children
+    if ( empty( $guests_values ) ) {
+        $adults = (int) get_post_meta( $message_id, '_adults', true );
+        $children = (int) get_post_meta( $message_id, '_children', true );
+        if ( $adults > 0 || $children > 0 ) {
+            $guests_values['adults'] = array( 'value' => $adults, 'label' => 'Взрослые', 'min' => 1, 'max' => 10 );
+            $guests_values['children'] = array( 'value' => $children, 'label' => 'Дети', 'min' => 0, 'max' => 10 );
+            $guests_labels['adults'] = 'Взрослые';
+            $guests_labels['children'] = 'Дети';
+            $has_guests = ( $adults > 0 || $children > 0 );
+        }
+    }
+    
+    return array(
+        'values' => $guests_values,
+        'labels' => $guests_labels,
+        'has_guests' => $has_guests,
+    );
+}
+
+/**
+ * Сформировать текст гостей для отображения
+ * 
+ * @param array $guests_values Массив значений гостей
+ * @param array $guests_labels Массив меток гостей
+ * @return string Текст вида "2 Взрослые, 1 Дети"
+ */
+function realty_format_guests_text( $guests_values, $guests_labels ) {
+    $parts = array();
+    foreach ( $guests_values as $guest_name => $guest_data ) {
+        $value = is_array( $guest_data ) ? ( $guest_data['value'] ?? 0 ) : $guest_data;
+        if ( $value > 0 ) {
+            $label = $guests_labels[ $guest_name ] ?? $guest_data['label'] ?? '';
+            $parts[] = $value . ' ' . $label;
+        }
+    }
+    return implode( ', ', $parts );
+}

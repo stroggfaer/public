@@ -8,6 +8,46 @@ $property_id   = $args['property_id'] ?? 0;
 $checkin_date  = $args['checkin_date'] ?? '';
 $checkout_date = $args['checkout_date'] ?? '';
 $owner_id      = $args['owner_id'] ?? 0;
+$thread_id     = $args['thread_id'] ?? '';
+
+// Если thread_id не передан, формируем его на основе параметров
+if ( empty( $thread_id ) && $property_id > 0 && is_user_logged_in() ) {
+    $current_user_id = get_current_user_id();
+    // Формат: thread_{property_id}_{client_id}_{owner_id}
+    $thread_id = 'thread_' . $property_id . '_' . $current_user_id . '_' . $owner_id;
+}
+
+// Получаем статус бронирования из первого сообщения треда
+$booking_status = 'new';
+if ( ! empty( $thread_id ) ) {
+    $first_message_args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+    );
+    
+    $first_message_query = new WP_Query( $first_message_args );
+    if ( $first_message_query->have_posts() ) {
+        $first_message_query->the_post();
+        $booking_status = get_post_meta( get_the_ID(), '_booking_status', true );
+        if ( empty( $booking_status ) ) {
+            $booking_status = 'new';
+        }
+        wp_reset_postdata();
+    }
+}
+
+// Используем хелпер для статусов
+$current_status = realty_get_booking_status_data( $booking_status );
 
 // Получить данные объекта недвижимости
 $property_data = null;
@@ -77,30 +117,101 @@ if ($checkout_date) {
     }
 }
 
-// Подсчет гостей из URL
+// Подсчет гостей - динамически из настроек
 $guests_text = '';
-$adults = isset($_GET['adults']) ? intval($_GET['adults']) : 0;
-$children = isset($_GET['children']) ? intval($_GET['children']) : 0;
 
-if ($adults > 0 || $children > 0) {
-    $guests_parts = [];
-    if ($adults > 0) {
-        // Склонение для взрослых
-        $cases = [2, 0, 1, 1, 1, 2];
-        $mod = $adults % 100;
-        $case = ($mod > 4 && $mod < 20) ? 2 : $cases[min($mod % 10, 5)];
-        $adults_forms = ['взрослый', 'взрослых', 'взрослых'];
-        $guests_parts[] = $adults . ' ' . $adults_forms[$case];
+// Сначала пробуем получить из мета-полей сообщения (если есть thread_id)
+$guests_from_message = false;
+if ( ! empty( $thread_id ) ) {
+    $first_message_args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+    );
+    
+    $first_message_query = new WP_Query( $first_message_args );
+    if ( $first_message_query->have_posts() ) {
+        $first_message_query->the_post();
+        $message_id = get_the_ID();
+        
+        // Получаем типы гостей из настроек
+        $guest_types_config = get_option( 'property_guest_types', array(
+            array( 'name' => 'adults', 'label' => 'Взрослые', 'enabled' => true ),
+            array( 'name' => 'children', 'label' => 'Дети', 'enabled' => true ),
+        ) );
+        
+        $guests_parts = array();
+        if ( ! empty( $guest_types_config ) && is_array( $guest_types_config ) ) {
+            foreach ( $guest_types_config as $guest_type ) {
+                if ( empty( $guest_type['enabled'] ) ) {
+                    continue;
+                }
+                $guest_name = $guest_type['name'];
+                $guest_value = (int) get_post_meta( $message_id, '_' . $guest_name, true );
+                
+                if ( $guest_value > 0 ) {
+                    $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+                }
+            }
+        }
+        
+        if ( ! empty( $guests_parts ) ) {
+            $guests_text = implode( ', ', $guests_parts );
+            $guests_from_message = true;
+        }
+        
+        wp_reset_postdata();
     }
-    if ($children > 0) {
-        // Склонение для детей
-        $cases = [2, 0, 1, 1, 1, 2];
-        $mod = $children % 100;
-        $case = ($mod > 4 && $mod < 20) ? 2 : $cases[min($mod % 10, 5)];
-        $children_forms = ['ребенок', 'ребенка', 'детей'];
-        $guests_parts[] = $children . ' ' . $children_forms[$case];
+}
+
+// Fallback: гости из URL (для нового запроса)
+if ( ! $guests_from_message ) {
+    // Получаем типы гостей из настроек
+    $guest_types_config = get_option( 'property_guest_types', array(
+        array( 'name' => 'adults', 'label' => 'Взрослые', 'enabled' => true ),
+        array( 'name' => 'children', 'label' => 'Дети', 'enabled' => true ),
+    ) );
+    
+    $guests_parts = array();
+    if ( ! empty( $guest_types_config ) && is_array( $guest_types_config ) ) {
+        foreach ( $guest_types_config as $guest_type ) {
+            if ( empty( $guest_type['enabled'] ) ) {
+                continue;
+            }
+            $guest_name = $guest_type['name'];
+            $guest_value = isset( $_GET[ $guest_name ] ) ? intval( $_GET[ $guest_name ] ) : 0;
+            
+            if ( $guest_value > 0 ) {
+                $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+            }
+        }
     }
-    $guests_text = implode(', ', $guests_parts);
+    
+    // Legacy fallback для старых URL с adults/children
+    if ( empty( $guests_parts ) ) {
+        $adults = isset($_GET['adults']) ? intval($_GET['adults']) : 0;
+        $children = isset($_GET['children']) ? intval($_GET['children']) : 0;
+        
+        if ($adults > 0 || $children > 0) {
+            if ($adults > 0) {
+                $guests_parts[] = $adults . ' Взрослые';
+            }
+            if ($children > 0) {
+                $guests_parts[] = $children . ' Дети';
+            }
+        }
+    }
+    
+    $guests_text = implode( ', ', $guests_parts );
 }
 ?>
 
@@ -127,8 +238,8 @@ if ($adults > 0 || $children > 0) {
                 <span><?php echo esc_html($property_location); ?></span>
             </div>
             <?php endif; ?>
-            <div class="my-booking-status my-booking-status--pending">
-                <?php esc_html_e('ОЖИДАНИЕ ЗАЕЗДА', 'realty-theme'); ?>
+            <div class="my-booking-status my-booking-status--<?php echo esc_attr( $current_status['class'] ); ?>">
+                <?php echo esc_html( strtoupper( $current_status['label'] ) ); ?>
             </div>
         </div>
         <?php if ($property_price) : ?>
