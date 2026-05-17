@@ -190,7 +190,7 @@
             return;
         }
         
-        const messageId = document.getElementById('booking-message-id')?.value;
+        const bookingId = document.getElementById('booking-message-id')?.value;
         const checkinDate = document.getElementById('edit-checkin-date')?.value;
         const checkoutDate = document.getElementById('edit-checkout-date')?.value;
         const bookingStatus = document.getElementById('edit-booking-status')?.value;
@@ -203,8 +203,8 @@
             guestsData[guestName] = field.value;
         });
         
-        if (!messageId) {
-            alert('Ошибка: не найден ID сообщения');
+        if (!bookingId) {
+            alert('Ошибка: не найден ID бронирования');
             return;
         }
         
@@ -223,7 +223,7 @@
         const body = new URLSearchParams();
         body.append('action', 'my_cabinet_update_booking_details');
         body.append('nonce', dialogViewData.updateBookingNonce);
-        body.append('message_id', messageId);
+        body.append('booking_id', bookingId);
         body.append('thread_id', dialogViewData.threadId);
         body.append('checkin_date', checkinDate);
         body.append('checkout_date', checkoutDate);
