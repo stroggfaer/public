@@ -719,8 +719,35 @@ function my_cabinet_ajax_get_user_threads() {
                     $dates_display = date_i18n( 'd.m.Y', strtotime( $checkin_date ) ) . ' - ' . date_i18n( 'd.m.Y', strtotime( $checkout_date ) );
                 }
                 
-                // Определяем статус (пока всегда "Ожидание", можно расширить)
-                $status = 'Ожидание';
+                // Получаем booking_request по thread_id
+                $status = 'new'; // статус по умолчанию
+                if ( ! empty( $thread_id ) ) {
+                    $booking_query = new WP_Query( array(
+                        'post_type'      => 'booking_request',
+                        'post_status'    => 'publish',
+                        'posts_per_page' => 1,
+                        'meta_query'     => array(
+                            array(
+                                'key'     => '_thread_id',
+                                'value'   => $thread_id,
+                                'compare' => '=',
+                            ),
+                        ),
+                    ) );
+                    
+                    if ( $booking_query->have_posts() ) {
+                        $booking_id = $booking_query->posts[0]->ID;
+                        $booking_status = get_post_meta( $booking_id, '_status', true );
+                        if ( ! empty( $booking_status ) ) {
+                            $status = $booking_status;
+                        }
+                        wp_reset_postdata();
+                    }
+                }
+                
+                // Получаем метку статуса
+                $booking_statuses = realty_get_booking_statuses();
+                $status_label = isset( $booking_statuses[ $status ] ) ? $booking_statuses[ $status ]['label'] : 'Новая заявка';
                 
                 $threads[] = array(
                     'property_id'       => $property_id,
@@ -732,7 +759,8 @@ function my_cabinet_ajax_get_user_threads() {
                     'checkin_date'      => $checkin_date,
                     'checkout_date'     => $checkout_date,
                     'dates_display'     => $dates_display,
-                    'status'            => $status,
+                    'status'            => $status_label,
+                    'status_key'        => $status,
                     'thread_id'         => $thread_id,
                 );
             }

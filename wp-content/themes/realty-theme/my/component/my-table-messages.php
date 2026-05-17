@@ -54,7 +54,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <td class="col-address">{{ thread.address || '—' }}</td>
                 <td class="col-dates">{{ thread.dates_display || '—' }}</td>
                 <td class="col-status">
-                                            <span :class="['status-badge', 'status-' + thread.status.toLowerCase()]">
+                                            <span :class="['status-badge', 'status-' + thread.status_key]">
                                                 {{ thread.status }}
                                             </span>
                 </td>
