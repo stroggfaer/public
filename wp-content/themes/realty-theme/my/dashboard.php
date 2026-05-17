@@ -93,7 +93,11 @@ if ( $has_booking_context && is_user_logged_in() ) {
             error_log( '[dashboard] Booking found: booking_id=' . $booking_id . ', status=' . $booking_status );
             wp_reset_postdata();
         } else {
-            error_log( '[dashboard] No booking_request found' );
+            // booking_request НЕ НАЙДЕН (удален админом)
+            // Редирект на /my/dashboard/ без параметров
+            error_log( '[dashboard] No booking_request found, redirecting to clean dashboard' );
+            wp_safe_redirect( '/my/dashboard/' );
+            exit;
         }
     }
 }

@@ -68,8 +68,27 @@ function realty_get_or_create_booking_request( $property_id, $client_id, $owner_
     // Подготовка guests_count из session_data
     $guests_count_json = '';
     if ( isset( $session_data['guests_count'] ) && ! empty( $session_data['guests_count'] ) ) {
-        $guests_count_json = $session_data['guests_count'];
-        error_log( '[booking-functions] guests_count from SESSION (raw): ' . $guests_count_json );
+        $guests_count_raw = $session_data['guests_count'];
+        error_log( '[booking-functions] guests_count from SESSION (raw): ' . print_r( $guests_count_raw, true ) );
+        
+        // Если это уже строка JSON
+        if ( is_string( $guests_count_raw ) ) {
+            // Декодируем чтобы проверить валидность
+            $decoded = json_decode( $guests_count_raw, true );
+            error_log( '[booking-functions] guests_count decoded type: ' . gettype( $decoded ) );
+            
+            if ( is_array( $decoded ) ) {
+                // Сохраняем как есть (уже валидный JSON)
+                $guests_count_json = $guests_count_raw;
+                error_log( '[booking-functions] guests_count is valid JSON, saving as-is' );
+            } else {
+                error_log( '[booking-functions] DECODE FAILED - invalid JSON string' );
+            }
+        } elseif ( is_array( $guests_count_raw ) ) {
+            // Уже массив — кодируем
+            $guests_count_json = wp_json_encode( $guests_count_raw );
+            error_log( '[booking-functions] guests_count was array, encoded: ' . $guests_count_json );
+        }
     } elseif ( isset( $session_data['adults'] ) || isset( $session_data['children'] ) ) {
         // Legacy support
         $guests = array();
@@ -83,6 +102,8 @@ function realty_get_or_create_booking_request( $property_id, $client_id, $owner_
         if ( $guests_count_json ) {
             error_log( '[booking-functions] guests_count from legacy: ' . $guests_count_json );
         }
+    } else {
+        error_log( '[booking-functions] guests_count NOT FOUND in session_data' );
     }
 
     // Сохраняем мета-поля
@@ -90,16 +111,21 @@ function realty_get_or_create_booking_request( $property_id, $client_id, $owner_
     update_post_meta( $booking_id, '_owner_id', $owner_id );
     update_post_meta( $booking_id, '_client_id', $client_id );
     update_post_meta( $booking_id, '_thread_id', $new_thread_id );
-    update_post_meta( $booking_id, '_checkin_date', $session_data['checkin_date'] ?? '' );
+    update_post_meta( $booking_id, '_checkin_date', sanitize_text_field( $session_data['checkin_date'] ?? '' ) );
+    update_post_meta( $booking_id, '_checkout_date', sanitize_text_field( $session_data['checkout_date'] ?? '' ) );
     update_post_meta( $booking_id, '_guests_count', $guests_count_json );
     update_post_meta( $booking_id, '_status', 'new' );
     update_post_meta( $booking_id, '_created_date', current_time( 'mysql' ) );
     
     // DEBUG: Проверяем что сохранилось
     $saved_guests = get_post_meta( $booking_id, '_guests_count', true );
+    $saved_checkin = get_post_meta( $booking_id, '_checkin_date', true );
+    $saved_checkout = get_post_meta( $booking_id, '_checkout_date', true );
     error_log( '[booking-functions] Created booking_id=' . $booking_id );
     error_log( '[booking-functions] guests_count to save: ' . $guests_count_json );
     error_log( '[booking-functions] guests_count saved in DB: ' . $saved_guests );
+    error_log( '[booking-functions] checkin_date saved: ' . $saved_checkin );
+    error_log( '[booking-functions] checkout_date saved: ' . $saved_checkout );
 
     return array(
         'booking_id' => $booking_id,

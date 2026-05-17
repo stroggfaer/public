@@ -1017,12 +1017,17 @@ function realty_start_booking_session( $property_id, $data = array() ) {
         return false;
     }
 
+    // guests_count уже приходит как JSON-строка, не кодируем повторно
+    $guests_count_raw = isset( $data['guests_count'] ) ? $data['guests_count'] : '';
+    // Если это массив (legacy), кодируем в JSON
+    $guests_count_value = is_array( $guests_count_raw ) ? wp_json_encode( $guests_count_raw ) : $guests_count_raw;
+    
     $session_data = array(
-        'property_id'  => absint( $property_id ),
-        'checkin_date' => isset( $data['checkin_date'] ) ? sanitize_text_field( $data['checkin_date'] ) : '',
+        'property_id'   => absint( $property_id ),
+        'checkin_date'  => isset( $data['checkin_date'] ) ? sanitize_text_field( $data['checkin_date'] ) : '',
         'checkout_date' => isset( $data['checkout_date'] ) ? sanitize_text_field( $data['checkout_date'] ) : '',
-        'guests_count' => isset( $data['guests_count'] ) ? wp_json_encode( $data['guests_count'] ) : '',
-        'created_at'   => time(),
+        'guests_count'  => $guests_count_value,
+        'created_at'    => time(),
     );
 
     // Пробуем сохранить в SESSION
