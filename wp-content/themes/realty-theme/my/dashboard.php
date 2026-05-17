@@ -60,8 +60,8 @@ if ( $has_booking_context && is_user_logged_in() ) {
         }
         // Если активной заявки нет — SESSION будет использован при создании
     } else {
-        // SESSION нет — ищем активную или последнюю заявку
-        error_log( '[dashboard] No SESSION, looking for booking_request: property_id=' . $property_id . ', client_id=' . $current_user_id );
+        // SESSION нет — ищем только НОВУЮ заявку (статус 'new')
+        error_log( '[dashboard] No SESSION, looking for NEW booking_request: property_id=' . $property_id . ', client_id=' . $current_user_id );
         $booking_query = new WP_Query( array(
             'post_type'      => 'booking_request',
             'post_status'    => 'publish',
@@ -76,9 +76,8 @@ if ( $has_booking_context && is_user_logged_in() ) {
                     'value' => $current_user_id,
                 ),
                 array(
-                    'key'     => '_status',
-                    'value'   => array( 'new', 'in_progress', 'confirmed' ),
-                    'compare' => 'IN',
+                    'key'   => '_status',
+                    'value' => 'new',
                 ),
             ),
             'orderby'        => 'date',
@@ -145,6 +144,7 @@ if ( $has_booking_context && is_user_logged_in() ) {
                             'owner_id'      => $owner_id,
                             'booking_id'    => $booking_id,
                             'booking_status' => $booking_status,
+                            'thread_id'     => $thread_id,
                             'context'       => 'booking_inquiry'
                         )); 
                         ?>
