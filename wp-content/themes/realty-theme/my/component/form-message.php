@@ -15,8 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Получаем параметры из $args
 $property_id   = $args['property_id'] ?? 0;
 $owner_id      = $args['owner_id'] ?? 0;
-$checkin_date  = $args['checkin_date'] ?? '';
-$checkout_date = $args['checkout_date'] ?? '';
+$booking_id    = $args['booking_id'] ?? 0;
+$booking_status = $args['booking_status'] ?? 'new';
 $context       = $args['context'] ?? 'general';
 
 $app_data = array(
@@ -25,8 +25,8 @@ $app_data = array(
     'getMessagesNonce'   => wp_create_nonce( 'my_cabinet_get_messages_nonce' ),
     'propertyId'         => $property_id,
     'ownerId'            => $owner_id,
-    'checkinDate'        => $checkin_date,
-    'checkoutDate'       => $checkout_date,
+    'bookingId'          => $booking_id,
+    'bookingStatus'      => $booking_status,
     'context'            => $context
 );
 

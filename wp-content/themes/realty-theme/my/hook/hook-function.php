@@ -248,6 +248,81 @@ function my_cabinet_disable_admin_bar_for_subscribers() {
 }
 add_action( 'after_setup_theme', 'my_cabinet_disable_admin_bar_for_subscribers' );
 
+// ============================================================
+// AJAX: Создание SESSION для бронирования
+// ============================================================
+
+/**
+ * AJAX: Создание временной сессии при нажатии "Написать хозяину"
+ * 
+ * Вызывается с страницы недвижимости перед редиректом в ЛК.
+ * Сохраняет параметры бронирования в SESSION (24 часа TTL).
+ */
+function my_cabinet_create_booking_session() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_booking_session_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $property_id  = isset( $_POST['property_id'] ) ? absint( $_POST['property_id'] ) : 0;
+    $checkin_date = isset( $_POST['checkin_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkin_date'] ) ) : '';
+    $checkout_date = isset( $_POST['checkout_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkout_date'] ) ) : '';
+    $guests_count = isset( $_POST['guests_count'] ) ? wp_unslash( $_POST['guests_count'] ) : '';
+
+    if ( ! $property_id ) {
+        wp_send_json_error( array( 'message' => 'Не указан объект недвижимости.' ) );
+    }
+
+    // DEBUG
+    error_log( '[create_booking_session] Creating: property_id=' . $property_id . ', checkin=' . $checkin_date . ', guests=' . $guests_count );
+
+    // Валидация дат (если указаны)
+    if ( ! empty( $checkin_date ) && ! empty( $checkout_date ) ) {
+        if ( strtotime( $checkin_date ) >= strtotime( $checkout_date ) ) {
+            wp_send_json_error( array( 'message' => 'Дата заезда должна быть раньше даты выезда.' ) );
+        }
+    }
+
+    // Валидация guests_count (JSON)
+    if ( ! empty( $guests_count ) ) {
+        $decoded = json_decode( $guests_count, true );
+        if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $decoded ) ) {
+            wp_send_json_error( array( 'message' => 'Некорректный формат данных о гостях.' ) );
+        }
+    }
+
+    // Создаем SESSION
+    $session_data = array(
+        'checkin_date'  => $checkin_date,
+        'checkout_date' => $checkout_date,
+        'guests_count'  => $guests_count,
+    );
+
+    $success = realty_start_booking_session( $property_id, $session_data );
+
+    if ( ! $success ) {
+        wp_send_json_error( array( 'message' => 'Не удалось сохранить параметры бронирования.' ) );
+    }
+
+    // Возвращаем URL для редиректа (только property_id, без дат и гостей)
+    $dashboard_url = home_url( '/my/dashboard/?property_id=' . $property_id );
+
+    wp_send_json_success( array(
+        'message'   => 'Параметры сохранены.',
+        'redirect'  => $dashboard_url,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_create_booking_session', 'my_cabinet_create_booking_session' );
+
+// ============================================================
+// AJAX: Отправка сообщения хозяину
+// ============================================================
+
 /**
  * AJAX: Отправка сообщения хозяину
  */
@@ -291,29 +366,92 @@ function my_cabinet_ajax_send_message() {
     if ( ! $owner_id || ! get_user_by( 'id', $owner_id ) ) {
         wp_send_json_error( array( 'message' => 'Получатель не найден.' ) );
     }
+
+    $current_user_id = get_current_user_id();
+
+    // ============================================================
+    // НОВАЯ ЛОГИКА: Работа с booking_request и SESSION
+    // ============================================================
     
-    // Получаем booking meta (если есть)
+    $booking_request_id = 0;
+    $thread_id = '';
+    $booking_status = 'new';
+
+    // Проверяем SESSION (если есть — берем параметры оттуда)
+    $session_data = realty_get_booking_session();
+    error_log( '[send_message] SESSION: ' . ( $session_data ? 'FOUND' : 'NOT FOUND' ) );
+    
+    if ( $property_id > 0 ) {
+        // Получаем или создаем booking_request
+        error_log( '[send_message] Calling realty_get_or_create_booking_request: property_id=' . $property_id . ', client_id=' . $current_user_id . ', owner_id=' . $owner_id );
+        $booking_result = realty_get_or_create_booking_request(
+            $property_id,
+            $current_user_id,
+            $owner_id,
+            $session_data ? $session_data : array()
+        );
+
+        if ( $booking_result ) {
+            $booking_request_id = $booking_result['booking_id'];
+            $thread_id = $booking_result['thread_id'];
+            $booking_status = $booking_result['status'];
+            error_log( '[send_message] booking_result: booking_id=' . $booking_request_id . ', action=' . $booking_result['action'] . ', status=' . $booking_status );
+
+            // Если заявка создана впервые ИЛИ есть SESSION — обновляем параметры
+            if ( $booking_result['action'] === 'created' && $session_data ) {
+                error_log( '[send_message] booking created, data already saved' );
+            } elseif ( $booking_result['action'] === 'existing' && $session_data ) {
+                error_log( '[send_message] booking exists, updating from SESSION' );
+                // Уже существует — обновляем из SESSION (если status=new)
+                $update_result = realty_update_booking_from_session( $booking_request_id, $session_data );
+                error_log( '[send_message] update result: ' . ( $update_result ? 'SUCCESS' : 'FAILED' ) );
+            }
+
+            // Очищаем SESSION (больше не нужен)
+            if ( $session_data ) {
+                realty_clear_booking_session();
+                error_log( '[send_message] SESSION cleared' );
+            }
+        } else {
+            error_log( '[send_message] realty_get_or_create_booking_request returned FALSE' );
+        }
+    }
+
+    // Fallback: если booking_request не создан, используем старую логику thread_id
+    if ( empty( $thread_id ) ) {
+        if ( $property_id > 0 ) {
+            $thread_id = 'thread_' . $property_id . '_' . $current_user_id . '_' . $owner_id;
+        } else {
+            $thread_id = 'thread_0_' . min( $current_user_id, $owner_id ) . '_' . max( $current_user_id, $owner_id );
+        }
+    }
+
+    // Получаем booking meta (если переданы напрямую или из booking_request)
     $checkin_date = isset( $_POST['checkin_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkin_date'] ) ) : '';
     $checkout_date = isset( $_POST['checkout_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkout_date'] ) ) : '';
     $adults = isset( $_POST['adults'] ) ? absint( $_POST['adults'] ) : 0;
     $children = isset( $_POST['children'] ) ? absint( $_POST['children'] ) : 0;
+
+    // Если есть booking_request, читаем данные из него (приоритет)
+    if ( $booking_request_id > 0 ) {
+        $booking_data = realty_get_booking_data( $booking_request_id );
+        if ( $booking_data ) {
+            $checkin_date = $booking_data['checkin_date'] ?: $checkin_date;
+            $checkout_date = $booking_data['checkout_date'] ?: $checkout_date;
+            
+            // Декодируем guests_count
+            if ( ! empty( $booking_data['guests_count'] ) && is_array( $booking_data['guests_count'] ) ) {
+                $adults = $booking_data['guests_count']['adults'] ?? $adults;
+                $children = $booking_data['guests_count']['children'] ?? $children;
+            }
+        }
+    }
     
     // Валидация дат (если указаны)
     if ( ! empty( $checkin_date ) && ! empty( $checkout_date ) ) {
         if ( strtotime( $checkin_date ) >= strtotime( $checkout_date ) ) {
             wp_send_json_error( array( 'message' => 'Дата заезда должна быть раньше выезда.' ) );
         }
-    }
-
-    // Сохраняем сообщение в БД (CPT message)
-    $current_user_id = get_current_user_id();
-    
-    // Формируем thread_id по правилу: thread_{property_id}_{sender_id}_{owner_id}
-    if ( $property_id > 0 ) {
-        $thread_id = 'thread_' . $property_id . '_' . $current_user_id . '_' . $owner_id;
-    } else {
-        // Для общих сообщений без property
-        $thread_id = 'thread_0_' . min( $current_user_id, $owner_id ) . '_' . max( $current_user_id, $owner_id );
     }
     
     $message_id = wp_insert_post( array(
@@ -337,6 +475,11 @@ function my_cabinet_ajax_send_message() {
     update_post_meta( $message_id, '_thread_id', $thread_id );
     // Сохраняем роль отправителя (клиент отправляет с публичной страницы)
     update_post_meta( $message_id, '_sender_role', 'client' );
+    
+    // Привязка к booking_request (если создана)
+    if ( $booking_request_id > 0 ) {
+        update_post_meta( $message_id, '_booking_request_id', $booking_request_id );
+    }
     
     // Сохраняем booking meta (если есть)
     if ( ! empty( $checkin_date ) ) {
@@ -624,71 +767,91 @@ function my_cabinet_ajax_get_dialogs() {
     $filters = array(
         'date' => isset( $_POST['filter_date'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_date'] ) ) : '',
         'login' => isset( $_POST['filter_login'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_login'] ) ) : '',
-        'subject' => isset( $_POST['filter_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_subject'] ) ) : '',
+        'status' => isset( $_POST['filter_status'] ) ? sanitize_text_field( wp_unslash( $_POST['filter_status'] ) ) : '',
     );
 
-    // Получаем все сообщения
+    // Получаем все booking_requests
     $args = array(
-        'post_type'      => 'message',
+        'post_type'      => 'booking_request',
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'orderby'        => 'date',
         'order'          => 'DESC',
     );
 
+    // Фильтр по статусу
+    if ( ! empty( $filters['status'] ) ) {
+        $args['meta_query'] = array(
+            array(
+                'key'     => '_status',
+                'value'   => $filters['status'],
+                'compare' => '=',
+            ),
+        );
+    }
+
     $query = new WP_Query( $args );
     $dialogs = array();
 
     // DEBUG логирование
-    error_log( 'my_cabinet_ajax_get_dialogs: Found ' . $query->found_posts . ' messages' );
+    error_log( 'my_cabinet_ajax_get_dialogs: Found ' . $query->found_posts . ' booking_requests' );
 
     if ( $query->have_posts() ) {
         while ( $query->have_posts() ) {
             $query->the_post();
             
-            $message_id = get_the_ID();
-            $sender_id = get_post_meta( $message_id, '_sender_id', true );
-            $receiver_id = get_post_meta( $message_id, '_receiver_id', true );
-            $thread_id = get_post_meta( $message_id, '_thread_id', true );
+            $booking_id = get_the_ID();
+            $property_id = (int) get_post_meta( $booking_id, '_property_id', true );
+            $client_id = (int) get_post_meta( $booking_id, '_client_id', true );
+            $thread_id = get_post_meta( $booking_id, '_thread_id', true );
+            $status = get_post_meta( $booking_id, '_status', true ) ?: 'new';
+            $checkin_date = get_post_meta( $booking_id, '_checkin_date', true );
+            $checkout_date = get_post_meta( $booking_id, '_checkout_date', true );
             
-            // Fallback: если thread_id пустой, создаем его
-            if ( empty( $thread_id ) && $sender_id && $receiver_id ) {
-                $thread_id = 'thread_' . min( $sender_id, $receiver_id ) . '_' . max( $sender_id, $receiver_id );
-                // Сохраняем для будущих запросов
-                update_post_meta( $message_id, '_thread_id', $thread_id );
+            // Декодируем гостей
+            $guests_count_raw = get_post_meta( $booking_id, '_guests_count', true );
+            $guests_count = ! empty( $guests_count_raw ) ? json_decode( $guests_count_raw, true ) : array();
+            if ( ! is_array( $guests_count ) ) {
+                $guests_count = array();
             }
             
-            $is_read = (bool) get_post_meta( $message_id, '_is_read', true );
-            $host_id = get_current_user_id();
-            
-            // Группируем по thread_id
-            if ( ! isset( $dialogs[ $thread_id ] ) ) {
-                $sender = get_userdata( $sender_id );
-                
-                // Считаем непрочитанные ТОЛЬКО если:
-                // 1. Хозяин - получатель (receiver_id = host_id)
-                // 2. Отправитель НЕ хозяин (sender_id != host_id)
-                // 3. Сообщение не прочитано
-                $is_unread = ( $receiver_id == $host_id && $sender_id != $host_id && ! $is_read ) ? 1 : 0;
-                
-                $dialogs[ $thread_id ] = array(
-                    'thread_id' => $thread_id,
-                    'sender_id' => $sender_id,
-                    'sender_login' => $sender ? $sender->user_login : 'Unknown',
-                    'sender_name' => $sender ? $sender->display_name : 'Unknown',
-                    'sender_email' => $sender ? $sender->user_email : '',
-                    'last_message_id' => $message_id,
-                    'last_subject' => get_the_title(),
-                    'last_date' => get_the_date( 'd.m.Y H:i:s' ),
-                    'last_timestamp' => get_the_date( 'U' ),
-                    'unread_count' => $is_unread,
-                );
-            } else {
-                // Обновляем счетчик непрочитанных (только от клиентов)
-                if ( $receiver_id == $host_id && $sender_id != $host_id && ! $is_read ) {
-                    $dialogs[ $thread_id ]['unread_count']++;
+            // Форматируем текст гостей
+            $guests_text = '';
+            if ( ! empty( $guests_count ) ) {
+                $guest_types_config = realty_get_guest_types_config();
+                $guests_parts = array();
+                foreach ( $guest_types_config as $guest_type ) {
+                    if ( empty( $guest_type['enabled'] ) ) continue;
+                    $guest_name = $guest_type['name'];
+                    $guest_value = $guests_count[ $guest_name ] ?? 0;
+                    if ( $guest_value > 0 ) {
+                        $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+                    }
                 }
+                $guests_text = implode( ', ', $guests_parts );
             }
+            
+            // Получаем данные клиента
+            $client = get_userdata( $client_id );
+            
+            // Получаем название недвижимости
+            $property_title = $property_id > 0 ? get_the_title( $property_id ) : '—';
+            
+            $dialogs[ $thread_id ] = array(
+                'booking_id'    => $booking_id,
+                'thread_id'     => $thread_id,
+                'client_id'     => $client_id,
+                'client_login'  => $client ? $client->user_login : 'Unknown',
+                'client_name'   => $client ? $client->display_name : 'Unknown',
+                'property_id'   => $property_id,
+                'property_title' => $property_title,
+                'checkin_date'  => $checkin_date,
+                'checkout_date' => $checkout_date,
+                'guests_text'   => $guests_text,
+                'status'        => $status,
+                'created_date'  => get_the_date( 'd.m.Y H:i' ),
+                'timestamp'     => get_the_date( 'U' ),
+            );
         }
         wp_reset_postdata();
     }
@@ -701,7 +864,7 @@ function my_cabinet_ajax_get_dialogs() {
         } else {
             $filter_date = date( 'd.m.Y', $date_timestamp );
             $dialogs = array_filter( $dialogs, function( $dialog ) use ( $filter_date ) {
-                return strpos( $dialog['last_date'], $filter_date ) === 0;
+                return strpos( $dialog['created_date'], $filter_date ) === 0;
             } );
         }
     }
@@ -709,21 +872,15 @@ function my_cabinet_ajax_get_dialogs() {
     if ( $filters['login'] ) {
         $login_lower = strtolower( $filters['login'] );
         $dialogs = array_filter( $dialogs, function( $dialog ) use ( $login_lower ) {
-            return strpos( strtolower( $dialog['sender_login'] ), $login_lower ) !== false ||
-                   strpos( strtolower( $dialog['sender_email'] ), $login_lower ) !== false;
+            return strpos( strtolower( $dialog['client_login'] ), $login_lower ) !== false;
         } );
     }
 
-    if ( $filters['subject'] ) {
-        $subject_lower = strtolower( $filters['subject'] );
-        $dialogs = array_filter( $dialogs, function( $dialog ) use ( $subject_lower ) {
-            return strpos( strtolower( $dialog['last_subject'] ), $subject_lower ) !== false;
-        } );
-    }
+    // Фильтр по subject удален - теперь фильтр по status
 
     // Сортируем по дате (новые первые)
     usort( $dialogs, function( $a, $b ) {
-        return $b['last_timestamp'] - $a['last_timestamp'];
+        return $b['timestamp'] - $a['timestamp'];
     } );
 
     // DEBUG логирование
@@ -1185,6 +1342,74 @@ function my_cabinet_ajax_delete_dialog() {
     ) );
 }
 add_action( 'wp_ajax_my_cabinet_delete_dialog', 'my_cabinet_ajax_delete_dialog' );
+
+/**
+ * AJAX: Удаление заявки на бронирование
+ */
+function my_cabinet_ajax_delete_booking() {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_delete_message_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности.' ) );
+    }
+
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( array( 'message' => 'Недостаточно прав.' ) );
+    }
+
+    $booking_id = isset( $_POST['booking_id'] ) ? absint( $_POST['booking_id'] ) : 0;
+
+    if ( empty( $booking_id ) ) {
+        wp_send_json_error( array( 'message' => 'Не указан booking_id.' ) );
+    }
+
+    // Проверяем что это booking_request
+    $post_type = get_post_type( $booking_id );
+    if ( $post_type !== 'booking_request' ) {
+        wp_send_json_error( array( 'message' => 'Неверный тип записи.' ) );
+    }
+
+    // Получаем thread_id для удаления связанных сообщений
+    $thread_id = get_post_meta( $booking_id, '_thread_id', true );
+
+    // Удаляем booking_request
+    $result = wp_delete_post( $booking_id, true );
+
+    if ( $result ) {
+        $messages_deleted = 0;
+        
+        // Если есть thread_id, удаляем все связанные сообщения
+        if ( ! empty( $thread_id ) ) {
+            $message_query = new WP_Query( array(
+                'post_type'      => 'message',
+                'post_status'    => 'publish',
+                'posts_per_page' => -1,
+                'meta_query'     => array(
+                    array(
+                        'key'     => '_thread_id',
+                        'value'   => $thread_id,
+                        'compare' => '=',
+                    ),
+                ),
+            ) );
+
+            if ( $message_query->have_posts() ) {
+                while ( $message_query->have_posts() ) {
+                    $message_query->the_post();
+                    wp_delete_post( get_the_ID(), true );
+                    $messages_deleted++;
+                }
+                wp_reset_postdata();
+            }
+        }
+
+        wp_send_json_success( array(
+            'message' => 'Заявка на бронирование удалена.' . ( $messages_deleted > 0 ? " (Удалено сообщений: {$messages_deleted})" : '' ),
+            'messages_deleted' => $messages_deleted,
+        ) );
+    } else {
+        wp_send_json_error( array( 'message' => 'Ошибка при удалении.' ) );
+    }
+}
+add_action( 'wp_ajax_my_cabinet_delete_booking', 'my_cabinet_ajax_delete_booking' );
 
 // ============================================================
 // AJAX: Вход

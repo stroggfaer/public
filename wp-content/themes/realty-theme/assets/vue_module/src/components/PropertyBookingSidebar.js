@@ -14,6 +14,10 @@ export default {
       type: String,
       required: true
     },
+    bookingSessionNonce: {
+      type: String,
+      required: true
+    },
     propertyId: {
       type: Number,
       required: true
@@ -210,7 +214,7 @@ export default {
     }
 
     // Обработка кнопки "Написать хозяину"
-    function handleContactHost() {
+    async function handleContactHost() {
       // Валидация дат
       if (!checkinDate.value || !checkoutDate.value) {
         alert('Пожалуйста, выберите даты заезда и выезда');
@@ -224,23 +228,58 @@ export default {
         return;
       }
 
-      // Сбор параметров
-      const params = new URLSearchParams({
-        property_id: props.propertyId,
-        owner_id: props.ownerId,
-        checkin_date: checkinDate.value,
-        checkout_date: checkoutDate.value
-      });
-
-      // Добавляем гостей
+      // Формируем guests_count JSON
+      const guestsCount = {};
       Object.entries(guestValues.value).forEach(([name, val]) => {
         if (val > 0) {
-          params.append(name, val);
+          guestsCount[name] = val;
         }
       });
 
-      // Редирект на dashboard
-      window.location.href = '/my/dashboard/?' + params.toString();
+      // Показываем загрузку
+      const contactBtn = document.querySelector('.booking-contact-btn');
+      if (contactBtn) {
+        contactBtn.disabled = true;
+        contactBtn.textContent = 'Сохранение...';
+      }
+
+      try {
+        // Сначала создаем SESSION через AJAX
+        const body = new URLSearchParams();
+        body.append('action', 'my_cabinet_create_booking_session');
+        body.append('nonce', props.bookingSessionNonce);
+        body.append('property_id', props.propertyId);
+        body.append('owner_id', props.ownerId);
+        body.append('checkin_date', checkinDate.value);
+        body.append('checkout_date', checkoutDate.value);
+        body.append('guests_count', JSON.stringify(guestsCount));
+
+        const response = await fetch(props.ajaxUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.data.redirect) {
+          // Редирект на dashboard (только property_id, без дат и гостей)
+          window.location.href = result.data.redirect;
+        } else {
+          alert(result.data.message || 'Ошибка сохранения параметров');
+          if (contactBtn) {
+            contactBtn.disabled = false;
+            contactBtn.textContent = 'Написать хозяину';
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка создания сессии:', error);
+        alert('Произошла ошибка. Попробуйте еще раз.');
+        if (contactBtn) {
+          contactBtn.disabled = false;
+          contactBtn.textContent = 'Написать хозяину';
+        }
+      }
     }
 
     // Обработка кнопки "Узнать о длительном проживании"

@@ -4,7 +4,7 @@
  */
 
 /* ============================================
-   Таблица диалогов
+   Таблица заявок на бронирование
    ============================================ */
 
 .messages-table-wrapper {
@@ -40,13 +40,39 @@
     background: #f5f5f5;
 }
 
-.messages-table tr.unread {
-    background: #fff8e1;
+/* Статусы бронирования */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
     font-weight: 600;
+    text-transform: uppercase;
 }
 
-.messages-table tr.unread td {
-    font-weight: 600;
+.status-new {
+    background: #0073aa;
+    color: #fff;
+}
+
+.status-in_progress {
+    background: #f0b849;
+    color: #fff;
+}
+
+.status-confirmed {
+    background: #46b450;
+    color: #fff;
+}
+
+.status-completed {
+    background: #82878c;
+    color: #fff;
+}
+
+.status-cancelled {
+    background: #dc3232;
+    color: #fff;
 }
 
 /* Ссылка на логин */

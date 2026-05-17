@@ -3,62 +3,226 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// ============================================================
+// АРХИТЕКТУРА: Booking Request — единственный источник данных
+// ============================================================
+// Все данные (даты, статус, гости) читаются из booking_request.
+// SESSION имеет приоритет только если status = "new".
+// URL параметры НЕ влияют на отображение данных бронирования.
+// Единственный параметр: property_id (для поиска booking_request).
+// ============================================================
+
 // Получаем параметры из $args
-$property_id   = $args['property_id'] ?? 0;
-$checkin_date  = $args['checkin_date'] ?? '';
-$checkout_date = $args['checkout_date'] ?? '';
-$owner_id      = $args['owner_id'] ?? 0;
-$thread_id     = $args['thread_id'] ?? '';
+$property_id    = $args['property_id'] ?? 0;
+$owner_id       = $args['owner_id'] ?? 0;
+$args_booking_id = $args['booking_id'] ?? 0;
+$args_status    = $args['booking_status'] ?? 'new';
+$args_thread_id = $args['thread_id'] ?? '';
 
-// Если thread_id не передан, формируем его на основе параметров
-if ( empty( $thread_id ) && $property_id > 0 && is_user_logged_in() ) {
-    $current_user_id = get_current_user_id();
-    // Формат: thread_{property_id}_{client_id}_{owner_id}
-    $thread_id = 'thread_' . $property_id . '_' . $current_user_id . '_' . $owner_id;
-}
+// Инициализируем переменные с дефолтными значениями
+$booking_status = $args_status;
+$checkin_date   = '';
+$checkout_date  = '';
+$guests_text    = '';
+$booking_found  = false;
+$booking_id     = $args_booking_id;
+$thread_id      = $args_thread_id;
 
-// Получаем статус бронирования из первого сообщения треда
-$booking_status = 'new';
-if ( ! empty( $thread_id ) ) {
-    $first_message_args = array(
-        'post_type'      => 'message',
-        'post_status'    => 'publish',
-        'posts_per_page' => 1,
-        'meta_query'     => array(
-            array(
-                'key'     => '_thread_id',
-                'value'   => $thread_id,
-                'compare' => '=',
-            ),
-        ),
-        'orderby'        => 'date',
-        'order'          => 'ASC',
-    );
-    
-    $first_message_query = new WP_Query( $first_message_args );
-    if ( $first_message_query->have_posts() ) {
-        $first_message_query->the_post();
-        $booking_status = get_post_meta( get_the_ID(), '_booking_status', true );
-        if ( empty( $booking_status ) ) {
-            $booking_status = 'new';
+// ============================================================
+// ШАГ 1: Если booking_id передан из dashboard — используем его
+// ============================================================
+if ( $booking_id > 0 ) {
+    error_log( '[card-booking] ШАГ 1: booking_id=' . $booking_id . ' передан из dashboard' );
+    $booking_data = realty_get_booking_data( $booking_id );
+
+    if ( $booking_data ) {
+        error_log( '[card-booking] booking_data found: ' . print_r( $booking_data, true ) );
+        $booking_found = true;
+        $booking_status = $booking_data['status'];
+        $checkin_date = $booking_data['checkin_date'];
+        $checkout_date = $booking_data['checkout_date'];
+        $thread_id = $booking_data['thread_id'];
+        
+        // Проверяем есть ли данные в booking_request
+        $booking_has_data = ! empty( $checkin_date ) || ! empty( $booking_data['guests_count'] );
+        
+        // Форматируем гостей
+        $guests_count = $booking_data['guests_count'];
+        if ( ! empty( $guests_count ) && is_array( $guests_count ) ) {
+            $guests_parts = array();
+            $guest_types_config = realty_get_guest_types_config();
+            
+            foreach ( $guest_types_config as $guest_type ) {
+                if ( empty( $guest_type['enabled'] ) ) {
+                    continue;
+                }
+                $guest_name = $guest_type['name'];
+                $guest_value = $guests_count[ $guest_name ] ?? 0;
+                
+                if ( $guest_value > 0 ) {
+                    $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+                }
+            }
+            
+            $guests_text = implode( ', ', $guests_parts );
         }
-        wp_reset_postdata();
+        
+        // Если guests_count пустой И статус=new И есть SESSION — используем SESSION для гостей
+        error_log( '[card-booking] Проверка SESSION для гостей: guests_count=' . ( empty( $booking_data['guests_count'] ) ? 'EMPTY' : 'HAS_DATA' ) . ', status=' . $booking_status );
+        
+        if ( empty( $booking_data['guests_count'] ) && $booking_status === 'new' ) {
+            $session_data = realty_get_booking_session();
+            error_log( '[card-booking] SESSION для гостей: ' . ( $session_data ? 'FOUND' : 'NOT FOUND' ) );
+            
+            if ( $session_data && $session_data['property_id'] == $property_id ) {
+                error_log( '[card-booking] guests_count пустой, используем SESSION для гостей' );
+                error_log( '[card-booking] SESSION guests_count raw: ' . ( $session_data['guests_count'] ?? 'NOT SET' ) );
+                
+                // Обновляем даты из SESSION если они пустые
+                if ( empty( $checkin_date ) ) {
+                    $checkin_date = $session_data['checkin_date'] ?? '';
+                }
+                if ( empty( $checkout_date ) ) {
+                    $checkout_date = $session_data['checkout_date'] ?? '';
+                }
+                
+                // Декодируем гостей из SESSION
+                $guests_count = array();
+                if ( ! empty( $session_data['guests_count'] ) ) {
+                    $decoded = $session_data['guests_count'];
+                    if ( is_string( $decoded ) ) {
+                        $decoded = json_decode( $decoded, true );
+                    }
+                    if ( is_string( $decoded ) ) {
+                        $decoded = json_decode( $decoded, true );
+                    }
+                    if ( is_array( $decoded ) ) {
+                        $guests_count = $decoded;
+                    }
+                }
+                
+                // Форматируем текст гостей
+                $guests_parts = array();
+                $guest_types_config = realty_get_guest_types_config();
+                foreach ( $guest_types_config as $guest_type ) {
+                    if ( empty( $guest_type['enabled'] ) ) {
+                        continue;
+                    }
+                    $guest_name = $guest_type['name'];
+                    $guest_value = $guests_count[ $guest_name ] ?? 0;
+                    if ( $guest_value > 0 ) {
+                        $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+                    }
+                }
+                $guests_text = implode( ', ', $guests_parts );
+                error_log( '[card-booking] Guests from SESSION: ' . $guests_text );
+            }
+        }
     }
 }
 
-// Используем хелпер для статусов
+// ============================================================
+// ШАГ 2: Если booking_id нет — проверяем SESSION
+// ============================================================
+if ( ! $booking_found ) {
+    $session_data = realty_get_booking_session();
+    
+    // DEBUG: Логируем SESSION
+    error_log( '[card-booking] SESSION check: args[property_id]=' . $property_id . ', session=' . ( $session_data ? 'FOUND' : 'EMPTY' ) );
+    if ( $session_data ) {
+        error_log( '[card-booking] SESSION data: ' . print_r( $session_data, true ) );
+        error_log( '[card-booking] SESSION property_id match? ' . ( $session_data['property_id'] == $property_id ? 'YES' : 'NO - SESSION has ' . $session_data['property_id'] ) );
+    }
+    
+    if ( $session_data && $property_id > 0 ) {
+        // SESSION есть — используем его данные (для status=new)
+        // ВАЖНО: Проверяем что property_id из URL совпадает с SESSION
+        if ( $session_data['property_id'] != $property_id ) {
+            error_log( '[card-booking] property_id mismatch! URL=' . $property_id . ', SESSION=' . $session_data['property_id'] . ' - SKIPPING' );
+        } else {
+            error_log( '[card-booking] Using SESSION data for property_id=' . $property_id );
+        $booking_status = 'new';
+        $checkin_date = $session_data['checkin_date'] ?? '';
+        $checkout_date = $session_data['checkout_date'] ?? '';
+        
+        // Декодируем гостей
+        $guests_count = array();
+        if ( ! empty( $session_data['guests_count'] ) ) {
+            // guests_count может быть уже JSON строкой или массивом
+            $decoded = $session_data['guests_count'];
+            
+            // Если строка - декодируем JSON
+            if ( is_string( $decoded ) ) {
+                $decoded = json_decode( $decoded, true );
+            }
+            
+            // Если все еще строка (двойное кодирование) - декодируем еще раз
+            if ( is_string( $decoded ) ) {
+                $decoded = json_decode( $decoded, true );
+            }
+            
+            if ( is_array( $decoded ) ) {
+                $guests_count = $decoded;
+            }
+            
+            error_log( '[card-booking] Guests decoded: ' . print_r( $guests_count, true ) );
+        }
+        
+        // Fallback на legacy
+        if ( empty( $guests_count ) ) {
+            error_log( '[card-booking] Guests empty, trying legacy format' );
+            if ( isset( $session_data['adults'] ) && $session_data['adults'] > 0 ) {
+                $guests_count['adults'] = $session_data['adults'];
+            }
+            if ( isset( $session_data['children'] ) && $session_data['children'] > 0 ) {
+                $guests_count['children'] = $session_data['children'];
+            }
+        }
+        
+        // Форматируем текст гостей
+        $guests_parts = array();
+        $guest_types_config = realty_get_guest_types_config();
+        
+        foreach ( $guest_types_config as $guest_type ) {
+            if ( empty( $guest_type['enabled'] ) ) {
+                continue;
+            }
+            $guest_name = $guest_type['name'];
+            $guest_value = $guests_count[ $guest_name ] ?? 0;
+            
+            if ( $guest_value > 0 ) {
+                $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+            }
+        }
+        
+        $guests_text = implode( ', ', $guests_parts );
+        } // close else (property_id match)
+    } // close if (session_data && property_id > 0)
+}
+
+// ============================================================
+// ШАГ 3: Если сообщение НЕ найдено — карточка пустая
+// ============================================================
+// Это нормальная ситуация:
+// - Клиент ещё не отправил сообщение
+// - Или thread_id не соответствует ни одному сообщению
+// Карточка покажет только информацию об объекте (property),
+// но не покажет даты/статус/гостей (так как их нет в БД).
+// ============================================================
+
+// Получаем статус из хелпера
 $current_status = realty_get_booking_status_data( $booking_status );
 
-// Получить данные объекта недвижимости
+// Получить данные объекта недвижимости (всегда из БД)
 $property_data = null;
 $property_price = '';
 $property_location = '';
 $property_rating = '4.9';
 $property_reviews = '128';
 
-if ($property_id) {
-    $property = get_post($property_id);
-    if ($property) {
+if ( $property_id > 0 ) {
+    $property = get_post( $property_id );
+    if ( $property ) {
         // Цена
         $price_raw = get_post_meta($property_id, 'price', true);
         if ($price_raw) {
@@ -94,124 +258,28 @@ if ($property_id) {
     }
 }
 
-// Форматирование дат на русском
-$formatted_checkin = '';
+// ============================================================
+// ШАГ 4: Форматируем даты для отображения
+// ============================================================
+$formatted_checkin  = '';
 $formatted_checkout = '';
 
-if ($checkin_date) {
-    $timestamp = strtotime($checkin_date);
-    if ($timestamp) {
-        setlocale(LC_TIME, 'ru_RU.UTF-8');
-        $formatted_checkin = strftime('%d %B, %Y', $timestamp);
-        // Убираем точку в конце месяца
-        $formatted_checkin = rtrim($formatted_checkin, '.');
+if ( $checkin_date ) {
+    $timestamp = strtotime( $checkin_date );
+    if ( $timestamp ) {
+        setlocale( LC_TIME, 'ru_RU.UTF-8' );
+        $formatted_checkin = strftime( '%d %B, %Y', $timestamp );
+        $formatted_checkin = rtrim( $formatted_checkin, '.' );
     }
 }
 
-if ($checkout_date) {
-    $timestamp = strtotime($checkout_date);
-    if ($timestamp) {
-        setlocale(LC_TIME, 'ru_RU.UTF-8');
-        $formatted_checkout = strftime('%d %B, %Y', $timestamp);
-        $formatted_checkout = rtrim($formatted_checkout, '.');
+if ( $checkout_date ) {
+    $timestamp = strtotime( $checkout_date );
+    if ( $timestamp ) {
+        setlocale( LC_TIME, 'ru_RU.UTF-8' );
+        $formatted_checkout = strftime( '%d %B, %Y', $timestamp );
+        $formatted_checkout = rtrim( $formatted_checkout, '.' );
     }
-}
-
-// Подсчет гостей - динамически из настроек
-$guests_text = '';
-
-// Сначала пробуем получить из мета-полей сообщения (если есть thread_id)
-$guests_from_message = false;
-if ( ! empty( $thread_id ) ) {
-    $first_message_args = array(
-        'post_type'      => 'message',
-        'post_status'    => 'publish',
-        'posts_per_page' => 1,
-        'meta_query'     => array(
-            array(
-                'key'     => '_thread_id',
-                'value'   => $thread_id,
-                'compare' => '=',
-            ),
-        ),
-        'orderby'        => 'date',
-        'order'          => 'ASC',
-    );
-    
-    $first_message_query = new WP_Query( $first_message_args );
-    if ( $first_message_query->have_posts() ) {
-        $first_message_query->the_post();
-        $message_id = get_the_ID();
-        
-        // Получаем типы гостей из настроек
-        $guest_types_config = get_option( 'property_guest_types', array(
-            array( 'name' => 'adults', 'label' => 'Взрослые', 'enabled' => true ),
-            array( 'name' => 'children', 'label' => 'Дети', 'enabled' => true ),
-        ) );
-        
-        $guests_parts = array();
-        if ( ! empty( $guest_types_config ) && is_array( $guest_types_config ) ) {
-            foreach ( $guest_types_config as $guest_type ) {
-                if ( empty( $guest_type['enabled'] ) ) {
-                    continue;
-                }
-                $guest_name = $guest_type['name'];
-                $guest_value = (int) get_post_meta( $message_id, '_' . $guest_name, true );
-                
-                if ( $guest_value > 0 ) {
-                    $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
-                }
-            }
-        }
-        
-        if ( ! empty( $guests_parts ) ) {
-            $guests_text = implode( ', ', $guests_parts );
-            $guests_from_message = true;
-        }
-        
-        wp_reset_postdata();
-    }
-}
-
-// Fallback: гости из URL (для нового запроса)
-if ( ! $guests_from_message ) {
-    // Получаем типы гостей из настроек
-    $guest_types_config = get_option( 'property_guest_types', array(
-        array( 'name' => 'adults', 'label' => 'Взрослые', 'enabled' => true ),
-        array( 'name' => 'children', 'label' => 'Дети', 'enabled' => true ),
-    ) );
-    
-    $guests_parts = array();
-    if ( ! empty( $guest_types_config ) && is_array( $guest_types_config ) ) {
-        foreach ( $guest_types_config as $guest_type ) {
-            if ( empty( $guest_type['enabled'] ) ) {
-                continue;
-            }
-            $guest_name = $guest_type['name'];
-            $guest_value = isset( $_GET[ $guest_name ] ) ? intval( $_GET[ $guest_name ] ) : 0;
-            
-            if ( $guest_value > 0 ) {
-                $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
-            }
-        }
-    }
-    
-    // Legacy fallback для старых URL с adults/children
-    if ( empty( $guests_parts ) ) {
-        $adults = isset($_GET['adults']) ? intval($_GET['adults']) : 0;
-        $children = isset($_GET['children']) ? intval($_GET['children']) : 0;
-        
-        if ($adults > 0 || $children > 0) {
-            if ($adults > 0) {
-                $guests_parts[] = $adults . ' Взрослые';
-            }
-            if ($children > 0) {
-                $guests_parts[] = $children . ' Дети';
-            }
-        }
-    }
-    
-    $guests_text = implode( ', ', $guests_parts );
 }
 ?>
 

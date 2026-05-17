@@ -41,7 +41,7 @@
     });
 
     /**
-     * Загрузка списка диалогов
+     * Загрузка списка заявок на бронирование
      */
     async function loadDialogs() {
         // Проверка наличия данных от PHP
@@ -53,20 +53,20 @@
 
         const filterDateEl = document.getElementById('filter-date');
         const filterLoginEl = document.getElementById('filter-login');
-        const filterSubjectEl = document.getElementById('filter-subject');
+        const filterStatusEl = document.getElementById('filter-status');
 
-        if (!filterDateEl || !filterLoginEl || !filterSubjectEl) {
+        if (!filterDateEl || !filterLoginEl) {
             console.error('Не найдены элементы фильтров');
             return;
         }
 
         const filterDate = filterDateEl.value;
         const filterLogin = filterLoginEl.value;
-        const filterSubject = filterSubjectEl.value;
+        const filterStatus = filterStatusEl ? filterStatusEl.value : '';
 
         const messagesList = document.getElementById('messages-list');
         if (messagesList) {
-            messagesList.innerHTML = '<tr><td colspan="6" class="loading">Загрузка сообщений...</td></tr>';
+            messagesList.innerHTML = '<tr><td colspan="8" class="loading">Загрузка заявок...</td></tr>';
         }
 
         const body = new URLSearchParams();
@@ -74,12 +74,12 @@
         body.append('nonce', myCabinetMessagesData.getDialogsNonce);
         body.append('filter_date', filterDate);
         body.append('filter_login', filterLogin);
-        body.append('filter_subject', filterSubject);
+        body.append('filter_status', document.getElementById('filter-status')?.value || '');
 
         console.log('Отправка AJAX запроса:', {
             url: myCabinetMessagesData.ajaxUrl,
             action: 'my_cabinet_get_dialogs',
-            filters: { filterDate, filterLogin, filterSubject }
+            filters: { filterDate, filterLogin, filterStatus }
         });
 
         try {
@@ -117,37 +117,50 @@
     }
 
     /**
-     * Отрисовка таблицы диалогов
+     * Отрисовка таблицы заявок на бронирование
      */
     function renderDialogs(dialogs) {
         const tbody = document.getElementById('messages-list');
         
         if (dialogs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="loading">Нет сообщений</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="loading">Нет заявок</td></tr>';
             return;
         }
 
+        // Статусы для отображения
+        const statusLabels = {
+            'new': 'Новая заявка',
+            'in_progress': 'В процессе',
+            'confirmed': 'Подтверждена',
+            'completed': 'Завершена',
+            'cancelled': 'Отменена'
+        };
+
         tbody.innerHTML = dialogs.map(dialog => {
-            console.log('Dialog:', dialog); // Debug
-            console.log('Thread ID:', dialog.thread_id); // Debug
+            console.log('Booking:', dialog); // Debug
+            
+            const statusLabel = statusLabels[dialog.status] || dialog.status;
+            const statusClass = 'status-' + dialog.status;
             
             return `
-            <tr class="${dialog.unread_count > 0 ? 'unread' : ''}" data-thread-id="${dialog.thread_id}">
-                <td class="col-id">${dialog.last_message_id}</td>
+            <tr data-thread-id="${dialog.thread_id}">
+                <td class="col-id">${dialog.booking_id}</td>
                 <td class="col-login">
                     <a href="${window.location.pathname}?page=booking-messages&view=dialog&thread_id=${dialog.thread_id}" class="login-link">
-                        ${dialog.sender_login}
+                        ${dialog.client_login}
                     </a>
                 </td>
-                <td class="col-name">${dialog.sender_name}</td>
-                <td class="col-subject">
-                    ${dialog.last_subject}
-                    ${dialog.unread_count > 0 ? `<span class="unread-badge">${dialog.unread_count}</span>` : ''}
+                <td class="col-property">${dialog.property_title}</td>
+                <td class="col-dates">
+                    ${dialog.checkin_date ? new Date(dialog.checkin_date).toLocaleDateString('ru-RU') : '—'} / 
+                    ${dialog.checkout_date ? new Date(dialog.checkout_date).toLocaleDateString('ru-RU') : '—'}
                 </td>
-                <td class="col-date">${dialog.last_date}</td>
+                <td class="col-guests">${dialog.guests_text || '—'}</td>
+                <td class="col-status"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td class="col-date">${dialog.created_date}</td>
                 <td class="col-actions">
-                    <a href="${window.location.pathname}?page=booking-messages&view=dialog&thread_id=${dialog.thread_id}" class="button action-btn btn-view">Просмотр / Ответить</a>
-                    <button type="button" class="button action-btn btn-delete" onclick="deleteDialog('${dialog.thread_id}', event)">Удалить</button>
+                    <a href="${window.location.pathname}?page=booking-messages&view=dialog&thread_id=${dialog.thread_id}" class="button action-btn btn-view">Просмотр</a>
+                    <button type="button" class="button action-btn btn-delete" onclick="deleteBooking(${dialog.booking_id}, event)">Удалить</button>
                 </td>
             </tr>
             `;
@@ -181,29 +194,29 @@
     function clearFilters() {
         const filterDateEl = document.getElementById('filter-date');
         const filterLoginEl = document.getElementById('filter-login');
-        const filterSubjectEl = document.getElementById('filter-subject');
+        const filterStatusEl = document.getElementById('filter-status');
 
         if (filterDateEl) filterDateEl.value = '';
         if (filterLoginEl) filterLoginEl.value = '';
-        if (filterSubjectEl) filterSubjectEl.value = '';
+        if (filterStatusEl) filterStatusEl.value = '';
         
         loadDialogs();
     }
 
     /**
-     * Удаление диалога
+     * Удаление заявки на бронирование
      */
-    window.deleteDialog = async function(threadId, event) {
+    window.deleteBooking = async function(bookingId, event) {
         if (event) event.stopPropagation();
         
-        if (!confirm('Удалить весь диалог? Это действие нельзя отменить.')) {
+        if (!confirm('Удалить эту заявку на бронирование? Это действие нельзя отменить.')) {
             return;
         }
 
         const body = new URLSearchParams();
-        body.append('action', 'my_cabinet_delete_dialog');
+        body.append('action', 'my_cabinet_delete_booking');
         body.append('nonce', myCabinetMessagesData.deleteMessageNonce);
-        body.append('thread_id', threadId);
+        body.append('booking_id', bookingId);
 
         try {
             const response = await fetch(myCabinetMessagesData.ajaxUrl, {

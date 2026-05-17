@@ -62,6 +62,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
     $booking_app_data = array(
         'ajaxUrl'       => admin_url('admin-ajax.php'),
         'nonce'         => wp_create_nonce('property_filter_nonce'),
+        'bookingSessionNonce' => wp_create_nonce('my_cabinet_booking_session_nonce'),
         'propertyId'    => $pod ? $pod->id() : 0,
         'ownerId'       => $author_id ?? 0,
         'config'        => array(
@@ -78,6 +79,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
         <property-booking-sidebar 
             :ajax-url="appData.ajaxUrl"
             :nonce="appData.nonce"
+            :booking-session-nonce="appData.bookingSessionNonce"
             :property-id="appData.propertyId"
             :owner-id="appData.ownerId"
             :config="appData.config"

@@ -115,9 +115,33 @@ function my_cabinet_enqueue_messages_assets( $hook ) {
     
     // Передаем данные в JS для страницы диалога
     if ( $view === 'dialog' && ! empty( $thread_id ) ) {
+        // Ищем booking_id по thread_id
+        $dialog_booking_id = 0;
+        $dialog_booking_status = 'new';
+        
+        $booking_query = new WP_Query( array(
+            'post_type'      => 'booking_request',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'meta_query'     => array(
+                array(
+                    'key'     => '_thread_id',
+                    'value'   => $thread_id,
+                    'compare' => '=',
+                ),
+            ),
+        ) );
+
+        if ( $booking_query->have_posts() ) {
+            $dialog_booking_id = $booking_query->posts[0]->ID;
+            $dialog_booking_status = get_post_meta( $dialog_booking_id, '_status', true ) ?: 'new';
+        }
+        
         wp_localize_script( 'my-cabinet-dialog-view', 'dialogViewData', array(
             'ajaxUrl' => admin_url( 'admin-ajax.php' ),
             'threadId' => $thread_id,
+            'bookingId' => $dialog_booking_id,
+            'bookingStatus' => $dialog_booking_status,
             'getDialogNonce' => wp_create_nonce( 'my_cabinet_get_dialog_nonce' ),
             'sendReplyNonce' => wp_create_nonce( 'my_cabinet_send_reply_nonce' ),
             'updateBookingNonce' => wp_create_nonce( 'my_cabinet_update_booking_nonce' ),
@@ -168,16 +192,19 @@ function my_cabinet_messages_page() {
 }
 
 /**
- * Страница списка сообщений
+ * Страница списка заявок на бронирование
  */
 function my_cabinet_messages_list_page() {
     // Подсчет непрочитанных сообщений
     $unread_count = my_cabinet_get_unread_messages_count();
     
+    // Получаем статус из фильтра
+    $status_filter = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
+    
     ?>
     <div class="wrap" id="my-cabinet-messages-admin">
         <h1 class="wp-heading-inline">
-            Сообщения
+            Заявки на бронирование
             <?php if ( $unread_count > 0 ): ?>
                 <span class="awaiting-mod"><?php echo esc_html( $unread_count ); ?></span>
             <?php endif; ?>
@@ -188,9 +215,16 @@ function my_cabinet_messages_list_page() {
             <div class="messages-filters">
                 <h3>Фильтры</h3>
                 <div class="filter-row">
+                    <select id="filter-status" class="regular-text">
+                        <option value="">Все статусы</option>
+                        <option value="new" <?php selected( $status_filter, 'new' ); ?>>Новая заявка</option>
+                        <option value="in_progress" <?php selected( $status_filter, 'in_progress' ); ?>>В процессе</option>
+                        <option value="confirmed" <?php selected( $status_filter, 'confirmed' ); ?>>Подтверждена</option>
+                        <option value="completed" <?php selected( $status_filter, 'completed' ); ?>>Завершена</option>
+                        <option value="cancelled" <?php selected( $status_filter, 'cancelled' ); ?>>Отменена</option>
+                    </select>
                     <input type="date" id="filter-date" class="regular-text" placeholder="Дата" />
                     <input type="text" id="filter-login" class="regular-text" placeholder="Логин" />
-                    <input type="text" id="filter-subject" class="regular-text" placeholder="Тема" />
                     <button type="button" id="apply-filters" class="button button-primary">Применить</button>
                     <button type="button" id="clear-filters" class="button">Сбросить</button>
                 </div>
@@ -204,16 +238,18 @@ function my_cabinet_messages_list_page() {
                 <thead>
                     <tr>
                         <th class="col-id">ID</th>
-                        <th class="col-login">Логин</th>
-                        <th class="col-name">Имя</th>
-                        <th class="col-subject">Заголовок</th>
-                        <th class="col-date">Дата</th>
+                        <th class="col-login">Клиент</th>
+                        <th class="col-property">Недвижимость</th>
+                        <th class="col-dates">Даты заезда/выезда</th>
+                        <th class="col-guests">Гости</th>
+                        <th class="col-status">Статус</th>
+                        <th class="col-date">Дата создания</th>
                         <th class="col-actions">Действия</th>
                     </tr>
                 </thead>
                 <tbody id="messages-list">
                     <tr>
-                        <td colspan="6" class="loading">Загрузка...</td>
+                        <td colspan="8" class="loading">Загрузка...</td>
                     </tr>
                 </tbody>
             </table>
@@ -261,9 +297,12 @@ function my_cabinet_get_unread_messages_count() {
  * Страница просмотра диалога
  */
 function my_cabinet_dialog_view_page( $thread_id ) {
-    // Получаем информацию о диалоге
-    $args = array(
-        'post_type'      => 'message',
+    // ============================================================
+    // НОВАЯ ЛОГИКА: Ищем booking_request по thread_id
+    // ============================================================
+    
+    $booking_query = new WP_Query( array(
+        'post_type'      => 'booking_request',
         'post_status'    => 'publish',
         'posts_per_page' => 1,
         'meta_query'     => array(
@@ -273,33 +312,102 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                 'compare' => '=',
             ),
         ),
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-    );
+    ) );
 
-    $query = new WP_Query( $args );
+    $booking_id = 0;
+    $booking_data = null;
+    $property_id = 0;
+    $client_id = 0;
+    $owner_id = 0;
+    $booking_status = 'new';
     
-    if ( ! $query->have_posts() ) {
-        echo '<div class="wrap"><h1>Диалог не найден</h1>';
-        echo '<a href="' . admin_url( 'admin.php?page=booking-messages' ) . '" class="button">← Назад к списку</a></div>';
-        return;
+    // DEBUG
+    error_log( 'my_cabinet_dialog_view_page: thread_id=' . $thread_id );
+    
+    if ( $booking_query->have_posts() ) {
+        $booking_id = $booking_query->posts[0]->ID;
+        
+        // DEBUG
+        error_log( 'my_cabinet_dialog_view_page: Found booking_id=' . $booking_id );
+        
+        $booking_data = realty_get_booking_data( $booking_id );
+        
+        // DEBUG
+        error_log( 'my_cabinet_dialog_view_page: booking_data=' . ( $booking_data ? 'OK' : 'NULL' ) );
+        
+        if ( $booking_data ) {
+            $property_id = $booking_data['property_id'];
+            $client_id = $booking_data['client_id'];
+            $owner_id = $booking_data['owner_id'];
+            $booking_status = $booking_data['status'];
+        }
+    } else {
+        // DEBUG
+        error_log( 'my_cabinet_dialog_view_page: No booking found, trying fallback to messages' );
+        // Fallback: ищем по сообщениям (для обратной совместимости)
+        $message_query = new WP_Query( array(
+            'post_type'      => 'message',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'meta_query'     => array(
+                array(
+                    'key'     => '_thread_id',
+                    'value'   => $thread_id,
+                    'compare' => '=',
+                ),
+            ),
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+        ) );
+
+        if ( $message_query->have_posts() ) {
+            $first_message = $message_query->posts[0];
+            $property_id = (int) get_post_meta( $first_message->ID, '_property_id', true );
+            $client_id = (int) get_post_meta( $first_message->ID, '_sender_id', true );
+            $owner_id = (int) get_post_meta( $first_message->ID, '_receiver_id', true );
+            
+            // Проверяем есть ли привязка к booking_request
+            $booking_id = (int) get_post_meta( $first_message->ID, '_booking_request_id', true );
+            if ( $booking_id > 0 ) {
+                $booking_data = realty_get_booking_data( $booking_id );
+                if ( $booking_data ) {
+                    $booking_status = $booking_data['status'];
+                }
+            }
+        } else {
+            echo '<div class="wrap"><h1>Диалог не найден</h1>';
+            echo '<a href="' . admin_url( 'admin.php?page=booking-messages' ) . '" class="button">← Назад к списку</a></div>';
+            return;
+        }
     }
 
     // Получаем информацию о пользователе
-    $first_message = $query->posts[0];
-    $sender_id = get_post_meta( $first_message->ID, '_sender_id', true );
-    $receiver_id = get_post_meta( $first_message->ID, '_receiver_id', true );
-    $property_id = (int) get_post_meta( $first_message->ID, '_property_id', true );
-    $sender = get_userdata( $sender_id );
+    $client = get_userdata( $client_id );
     
-    // Получаем booking meta
-    $checkin_date = get_post_meta( $first_message->ID, '_checkin_date', true );
-    $checkout_date = get_post_meta( $first_message->ID, '_checkout_date', true );
+    // Получаем booking meta из booking_data
+    $checkin_date  = $booking_data ? $booking_data['checkin_date'] : '';
+    $checkout_date = $booking_data ? $booking_data['checkout_date'] : '';
+    $guests_count  = $booking_data ? $booking_data['guests_count'] : array();
+    $has_guests    = ! empty( $guests_count );
     
-    // Используем хелпер для получения гостей
-    $guests_data = realty_get_guests_values_from_message( $first_message->ID );
-    $guests_values = $guests_data['values'];
-    $has_guests = $guests_data['has_guests'];
+    // Формируем guests_values для обратной совместимости
+    $guests_values = array();
+    if ( $has_guests && is_array( $guests_count ) ) {
+        $guest_types_config = realty_get_guest_types_config();
+        foreach ( $guest_types_config as $guest_type ) {
+            if ( empty( $guest_type['enabled'] ) ) {
+                continue;
+            }
+            $guest_name = $guest_type['name'];
+            $guest_value = $guests_count[ $guest_name ] ?? 0;
+            if ( $guest_value > 0 ) {
+                $guests_values[ $guest_name ] = array(
+                    'value' => $guest_value,
+                    'label' => $guest_type['label'],
+                );
+            }
+        }
+    }
     
     // URL для возврата
     $back_url = admin_url( 'admin.php?page=booking-messages' );
@@ -307,7 +415,7 @@ function my_cabinet_dialog_view_page( $thread_id ) {
     ?>
     <div class="wrap dialog-view-page">
         <h1 class="wp-heading-inline">
-            Диалог с <?php echo $sender ? esc_html( $sender->display_name ) : 'Пользователем'; ?>
+            Диалог с <?php echo $client ? esc_html( $client->display_name ) : 'Пользователем'; ?>
         </h1>
         <a href="<?php echo esc_url( $back_url ); ?>" class="page-title-action">← Назад к списку</a>
         <hr class="wp-header-end">
@@ -316,8 +424,8 @@ function my_cabinet_dialog_view_page( $thread_id ) {
             <!-- Левая колонка: Чат (70%) -->
             <div class="dialog-chat-column">
                 <div class="dialog-info-box">
-                    <strong>Логин:</strong> <?php echo $sender ? esc_html( $sender->user_login ) : '—'; ?> | 
-                    <strong>Email:</strong> <?php echo $sender ? esc_html( $sender->user_email ) : '—'; ?> | 
+                    <strong>Логин:</strong> <?php echo $client ? esc_html( $client->user_login ) : '—'; ?> | 
+                    <strong>Email:</strong> <?php echo $client ? esc_html( $client->user_email ) : '—'; ?> | 
                     <strong>ID диалога:</strong> <?php echo esc_html( $thread_id ); ?>
                 </div>
 
@@ -518,8 +626,8 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                                 </div>
                             </div>
                             
-                            <!-- Hidden поле для message_id -->
-                            <input type="hidden" id="booking-message-id" value="<?php echo esc_attr( $first_message->ID ); ?>" />
+                            <!-- Hidden поле для booking_id -->
+                            <input type="hidden" id="booking-message-id" value="<?php echo esc_attr( $booking_id ); ?>" />
                         </div>
                     <?php endif; ?>
                     
