@@ -165,9 +165,9 @@ export default {
         body.append('nonce', props.appData.getMessagesNonce);
         body.append('limit', '20');
         
-        // Передаем property_id для фильтрации сообщений
-        if (props.appData.propertyId) {
-          body.append('property_id', props.appData.propertyId);
+        // Передаем thread_id для фильтрации сообщений (строго один поток = один чат)
+        if (props.appData.threadId) {
+          body.append('thread_id', props.appData.threadId);
         }
 
         const response = await fetch(props.appData.ajaxUrl, {
@@ -223,6 +223,7 @@ export default {
             message_content: messageForm.content,
             property_id: props.appData.propertyId || 0,
             owner_id: props.appData.ownerId || 0,
+            thread_id: props.appData.threadId || '',
             checkin_date: props.appData.checkinDate || '',
             checkout_date: props.appData.checkoutDate || '',
             adults: bookingContext.value?.adults || 0,

@@ -876,6 +876,7 @@ function realty_get_property_long_stay_text( $property_id = 0 ) {
  */
 function realty_get_booking_statuses() {
     return array(
+        'pending'   => array( 'label' => 'Ожидание', 'class' => 'pending' ),
         'new'       => array( 'label' => 'Новая заявка', 'class' => 'pending' ),
         'confirmed' => array( 'label' => 'Подтверждено', 'class' => 'confirmed' ),
         'checkin'   => array( 'label' => 'Заселение', 'class' => 'checkin' ),
@@ -1005,6 +1006,9 @@ add_action( 'init', 'realty_init_booking_session', 1 );
 /**
  * Создание временной сессии бронирования
  * 
+ * @deprecated 1.0.0 Использовать booking_request со статусом pending
+ * @see realty_create_booking_thread()
+ * 
  * Сохраняет параметры бронирования до отправки первого сообщения.
  * Использует SESSION с fallback на transients (24 часа TTL).
  * 
@@ -1013,81 +1017,29 @@ add_action( 'init', 'realty_init_booking_session', 1 );
  * @return bool Успешность сохранения
  */
 function realty_start_booking_session( $property_id, $data = array() ) {
-    if ( ! $property_id || ! is_user_logged_in() ) {
-        return false;
-    }
-
-    // guests_count уже приходит как JSON-строка, не кодируем повторно
-    $guests_count_raw = isset( $data['guests_count'] ) ? $data['guests_count'] : '';
-    // Если это массив (legacy), кодируем в JSON
-    $guests_count_value = is_array( $guests_count_raw ) ? wp_json_encode( $guests_count_raw ) : $guests_count_raw;
-    
-    $session_data = array(
-        'property_id'   => absint( $property_id ),
-        'checkin_date'  => isset( $data['checkin_date'] ) ? sanitize_text_field( $data['checkin_date'] ) : '',
-        'checkout_date' => isset( $data['checkout_date'] ) ? sanitize_text_field( $data['checkout_date'] ) : '',
-        'guests_count'  => $guests_count_value,
-        'created_at'    => time(),
-    );
-
-    // Пробуем сохранить в SESSION
-    if ( session_status() === PHP_SESSION_ACTIVE ) {
-        $_SESSION['booking_temp'] = $session_data;
-        return true;
-    }
-
-    // Fallback: используем WordPress transients
-    $user_id   = get_current_user_id();
-    $transient = 'booking_temp_' . $user_id;
-    
-    // TTL 24 часа (в секундах)
-    return set_transient( $transient, $session_data, DAY_IN_SECONDS );
+    _deprecated_function( __FUNCTION__, '1.0.0', 'realty_create_booking_thread' );
+    return false;
 }
 
 /**
  * Получение временной сессии бронирования
  * 
+ * @deprecated 1.0.0 booking_request теперь хранится в БД
+ * 
  * @return array|false Данные сессии или false если не существует
  */
 function realty_get_booking_session() {
-    // Пробуем SESSION
-    if ( session_status() === PHP_SESSION_ACTIVE && isset( $_SESSION['booking_temp'] ) ) {
-        $session = $_SESSION['booking_temp'];
-        
-        // Проверяем TTL 24 часа
-        if ( isset( $session['created_at'] ) && ( time() - $session['created_at'] ) > DAY_IN_SECONDS ) {
-            realty_clear_booking_session();
-            return false;
-        }
-        
-        return $session;
-    }
-
-    // Fallback: transients
-    $user_id   = get_current_user_id();
-    $transient = 'booking_temp_' . $user_id;
-    $session   = get_transient( $transient );
-    
-    if ( $session ) {
-        return $session;
-    }
-    
+    _deprecated_function( __FUNCTION__, '1.0.0' );
     return false;
 }
 
 /**
  * Очистка временной сессии бронирования
  * 
+ * @deprecated 1.0.0 SESSION больше не используется
+ * 
  * Вызывается после создания booking_request.
  */
 function realty_clear_booking_session() {
-    // Очищаем SESSION
-    if ( session_status() === PHP_SESSION_ACTIVE && isset( $_SESSION['booking_temp'] ) ) {
-        unset( $_SESSION['booking_temp'] );
-    }
-
-    // Очищаем transients
-    $user_id   = get_current_user_id();
-    $transient = 'booking_temp_' . $user_id;
-    delete_transient( $transient );
+    _deprecated_function( __FUNCTION__, '1.0.0' );
 }

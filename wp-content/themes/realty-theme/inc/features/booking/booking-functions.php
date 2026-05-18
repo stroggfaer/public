@@ -254,6 +254,36 @@ function realty_find_active_booking( $property_id, $client_id ) {
 }
 
 /**
+ * Найти booking_request со статусом pending
+ * 
+ * @param int $property_id ID объекта
+ * @param int $client_id   ID клиента
+ * @return WP_Post|false Объект заявки или false
+ */
+function realty_find_pending_booking( $property_id, $client_id ) {
+    $query = new WP_Query( array(
+        'post_type'      => 'booking_request',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'meta_query'     => array(
+            array( 'key' => '_property_id', 'value' => $property_id ),
+            array( 'key' => '_client_id', 'value' => $client_id ),
+            array( 'key' => '_status', 'value' => 'pending' ),
+        ),
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    ) );
+
+    if ( $query->have_posts() ) {
+        $booking = $query->posts[0];
+        wp_reset_postdata();
+        return $booking;
+    }
+
+    return false;
+}
+
+/**
  * Найти завершенные заявки (completed/cancelled)
  * 
  * @param int $property_id ID объекта
@@ -375,6 +405,111 @@ function realty_update_booking_status( $booking_id, $new_status, $user_id = 0 ) 
 
     // Обновляем статус
     update_post_meta( $booking_id, '_status', $new_status );
+
+    return true;
+}
+
+/**
+ * Создать booking_request (чат-поток) со статусом pending
+ * 
+ * @param int   $property_id ID объекта
+ * @param int   $client_id   ID клиента
+ * @param int   $owner_id    ID владельца
+ * @param array $params      Параметры (checkin_date, checkout_date, guests_count)
+ * @return array|false Массив booking_id, thread_id или false
+ */
+function realty_create_booking_thread( $property_id, $client_id, $owner_id, $params = array() ) {
+    if ( ! $property_id || ! $client_id || ! $owner_id ) {
+        return false;
+    }
+
+    // Генерируем уникальный thread_id
+    $thread_id = 'thread_' . $property_id . '_' . $client_id . '_' . $owner_id . '_' . time() . '_' . wp_generate_password( 6, false );
+    
+    $booking_id = wp_insert_post( array(
+        'post_title'    => 'Заявка #' . $property_id . ' - ' . date( 'd.m.Y' ),
+        'post_status'   => 'publish',
+        'post_type'     => 'booking_request',
+        'post_author'   => $client_id,
+    ) );
+
+    if ( is_wp_error( $booking_id ) ) {
+        error_log( 'Booking thread creation error: ' . $booking_id->get_error_message() );
+        return false;
+    }
+
+    // Подготовка guests_count
+    $guests_count_json = '';
+    if ( isset( $params['guests_count'] ) && ! empty( $params['guests_count'] ) ) {
+        $guests_count_raw = $params['guests_count'];
+        
+        if ( is_string( $guests_count_raw ) ) {
+            $decoded = json_decode( $guests_count_raw, true );
+            if ( is_array( $decoded ) ) {
+                $guests_count_json = $guests_count_raw;
+            }
+        } elseif ( is_array( $guests_count_raw ) ) {
+            $guests_count_json = wp_json_encode( $guests_count_raw );
+        }
+    }
+
+    // Сохраняем мета-поля
+    update_post_meta( $booking_id, '_property_id', $property_id );
+    update_post_meta( $booking_id, '_owner_id', $owner_id );
+    update_post_meta( $booking_id, '_client_id', $client_id );
+    update_post_meta( $booking_id, '_thread_id', $thread_id );
+    update_post_meta( $booking_id, '_checkin_date', sanitize_text_field( $params['checkin_date'] ?? '' ) );
+    update_post_meta( $booking_id, '_checkout_date', sanitize_text_field( $params['checkout_date'] ?? '' ) );
+    update_post_meta( $booking_id, '_guests_count', $guests_count_json );
+    update_post_meta( $booking_id, '_status', 'pending' );
+    update_post_meta( $booking_id, '_created_date', current_time( 'mysql' ) );
+
+    return array(
+        'booking_id' => $booking_id,
+        'thread_id'  => $thread_id,
+        'status'     => 'pending',
+    );
+}
+
+/**
+ * Обновить параметры booking_request (даты, гости)
+ * 
+ * @param int   $booking_id ID заявки
+ * @param array $params     Новые параметры
+ * @return bool Успешность
+ */
+function realty_update_booking_parameters( $booking_id, $params = array() ) {
+    if ( ! $booking_id ) {
+        return false;
+    }
+
+    $booking = get_post( $booking_id );
+    if ( ! $booking || $booking->post_type !== 'booking_request' ) {
+        return false;
+    }
+
+    // Обновляем даты
+    if ( isset( $params['checkin_date'] ) && ! empty( $params['checkin_date'] ) ) {
+        update_post_meta( $booking_id, '_checkin_date', sanitize_text_field( $params['checkin_date'] ) );
+    }
+    
+    if ( isset( $params['checkout_date'] ) && ! empty( $params['checkout_date'] ) ) {
+        update_post_meta( $booking_id, '_checkout_date', sanitize_text_field( $params['checkout_date'] ) );
+    }
+
+    // Обновляем guests_count
+    if ( isset( $params['guests_count'] ) && ! empty( $params['guests_count'] ) ) {
+        $guests_count_raw = $params['guests_count'];
+        
+        if ( is_string( $guests_count_raw ) ) {
+            $decoded = json_decode( $guests_count_raw, true );
+            if ( is_array( $decoded ) ) {
+                update_post_meta( $booking_id, '_guests_count', $guests_count_raw );
+            }
+        } elseif ( is_array( $guests_count_raw ) ) {
+            update_post_meta( $booking_id, '_guests_count', wp_json_encode( $guests_count_raw ) );
+        }
+    }
 
     return true;
 }

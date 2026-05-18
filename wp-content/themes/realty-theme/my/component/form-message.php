@@ -17,6 +17,7 @@ $property_id   = $args['property_id'] ?? 0;
 $owner_id      = $args['owner_id'] ?? 0;
 $booking_id    = $args['booking_id'] ?? 0;
 $booking_status = $args['booking_status'] ?? 'new';
+$thread_id     = $args['thread_id'] ?? '';
 $context       = $args['context'] ?? 'general';
 
 $app_data = array(
@@ -27,6 +28,7 @@ $app_data = array(
     'ownerId'            => $owner_id,
     'bookingId'          => $booking_id,
     'bookingStatus'      => $booking_status,
+    'threadId'           => $thread_id,
     'context'            => $context
 );
 

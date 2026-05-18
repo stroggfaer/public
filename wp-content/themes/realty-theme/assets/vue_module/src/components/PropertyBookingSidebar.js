@@ -18,6 +18,10 @@ export default {
       type: String,
       required: true
     },
+    bookingThreadNonce: {
+      type: String,
+      required: true
+    },
     propertyId: {
       type: Number,
       required: true
@@ -244,10 +248,10 @@ export default {
       }
 
       try {
-        // Сначала создаем SESSION через AJAX
+        // НОВЫЙ endpoint: создаем booking_request вместо SESSION
         const body = new URLSearchParams();
-        body.append('action', 'my_cabinet_create_booking_session');
-        body.append('nonce', props.bookingSessionNonce);
+        body.append('action', 'my_cabinet_create_or_get_booking_thread');
+        body.append('nonce', props.bookingThreadNonce); // ← новый nonce
         body.append('property_id', props.propertyId);
         body.append('owner_id', props.ownerId);
         body.append('checkin_date', checkinDate.value);
@@ -263,17 +267,17 @@ export default {
         const result = await response.json();
 
         if (result.success && result.data.redirect) {
-          // Редирект на dashboard (только property_id, без дат и гостей)
+          // Редирект на dashboard (теперь с thread_id!)
           window.location.href = result.data.redirect;
         } else {
-          alert(result.data.message || 'Ошибка сохранения параметров');
+          alert(result.data.message || 'Ошибка создания чат-потока');
           if (contactBtn) {
             contactBtn.disabled = false;
             contactBtn.textContent = 'Написать хозяину';
           }
         }
       } catch (error) {
-        console.error('Ошибка создания сессии:', error);
+        console.error('Ошибка создания чат-потока:', error);
         alert('Произошла ошибка. Попробуйте еще раз.');
         if (contactBtn) {
           contactBtn.disabled = false;

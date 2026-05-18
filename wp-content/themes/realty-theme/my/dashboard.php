@@ -20,85 +20,80 @@ get_header();
 // GET параметры (checkin_date, checkout_date, guests) НЕ используются.
 // ============================================================
 
-// Читаем только property_id из URL
-$property_id = isset( $_GET['property_id'] ) ? intval( $_GET['property_id'] ) : 0;
-$owner_id    = isset( $_GET['owner_id'] ) ? intval( $_GET['owner_id'] ) : 0;
+// Читаем property_id и thread_id из URL
+$property_id = isset( $_GET['property_id'] ) ? absint( $_GET['property_id'] ) : 0;
+$thread_id   = isset( $_GET['thread_id'] ) ? sanitize_text_field( wp_unslash( $_GET['thread_id'] ) ) : '';
+$owner_id    = isset( $_GET['owner_id'] ) ? absint( $_GET['owner_id'] ) : 0;
 
 // Показываем режим бронирования если есть property_id
 $has_booking_context = ( $property_id > 0 );
 
 // Находим booking_request для передачи в компоненты
 $booking_id     = 0;
-$booking_status = 'new';
-$thread_id      = '';
+$booking_status = 'pending';
+$found_thread_id = '';
 
 if ( $has_booking_context && is_user_logged_in() ) {
     $current_user_id = get_current_user_id();
     
-    // Сначала проверяем SESSION
-    $session_data = realty_get_booking_session();
-    
-    if ( $session_data ) {
-        // Есть SESSION — ищем активную заявку
-        error_log( '[dashboard] SESSION found, looking for active booking: property_id=' . $property_id . ', client_id=' . $current_user_id );
-        $active_booking = realty_find_active_booking( $property_id, $current_user_id );
-        
-        if ( $active_booking ) {
-            $booking_id = $active_booking->ID;
-            $booking_status = get_post_meta( $booking_id, '_status', true ) ?: 'new';
-            $thread_id = get_post_meta( $booking_id, '_thread_id', true );
-            error_log( '[dashboard] Active booking found: booking_id=' . $booking_id . ', status=' . $booking_status );
-            
-            // ВАЖНО: Если booking_request пустой (guests_count) — обновляем из SESSION
-            $booking_guests = get_post_meta( $booking_id, '_guests_count', true );
-            if ( empty( $booking_guests ) && $booking_status === 'new' ) {
-                error_log( '[dashboard] booking_request пустой, обновляем из SESSION' );
-                realty_update_booking_from_session( $booking_id, $session_data );
-            }
-        } else {
-            error_log( '[dashboard] No active booking found for SESSION' );
-        }
-        // Если активной заявки нет — SESSION будет использован при создании
-    } else {
-        // SESSION нет — ищем только НОВУЮ заявку (статус 'new')
-        error_log( '[dashboard] No SESSION, looking for NEW booking_request: property_id=' . $property_id . ', client_id=' . $current_user_id );
+    // ПРИОРИТЕТ 1: Ищем по thread_id (если передан в URL)
+    if ( ! empty( $thread_id ) ) {
         $booking_query = new WP_Query( array(
             'post_type'      => 'booking_request',
             'post_status'    => 'publish',
             'posts_per_page' => 1,
             'meta_query'     => array(
-                array(
-                    'key'   => '_property_id',
-                    'value' => $property_id,
-                ),
-                array(
-                    'key'   => '_client_id',
-                    'value' => $current_user_id,
-                ),
-                array(
-                    'key'   => '_status',
-                    'value' => 'new',
-                ),
+                array( 'key' => '_thread_id', 'value' => $thread_id ),
+                array( 'key' => '_client_id', 'value' => $current_user_id ),
             ),
-            'orderby'        => 'date',
-            'order'          => 'DESC',
         ) );
 
         if ( $booking_query->have_posts() ) {
-            $booking_query->the_post();
-            $booking_id = get_the_ID();
-            $booking_status = get_post_meta( $booking_id, '_status', true ) ?: 'new';
-            $thread_id = get_post_meta( $booking_id, '_thread_id', true );
-            error_log( '[dashboard] Booking found: booking_id=' . $booking_id . ', status=' . $booking_status );
-            wp_reset_postdata();
-        } else {
-            // booking_request НЕ НАЙДЕН (удален админом)
-            // Редирект на /my/dashboard/ без параметров
-            error_log( '[dashboard] No booking_request found, redirecting to clean dashboard' );
-            wp_safe_redirect( '/my/dashboard/' );
-            exit;
+            $booking_id = $booking_query->posts[0]->ID;
+            $booking_status = get_post_meta( $booking_id, '_status', true ) ?: 'pending';
+            $found_thread_id = get_post_meta( $booking_id, '_thread_id', true );
+            error_log( '[dashboard] Found booking by thread_id: ' . $booking_id . ', status=' . $booking_status );
         }
     }
+    
+    // ПРИОРИТЕТ 2: Ищем по property_id + client_id (fallback)
+    if ( ! $booking_id ) {
+        // Ищем сначала pending, потом new
+        $statuses_to_find = array( 'pending', 'new' );
+        
+        foreach ( $statuses_to_find as $status ) {
+            $booking_query = new WP_Query( array(
+                'post_type'      => 'booking_request',
+                'post_status'    => 'publish',
+                'posts_per_page' => 1,
+                'meta_query'     => array(
+                    array( 'key' => '_property_id', 'value' => $property_id ),
+                    array( 'key' => '_client_id', 'value' => $current_user_id ),
+                    array( 'key' => '_status', 'value' => $status ),
+                ),
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+            ) );
+
+            if ( $booking_query->have_posts() ) {
+                $booking_id = $booking_query->posts[0]->ID;
+                $booking_status = get_post_meta( $booking_id, '_status', true );
+                $found_thread_id = get_post_meta( $booking_id, '_thread_id', true );
+                error_log( '[dashboard] Found booking by property_id: ' . $booking_id . ', status=' . $booking_status );
+                break;
+            }
+        }
+    }
+    
+    // Если booking_request не найден — редирект на чистый dashboard
+    if ( ! $booking_id ) {
+        error_log( '[dashboard] No booking_request found, redirecting to clean dashboard' );
+        wp_safe_redirect( '/my/dashboard/' );
+        exit;
+    }
+    
+    // Используем найденный thread_id
+    $thread_id = $found_thread_id;
 }
 
 

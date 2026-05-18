@@ -320,6 +320,133 @@ function my_cabinet_create_booking_session() {
 add_action( 'wp_ajax_my_cabinet_create_booking_session', 'my_cabinet_create_booking_session' );
 
 // ============================================================
+// AJAX: Создание или получение чат-потока бронирования
+// ============================================================
+
+/**
+ * AJAX: Создать или получить booking_request при клике "Написать хозяину"
+ * 
+ * Новая логика вместо SESSION:
+ * - Создает booking_request со статусом pending
+ * - Возвращает thread_id для URL
+ */
+function my_cabinet_ajax_create_or_get_booking_thread() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_create_thread_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    // Получаем параметры
+    $property_id = isset( $_POST['property_id'] ) ? absint( $_POST['property_id'] ) : 0;
+    $owner_id    = isset( $_POST['owner_id'] ) ? absint( $_POST['owner_id'] ) : 0;
+    $checkin_date = isset( $_POST['checkin_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkin_date'] ) ) : '';
+    $checkout_date = isset( $_POST['checkout_date'] ) ? sanitize_text_field( wp_unslash( $_POST['checkout_date'] ) ) : '';
+    $guests_count  = isset( $_POST['guests_count'] ) ? sanitize_text_field( wp_unslash( $_POST['guests_count'] ) ) : '';
+
+    if ( ! $property_id || ! $owner_id ) {
+        wp_send_json_error( array( 'message' => 'Не указаны параметры.' ) );
+    }
+
+    // Валидация дат
+    if ( ! empty( $checkin_date ) && ! empty( $checkout_date ) ) {
+        if ( strtotime( $checkin_date ) >= strtotime( $checkout_date ) ) {
+            wp_send_json_error( array( 'message' => 'Дата заезда должна быть раньше даты выезда.' ) );
+        }
+    }
+
+    $current_user_id = get_current_user_id();
+
+    // ШАГ 1: Ищем booking_request со статусом pending
+    $pending_booking = realty_find_pending_booking( $property_id, $current_user_id );
+
+    if ( $pending_booking ) {
+        // ШАГ 2A: Существует — используем его + UPDATE параметров
+        $booking_id = $pending_booking->ID;
+        $thread_id = get_post_meta( $booking_id, '_thread_id', true );
+        
+        realty_update_booking_parameters( $booking_id, array(
+            'checkin_date'  => $checkin_date,
+            'checkout_date' => $checkout_date,
+            'guests_count'  => $guests_count
+        ) );
+
+        error_log( '[create_thread] Using existing pending booking: ' . $booking_id );
+
+    } else {
+        // ШАГ 2B: Проверяем архивные статусы
+        $all_bookings_query = new WP_Query( array(
+            'post_type'      => 'booking_request',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'meta_query'     => array(
+                array( 'key' => '_property_id', 'value' => $property_id ),
+                array( 'key' => '_client_id', 'value' => $current_user_id ),
+            ),
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+        ) );
+
+        $create_new = true;
+
+        if ( $all_bookings_query->have_posts() ) {
+            $last_booking = $all_bookings_query->posts[0];
+            $last_status = get_post_meta( $last_booking->ID, '_status', true );
+            
+            $archived_statuses = array( 'confirmed', 'checkin', 'completed', 'cancelled' );
+            
+            if ( ! in_array( $last_status, $archived_statuses, true ) ) {
+                // Есть активная заявка (new или in_progress) — используем её
+                $booking_id = $last_booking->ID;
+                $thread_id = get_post_meta( $booking_id, '_thread_id', true );
+                
+                realty_update_booking_parameters( $booking_id, array(
+                    'checkin_date'  => $checkin_date,
+                    'checkout_date' => $checkout_date,
+                    'guests_count'  => $guests_count
+                ) );
+                
+                $create_new = false;
+                error_log( '[create_thread] Using existing active booking: ' . $booking_id . ', status=' . $last_status );
+            }
+        }
+
+        if ( $create_new ) {
+            // Создаем НОВЫЙ booking_request
+            $result = realty_create_booking_thread( $property_id, $current_user_id, $owner_id, array(
+                'checkin_date'  => $checkin_date,
+                'checkout_date' => $checkout_date,
+                'guests_count'  => $guests_count
+            ) );
+
+            if ( ! $result ) {
+                wp_send_json_error( array( 'message' => 'Не удалось создать чат-поток.' ) );
+            }
+
+            $booking_id = $result['booking_id'];
+            $thread_id = $result['thread_id'];
+            
+            error_log( '[create_thread] Created new booking: ' . $booking_id );
+        }
+    }
+
+    // ШАГ 3: Возвращаем URL для редиректа (с thread_id!)
+    $dashboard_url = home_url( '/my/dashboard/?property_id=' . $property_id . '&thread_id=' . $thread_id );
+
+    wp_send_json_success( array(
+        'message'    => 'Чат-поток готов.',
+        'redirect'   => $dashboard_url,
+        'thread_id'  => $thread_id,
+        'booking_id' => $booking_id,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_create_or_get_booking_thread', 'my_cabinet_ajax_create_or_get_booking_thread' );
+
+// ============================================================
 // AJAX: Отправка сообщения хозяину
 // ============================================================
 
@@ -370,18 +497,52 @@ function my_cabinet_ajax_send_message() {
     $current_user_id = get_current_user_id();
 
     // ============================================================
-    // НОВАЯ ЛОГИКА: Работа с booking_request и SESSION
+    // НОВАЯ ЛОГИКА: Работа с booking_request по thread_id
     // ============================================================
     
     $booking_request_id = 0;
     $thread_id = '';
     $booking_status = 'new';
 
-    // Проверяем SESSION (если есть — берем параметры оттуда)
-    $session_data = realty_get_booking_session();
-    error_log( '[send_message] SESSION: ' . ( $session_data ? 'FOUND' : 'NOT FOUND' ) );
+    // Получаем thread_id из POST (передается с формы)
+    $thread_id_from_post = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
     
-    if ( $property_id > 0 ) {
+    if ( ! empty( $thread_id_from_post ) ) {
+        // Ищем booking_request по thread_id
+        $booking_query = new WP_Query( array(
+            'post_type'      => 'booking_request',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'meta_query'     => array(
+                array( 'key' => '_thread_id', 'value' => $thread_id_from_post ),
+            ),
+        ) );
+
+        if ( $booking_query->have_posts() ) {
+            $booking_request_id = $booking_query->posts[0]->ID;
+            $current_status = get_post_meta( $booking_request_id, '_status', true );
+            
+            // Если статус pending — меняем на new
+            if ( $current_status === 'pending' ) {
+                update_post_meta( $booking_request_id, '_status', 'new' );
+                error_log( '[send_message] Status changed: pending → new, booking_id=' . $booking_request_id );
+            }
+            
+            $thread_id = get_post_meta( $booking_request_id, '_thread_id', true );
+            $booking_status = get_post_meta( $booking_request_id, '_status', true );
+            
+            error_log( '[send_message] Found booking by thread_id: ' . $booking_request_id . ', status=' . $booking_status );
+        }
+    }
+    
+    // Fallback: если booking_request не найден по thread_id, используем старую логику
+    if ( empty( $thread_id ) && $property_id > 0 ) {
+        error_log( '[send_message] Fallback: using old logic with SESSION' );
+        
+        // Проверяем SESSION (если есть — берем параметры оттуда)
+        $session_data = realty_get_booking_session();
+        error_log( '[send_message] SESSION: ' . ( $session_data ? 'FOUND' : 'NOT FOUND' ) );
+        
         // Получаем или создаем booking_request
         error_log( '[send_message] Calling realty_get_or_create_booking_request: property_id=' . $property_id . ', client_id=' . $current_user_id . ', owner_id=' . $owner_id );
         $booking_result = realty_get_or_create_booking_request(
@@ -555,7 +716,7 @@ function my_cabinet_ajax_get_messages() {
     $current_user_id = get_current_user_id();
     $limit = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 20;
     $offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
-    $property_id = isset( $_POST['property_id'] ) ? absint( $_POST['property_id'] ) : 0;
+    $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
 
     // Запрос сообщений, где пользователь - отправитель
     $args = array(
@@ -568,12 +729,12 @@ function my_cabinet_ajax_get_messages() {
         'order'          => 'DESC',
     );
 
-    // Фильтрация по property_id (если указан)
-    if ( $property_id > 0 ) {
+    // Фильтрация по thread_id (строго один поток = один чат)
+    if ( ! empty( $thread_id ) ) {
         $args['meta_query'] = array(
             array(
-                'key'     => '_property_id',
-                'value'   => $property_id,
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
                 'compare' => '=',
             ),
         );
@@ -583,8 +744,8 @@ function my_cabinet_ajax_get_messages() {
     $messages = array();
 
     // DEBUG: Log the query
-    if ( $property_id > 0 ) {
-        error_log( 'my_cabinet_ajax_get_messages: Filtering by property_id=' . $property_id . ', found=' . $query->found_posts );
+    if ( ! empty( $thread_id ) ) {
+        error_log( 'my_cabinet_ajax_get_messages: Filtering by thread_id=' . $thread_id . ', found=' . $query->found_posts );
     }
 
     if ( $query->have_posts() ) {
@@ -675,7 +836,7 @@ function my_cabinet_ajax_get_user_threads() {
 
     $query = new WP_Query( $args );
     $threads = array();
-    $seen_properties = array();
+    $seen_threads = array();
 
     if ( $query->have_posts() ) {
         while ( $query->have_posts() ) {
@@ -685,9 +846,9 @@ function my_cabinet_ajax_get_user_threads() {
             $property_id = (int) get_post_meta( $message_id, '_property_id', true );
             $thread_id = get_post_meta( $message_id, '_thread_id', true );
             
-            // Группируем по property_id (берем первое сообщение для каждого объекта)
-            if ( ! in_array( $property_id, $seen_properties ) ) {
-                $seen_properties[] = $property_id;
+            // Группируем по thread_id (один поток = одна запись в списке)
+            if ( ! empty( $thread_id ) && ! in_array( $thread_id, $seen_threads ) ) {
+                $seen_threads[] = $thread_id;
                 
                 // Получаем данные объекта
                 $property_post = get_post( $property_id );

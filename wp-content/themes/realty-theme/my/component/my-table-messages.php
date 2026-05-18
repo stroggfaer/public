@@ -59,7 +59,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                             </span>
                 </td>
                 <td class="col-actions">
-                    <a :href="getThreadUrl(thread)"
+                    <a :href="`/my/dashboard/?property_id=${thread.property_id}&thread_id=${thread.thread_id}`"
                        class="button__com thread-view-btn">
                         Перейти в диалог
                     </a>
@@ -125,15 +125,6 @@ if ( ! defined( 'ABSPATH' ) ) {
                     }
                 };
 
-                // Формируем URL для перехода в диалог
-                const getThreadUrl = (thread) => {
-                    const params = new URLSearchParams();
-                    params.append('property_id', thread.property_id);
-                    if (thread.checkin_date) params.append('checkin_date', thread.checkin_date);
-                    if (thread.checkout_date) params.append('checkout_date', thread.checkout_date);
-                    return `/my/dashboard/?${params.toString()}`;
-                };
-
                 onMounted(() => {
                     // Hide static preloader and show Vue component
                     const preloader = document.getElementById('my-threads-preloader');
@@ -150,8 +141,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                     error,
                     loadingText,
                     nonce,
-                    ajaxUrl,
-                    getThreadUrl
+                    ajaxUrl
                 };
             }
         });
