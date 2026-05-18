@@ -311,6 +311,16 @@ body:has(.my-dashboard-layout) {
     color: var(--color-text);
   }
 
+  // Property title
+  .my-widget-property {
+    &-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--color-text);
+    }
+  }
+
   // ── Action buttons ──────────────────────────────────────────
   .my-action-btn {
     text-decoration: none;
@@ -359,8 +369,7 @@ body:has(.my-dashboard-layout) {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 0;
-    border-top: 1px solid var(--color-border);
+    padding: 0px 0 14px;
     border-bottom: 1px solid var(--color-border);
   }
 
@@ -369,20 +378,21 @@ body:has(.my-dashboard-layout) {
     flex-shrink: 0;
     width: 52px;
     height: 52px;
-
+    border: 1px solid #d6d6d6;
+    border-radius: 100px;
     img {
       width: 100%;
       height: 100%;
-      border-radius: 50%;
       object-fit: cover;
       display: block;
+      border-radius: 100px;
     }
   }
 
   .my-host-status {
     position: absolute;
-    bottom: 6px;
-    right: 6px;
+    bottom: 1px;
+    right: 1px;
     width: 12px;
     height: 12px;
     background: var(--color-online);

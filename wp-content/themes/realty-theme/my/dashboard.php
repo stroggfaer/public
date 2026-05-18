@@ -94,6 +94,10 @@ if ( $has_booking_context && is_user_logged_in() ) {
     
     // Используем найденный thread_id
     $thread_id = $found_thread_id;
+    
+    // Получаем даты бронирования для info-sidebar
+    $checkin_date = get_post_meta( $booking_id, '_checkin_date', true ) ?: '';
+    $checkout_date = get_post_meta( $booking_id, '_checkout_date', true ) ?: '';
 }
 
 
@@ -148,7 +152,16 @@ if ( $has_booking_context && is_user_logged_in() ) {
 
                     <!-- Правая колонка: Боковая панель действий -->
                     <div class="my-content-sidebar">
-                        <?php get_template_part('my/component/info-sidebar'); ?>
+                        <?php 
+                        get_template_part('my/component/info-sidebar', null, array(
+                            'property_id'    => $property_id,
+                            'owner_id'       => $owner_id,
+                            'booking_status' => $booking_status,
+                            'thread_id'      => $thread_id,
+                            'checkin_date'   => $checkin_date ?? '',
+                            'checkout_date'  => $checkout_date ?? ''
+                        )); 
+                        ?>
                     </div>
                 </div>
             <?php

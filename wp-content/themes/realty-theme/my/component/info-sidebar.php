@@ -2,38 +2,116 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+// Получаем данные из args
+$property_id    = $args['property_id'] ?? 0;
+$owner_id       = $args['owner_id'] ?? 0;
+$booking_status = $args['booking_status'] ?? 'new';
+$thread_id      = $args['thread_id'] ?? '';
+$checkin_date   = $args['checkin_date'] ?? '';
+$checkout_date  = $args['checkout_date'] ?? '';
+
+// Данные объекта
+$property_title = '';
+$property_url = '';
+$owner_name = '';
+$owner_avatar = '';
+$owner_rating = '4.9';
+$owner_reviews = '128';
+$response_time = '15 минут';
+
+if ( $property_id > 0 ) {
+    $property = get_post( $property_id );
+    if ( $property ) {
+        $property_title = $property->post_title;
+        $property_url = get_permalink( $property_id );
+        
+        // Данные хоста
+        $author_id = get_post_field( 'post_author', $property_id );
+        if ( $author_id ) {
+            $first_name = get_the_author_meta( 'first_name', (int) $author_id );
+            $last_name = get_the_author_meta( 'last_name', (int) $author_id );
+            $owner_name = trim( $first_name . ' ' . $last_name );
+            
+            if ( empty( $owner_name ) ) {
+                $owner_name = get_the_author_meta( 'display_name', (int) $author_id );
+            }
+            
+            // Аватар хоста
+            $owner_avatar = get_avatar_url( $author_id, array( 'size' => 80 ) );
+        }
+    }
+}
 ?>
+
 <div class="my-actions-panel">
-    <h3 class="my-actions-title"><?php esc_html_e( 'Действия', 'realty-theme' ); ?></h3>
+    <!-- Информация об объекте -->
+<!--    <div class="my-widget-property">-->
+<!--        <h3 class="my-widget-property-title">--><?php //echo esc_html( $property_title ); ?><!--</h3>-->
+<!--    </div>-->
 
-    <a href="#" class="my-action-btn my-action-btn--primary">
-        <span class="material-symbols-outlined">chat</span>
-        <span><?php esc_html_e( 'Написать хозяину', 'realty-theme' ); ?></span>
-    </a>
-
-    <a href="#" class="my-action-btn my-action-btn--secondary">
-        <span class="material-symbols-outlined">calendar_today</span>
-        <span><?php esc_html_e( 'Узнать о длительном проживании', 'realty-theme' ); ?></span>
-    </a>
-
+    <!-- Информация о хосте -->
     <div class="my-host-info">
         <div class="my-host-avatar">
+            <?php if ( $owner_avatar ) : ?>
+                <img src="<?php echo esc_url( $owner_avatar ); ?>" alt="<?php echo esc_attr( $owner_name ); ?>" />
+            <?php else : ?>
+                <div class="avatar-placeholder">
+                    <span class="material-symbols-outlined">person</span>
+                </div>
+            <?php endif; ?>
             <span class="my-host-status"></span>
-            <div class="avatar-placeholder">
-                <span class="material-symbols-outlined">person</span>
-            </div>
-            <!--                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" alt="Хозяин" />-->
         </div>
         <div class="my-host-details">
-            <div class="my-host-name"><?php esc_html_e( 'Хозяин отвечает', 'realty-theme' ); ?></div>
-            <div class="my-host-response"><?php esc_html_e( 'Обычно в течение 15 минут', 'realty-theme' ); ?></div>
+            <div class="my-host-name"><?php echo esc_html( $owner_name ); ?></div>
+            <div class="my-host-response">
+                <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle; margin-right: 2px;">schedule</span>
+                Отвечает обычно за <?php echo esc_html( $response_time ); ?>
+            </div>
         </div>
     </div>
 
+    <!-- Кнопки действий -->
+    <a href="#" class="my-action-btn my-action-btn--primary my-btn-write-host">
+        <span class="material-symbols-outlined">chat</span>
+        <span><?php esc_html_e( 'Написать хосту', 'realty-theme' ); ?></span>
+    </a>
+
+    <?php if ( $property_url && in_array( $booking_status, array( 'new', 'pending' ) ) ) : ?>
+    <a href="<?php echo esc_url( $property_url ); ?>" class="my-action-btn my-action-btn--secondary">
+        <span class="material-symbols-outlined">edit</span>
+        <span><?php esc_html_e( 'Изменить бронирование', 'realty-theme' ); ?></span>
+    </a>
+    <?php endif; ?>
+
+    <!-- Информационное уведомление -->
+    <?php if ( in_array( $booking_status, array( 'new', 'pending', 'confirmed' ) ) ) : ?>
     <div class="my-info-notice">
         <span class="material-symbols-outlined my-notice-icon">info</span>
         <p class="my-notice-text">
-            <?php esc_html_e( 'Вы можете изменить даты бронирования или отменить его до 12 октября без комиссии.', 'realty-theme' ); ?>
+            <?php 
+            if ( $booking_status === 'new' || $booking_status === 'pending' ) :
+                echo esc_html( realty_get_booking_notice_new_pending() );
+            else :
+                echo esc_html( realty_get_booking_notice_confirmed() );
+            endif;
+            ?>
         </p>
     </div>
+    <?php endif; ?>
 </div>
+
+<script type="module">
+    (function() {
+        // Кнопка "Написать хосту" - скролл к форме сообщения
+        const writeBtn = document.querySelector('.my-btn-write-host');
+        if (writeBtn) {
+            writeBtn.addEventListener('click', function() {
+                const messageForm = document.querySelector('.my-message-section');
+                if (messageForm) {
+                    messageForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        }
+    })();
+</script>

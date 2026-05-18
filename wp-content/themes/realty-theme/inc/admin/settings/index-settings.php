@@ -75,6 +75,10 @@ function realty_theme_register_settings() {
     register_setting( 'realty_theme_theme_settings', 'realty_logo_type' );
     register_setting( 'realty_theme_theme_settings', 'realty_company_name' );
     register_setting( 'realty_theme_theme_settings', 'realty_copyright_text' );
+
+    // Настройки бронирования
+    register_setting( 'realty_theme_booking_settings', 'booking_notice_new_pending' );
+    register_setting( 'realty_theme_booking_settings', 'booking_notice_confirmed' );
 }
 add_action( 'admin_init', 'realty_theme_register_settings' );
 
@@ -135,6 +139,9 @@ function realty_theme_settings_page() {
         } elseif ( $active_tab === 'theme' ) {
             realty_theme_save_theme_settings();
             $message = __( 'Настройки темы успешно сохранены!', 'realty-theme' );
+        } elseif ( $active_tab === 'booking' ) {
+            realty_theme_save_booking_settings();
+            $message = __( 'Настройки бронирования успешно сохранены!', 'realty-theme' );
         }
     }
 
@@ -164,6 +171,9 @@ function realty_theme_settings_page() {
             </a>
             <a href="?post_type=property&page=realty-theme-settings&tab=maps" class="nav-tab <?php echo 'maps' === $active_tab ? 'nav-tab-active' : ''; ?>">
                 <?php esc_html_e( 'API Карта', 'realty-theme' ); ?>
+            </a>
+            <a href="?post_type=property&page=realty-theme-settings&tab=booking" class="nav-tab <?php echo 'booking' === $active_tab ? 'nav-tab-active' : ''; ?>">
+                <?php esc_html_e( 'Бронирование', 'realty-theme' ); ?>
             </a>
         </h2>
 
@@ -239,6 +249,7 @@ function realty_theme_get_settings_tab_path( $tab ) {
         'filter'      => $dir . 'filter-settings.php',
         'guest-types' => $dir . 'guest-types-settings.php',
         'maps'        => $dir . 'maps-settings.php',
+        'booking'     => $dir . 'booking-settings.php',
     );
 
     return isset( $files[ $tab ] ) ? $files[ $tab ] : '';
@@ -447,6 +458,20 @@ function realty_theme_save_theme_settings() {
 }
 
 /**
+ * Сохранение настроек бронирования
+ *
+ * @since 1.0.0
+ */
+function realty_theme_save_booking_settings() {
+    if ( isset( $_POST['booking_notice_new_pending'] ) ) {
+        update_option( 'booking_notice_new_pending', sanitize_textarea_field( wp_unslash( $_POST['booking_notice_new_pending'] ) ) );
+    }
+    if ( isset( $_POST['booking_notice_confirmed'] ) ) {
+        update_option( 'booking_notice_confirmed', sanitize_textarea_field( wp_unslash( $_POST['booking_notice_confirmed'] ) ) );
+    }
+}
+
+/**
  * Функции для получения настроек карты
  *
  * @return string API ключ Google Maps.
@@ -494,6 +519,26 @@ function realty_get_default_lat() {
  */
 function realty_get_default_lng() {
     return get_option( 'realty_default_lng', '37.6173' );
+}
+
+/**
+ * Получение уведомления для новых заявок
+ *
+ * @return string Текст уведомления.
+ * @since 1.0.0
+ */
+function realty_get_booking_notice_new_pending() {
+    return get_option( 'booking_notice_new_pending', __( 'Вы можете изменить даты бронирования или отменить его до подтверждения.', 'realty-theme' ) );
+}
+
+/**
+ * Получение уведомления для подтверждённых бронирований
+ *
+ * @return string Текст уведомления.
+ * @since 1.0.0
+ */
+function realty_get_booking_notice_confirmed() {
+    return get_option( 'booking_notice_confirmed', __( 'Бесплатная отмена возможна до 48 часов до заезда.', 'realty-theme' ) );
 }
 
 /**
