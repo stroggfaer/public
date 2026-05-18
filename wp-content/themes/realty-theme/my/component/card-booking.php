@@ -351,7 +351,11 @@ if ( $checkout_date ) {
             <?php if ($property_data && $property_data['owner_name']) : ?>
             <div class="my-details-row">
                 <span class="my-details-label"><?php esc_html_e('Хозяин', 'realty-theme'); ?></span>
-                <span class="my-details-value my-details-value--link"><?php echo esc_html($property_data['owner_name']); ?></span>
+                <span class="my-details-value my-details-value--link my-host-name-trigger" 
+                      data-owner-id="<?php echo esc_attr($property_data['author_id']); ?>"
+                      data-owner-name="<?php echo esc_attr($property_data['owner_name']); ?>">
+                    <?php echo esc_html($property_data['owner_name']); ?>
+                </span>
             </div>
             <?php endif; ?>
         </div>
@@ -394,11 +398,15 @@ if ( $checkout_date ) {
     </el-dialog>
 </div>
 
+<!-- Vue 3 Host Profile Modal -->
+<div id="vue-host-profile-modal"></div>
+
 <script type="module">
     (function() {
-        const { createAppModule, AppContentMap } = window.VueAppModule;
+        const { createAppModule, AppContentMap, HostProfileModal } = window.VueAppModule;
         const { ref, onMounted } = Vue;
 
+        // Map Modal App
         const AppPropertyMapModal = createAppModule({
             components: {
                 AppContentMap
@@ -434,5 +442,39 @@ if ( $checkout_date ) {
 
         AppPropertyMapModal.component('el-dialog', window.VueAppModule.ElDialog);
         AppPropertyMapModal.mount('#vue-property-map-modal');
+
+        // Host Profile Modal App
+        const AppHostProfileModal = createAppModule({
+            components: {
+                HostProfileModal
+            },
+            setup() {
+                const hostProfileRef = ref(null);
+
+                onMounted(() => {
+                    // Listen for clicks on host name
+                    document.addEventListener('click', function(e) {
+                        const hostTrigger = e.target.closest('.my-host-name-trigger');
+                        if (hostTrigger) {
+                            e.preventDefault();
+                            const ownerId = hostTrigger.dataset.ownerId;
+                            const ownerName = hostTrigger.dataset.ownerName;
+                            
+                            if (hostProfileRef.value) {
+                                hostProfileRef.value.openModal(ownerId, ownerName);
+                            }
+                        }
+                    });
+                });
+
+                return {
+                    hostProfileRef
+                };
+            },
+            template: '<host-profile-modal ref="hostProfileRef" />'
+        });
+
+        AppHostProfileModal.component('el-dialog', window.VueAppModule.ElDialog);
+        AppHostProfileModal.mount('#vue-host-profile-modal');
     })();
 </script>

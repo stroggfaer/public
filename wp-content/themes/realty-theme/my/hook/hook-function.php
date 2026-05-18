@@ -1717,3 +1717,43 @@ function my_cabinet_ajax_register() {
 }
 add_action( 'wp_ajax_nopriv_my_cabinet_register', 'my_cabinet_ajax_register' );
 add_action( 'wp_ajax_my_cabinet_register',        'my_cabinet_ajax_register' );
+
+// ============================================================
+// AJAX: Получение профиля хозяина для модального окна
+// ============================================================
+
+/**
+ * AJAX: Получить данные профиля хозяина
+ * 
+ * Возвращает: avatar, first_name, last_name, email, user_login, description
+ */
+function my_cabinet_ajax_get_host_profile() {
+    // Проверка nonce не требуется - публичные данные хозяина
+    
+    $owner_id = isset( $_POST['owner_id'] ) ? intval( $_POST['owner_id'] ) : 0;
+    
+    if ( ! $owner_id ) {
+        wp_send_json_error( array( 'message' => 'owner_id is required' ) );
+    }
+    
+    // Проверяем существование пользователя
+    $user = get_user_by( 'id', $owner_id );
+    if ( ! $user ) {
+        wp_send_json_error( array( 'message' => 'User not found' ) );
+    }
+    
+    // Собираем данные профиля
+    $host_data = array(
+        'avatar'       => get_avatar_url( $owner_id, array( 'size' => 150 ) ),
+        'first_name'   => get_the_author_meta( 'first_name', $owner_id ),
+        'last_name'    => get_the_author_meta( 'last_name', $owner_id ),
+        'display_name' => get_the_author_meta( 'display_name', $owner_id ),
+        'email'        => get_the_author_meta( 'email', $owner_id ),
+        'user_login'   => $user->user_login,
+        'description'  => get_the_author_meta( 'description', $owner_id ),
+    );
+    
+    wp_send_json_success( $host_data );
+}
+add_action( 'wp_ajax_nopriv_my_cabinet_get_host_profile', 'my_cabinet_ajax_get_host_profile' );
+add_action( 'wp_ajax_my_cabinet_get_host_profile',        'my_cabinet_ajax_get_host_profile' );
