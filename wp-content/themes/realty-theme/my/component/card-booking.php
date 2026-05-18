@@ -217,6 +217,9 @@ $current_status = realty_get_booking_status_data( $booking_status );
 $property_data = null;
 $property_price = '';
 $property_location = '';
+$property_address = '';
+$property_lat = '';
+$property_lng = '';
 $property_rating = '4.9';
 $property_reviews = '128';
 
@@ -229,10 +232,18 @@ if ( $property_id > 0 ) {
             $property_price = number_format((float) $price_raw, 0, '.', ' ') . ' ₽';
         }
         
-        // Локация
+        // Локация (город из таксономии)
         $location_terms = get_the_terms($property_id, 'location');
         if ($location_terms && !is_wp_error($location_terms)) {
             $property_location = $location_terms[0]->name;
+        }
+        
+        // Адрес из Pods поля
+        $pod = pods('property', $property_id);
+        if ($pod && $pod->exists()) {
+            $property_address = $pod->field('address') ?? '';
+            $property_lat = $pod->field('latitude') ?? '';
+            $property_lng = $pod->field('longitude') ?? '';
         }
         
         // Хозяин
@@ -295,17 +306,10 @@ if ( $checkout_date ) {
             <div class="my-booking-rating">
                 <span class="material-symbols-outlined my-rating-star">star</span>
                 <span class="my-rating-value"><?php echo esc_html($property_rating); ?> (<?php echo esc_html($property_reviews); ?>)</span>
-                <span class="my-rating-badge"><?php esc_html_e('Подтверждено', 'realty-theme'); ?></span>
             </div>
             <h2 class="my-booking-title">
                 <?php echo $property_data ? esc_html($property_data['title']) : 'Объект недвижимости'; ?>
             </h2>
-            <?php if ($property_location) : ?>
-            <div class="my-booking-location">
-                <span class="material-symbols-outlined">location_on</span>
-                <span><?php echo esc_html($property_location); ?></span>
-            </div>
-            <?php endif; ?>
             <div class="my-booking-status my-booking-status--<?php echo esc_attr( $current_status['class'] ); ?>">
                 <?php echo esc_html( strtoupper( $current_status['label'] ) ); ?>
             </div>
@@ -352,15 +356,21 @@ if ( $checkout_date ) {
             <?php endif; ?>
         </div>
 
-        <?php if ($property_location) : ?>
+        <?php if ($property_address) : ?>
         <div class="my-details-section">
             <h3 class="my-details-title"><?php esc_html_e('РАСПОЛОЖЕНИЕ', 'realty-theme'); ?></h3>
+            <?php if ($property_location) : ?>
+                <div class="my-details-row">
+                    <span class="my-details-label"><?php esc_html_e('Город', 'realty-theme'); ?></span>
+                    <span class="my-details-value"><?php echo esc_html($property_location); ?></span>
+                </div>
+            <?php endif; ?>
             <div class="my-details-row">
                 <span class="my-details-label"><?php esc_html_e('Адрес', 'realty-theme'); ?></span>
-                <span class="my-details-value"><?php echo esc_html($property_location); ?></span>
+                <span class="my-details-value"><?php echo esc_html($property_address); ?></span>
             </div>
             <div class="my-details-row">
-                <a href="#" class="my-details-link">
+                <a href="#" class="my-details-link" id="show-property-map" data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>" data-address="<?php echo esc_attr($property_address); ?>">
                     <span class="material-symbols-outlined">navigation</span>
                     <span><?php esc_html_e('Показать маршрут', 'realty-theme'); ?></span>
                 </a>
@@ -369,3 +379,60 @@ if ( $checkout_date ) {
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Vue 3 Map Modal -->
+<div id="vue-property-map-modal">
+    <el-dialog v-model="visible" :title="'Местоположение: <?php echo esc_html($property_location); ?>, <?php echo esc_html($property_address); ?>'" width="800">
+        <app-content-map 
+            v-if="visible && propertyLat && propertyLng"
+            :latitude="propertyLat" 
+            :longitude="propertyLng"
+            map-id="property-map-modal"
+            :zoom="15"
+            height="500px"
+        />
+    </el-dialog>
+</div>
+
+<script type="module">
+    (function() {
+        const { createAppModule, AppContentMap } = window.VueAppModule;
+        const { ref, onMounted } = Vue;
+
+        const AppPropertyMapModal = createAppModule({
+            components: {
+                AppContentMap
+            },
+            setup() {
+                const visible = ref(false);
+                const propertyLat = ref(0);
+                const propertyLng = ref(0);
+
+                onMounted(() => {
+                    const trigger = document.getElementById('show-property-map');
+                    if (trigger) {
+                        trigger.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const lat = this.dataset.lat;
+                            const lng = this.dataset.lng;
+                            if (lat && lng) {
+                                propertyLat.value = parseFloat(lat);
+                                propertyLng.value = parseFloat(lng);
+                                visible.value = true;
+                            }
+                        });
+                    }
+                });
+
+                return {
+                    visible,
+                    propertyLat,
+                    propertyLng
+                };
+            }
+        });
+
+        AppPropertyMapModal.component('el-dialog', window.VueAppModule.ElDialog);
+        AppPropertyMapModal.mount('#vue-property-map-modal');
+    })();
+</script>

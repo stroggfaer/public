@@ -110,8 +110,8 @@ function enqueue_ajax_pagination_scripts() {
 add_action('wp_enqueue_scripts', 'enqueue_property_filter_scripts');
 
 function enqueue_property_filter_scripts() {
-    // Подключаем Google Maps API только на странице архива недвижимости и на странице одиночного объекта
-    if (is_post_type_archive('property') || is_singular('property')) {
+    // Подключаем Google Maps API на страницах архива, одиночного объекта и dashboard
+    if (is_post_type_archive('property') || is_singular('property') || is_page('my-dashboard') || (isset($_GET['property_id']) && isset($_GET['thread_id']))) {
         // Получаем API-ключ из настроек
         $api_key = get_option('google_maps_api_key', '');
         if (!empty($api_key)) {
