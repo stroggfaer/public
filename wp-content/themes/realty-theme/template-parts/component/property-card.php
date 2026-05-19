@@ -36,6 +36,14 @@ $gallery_data = pod_get_gallery_data($pod, 'medium', true);
 if (!$thumbnail_url) {
     $thumbnail_url = $gallery_data['src'];
 }
+
+// Проверяем статус избранного
+$is_favorite = false;
+if (is_user_logged_in()) {
+    $favorites = get_user_meta(get_current_user_id(), '_real_property_favorites', true);
+    $favorites = is_array($favorites) ? $favorites : array();
+    $is_favorite = in_array($property_id, $favorites, true);
+}
 ?>
 <div class="property-card" data-id="<?php echo esc_attr($property_id); ?>"
     data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
@@ -45,8 +53,8 @@ if (!$thumbnail_url) {
             <button type="button" class="map-location js-map-location" title="Показать на карте" data-id="<?php echo esc_attr($property_id); ?>" data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
                 <span class="material-symbols-outlined">map</span>
             </button>
-            <button type="button" class="favorite js-favorite" title="Добавить в избранное">
-                <span class="material-symbols-outlined">favorite</span>
+            <button type="button" class="favorite js-favorite <?php echo $is_favorite ? 'active' : ''; ?>" title="Добавить в избранное" data-property-id="<?php echo esc_attr($property_id); ?>" data-is-favorite="<?php echo $is_favorite ? '1' : '0'; ?>">
+                <span class="material-symbols-outlined"><?php echo $is_favorite ? 'favorite' : 'favorite_border'; ?></span>
             </button>
         </div>
         <a href="<?php echo esc_url(get_permalink($property_id)); ?>" class="property-link"></a>

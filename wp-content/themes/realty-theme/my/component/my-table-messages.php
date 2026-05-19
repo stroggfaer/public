@@ -70,11 +70,16 @@ if ( ! defined( 'ABSPATH' ) ) {
     </div>
 
     <!-- Empty state -->
-    <div v-else id="my-threads-empty" class="my-threads-placeholder">
-        <span class="material-symbols-outlined my-empty-icon">chat_bubble_outline</span>
-        <h3><?php esc_html_e('У вас пока нет сообщений', 'realty-theme'); ?></h3>
-        <p><?php esc_html_e('Выберите недвижимость и напишите хозяину.', 'realty-theme'); ?></p>
-        <a href="/property/" class="button__com"><?php esc_html_e('Перейти к поиску', 'realty-theme'); ?></a>
+    <div v-else id="my-threads-empty" class="my-empty-placeholder">
+        <?php
+        get_template_part( 'template-parts/component/empty-block', null, array(
+            'icon'        => 'chat_bubble_outline',
+            'title'       => __( 'У вас пока нет сообщений', 'realty-theme' ),
+            'description' => __( 'Выберите недвижимость и напишите хозяину.', 'realty-theme' ),
+            'button_text' => __( 'Перейти к поиску', 'realty-theme' ),
+            'button_url'  => '/property/',
+        ) );
+        ?>
     </div>
 
     <!-- Error state -->

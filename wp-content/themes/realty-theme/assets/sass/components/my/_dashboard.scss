@@ -618,35 +618,35 @@ body:has(.my-dashboard-layout) {
     }
   }
   
-  // ── Empty State ─────────────────────────────────────────────
-  .my-threads-placeholder {
-    background: var(--color-white);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-card);
-    padding: 60px 40px;
-    text-align: center;
-    
-    .my-empty-icon {
-      font-size: 64px;
-      color: var(--color-text-light);
-      margin-bottom: 16px;
-    }
-    
-    h3 {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0 0 8px;
-      color: var(--color-text);
-    }
-    
-    p {
-      font-size: 14px;
-      color: var(--color-text-muted);
-      margin: 0 0 24px;
-    }
+
+}
+// ── Empty State ─────────────────────────────────────────────
+.my-empty-placeholder {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: 60px 40px;
+  text-align: center;
+
+  .my-empty-icon {
+    font-size: 64px;
+    color: var(--color-text-light);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--color-text);
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin: 0 0 24px;
   }
 }
-
 // ============================================================
 // Host Profile Modal - Premium Bento Card Style
 // ============================================================

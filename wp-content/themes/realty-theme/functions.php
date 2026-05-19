@@ -85,6 +85,13 @@ function naked_scripts()  {
     // add theme scripts
     wp_enqueue_script( 'naked', get_template_directory_uri() . '/js/site.js', array(), NAKED_VERSION, true );
 
+    // Передаем данные в JS для работы избранного и других функций
+    wp_localize_script( 'naked', 'RealtyData', array(
+        'isLoggedIn'    => is_user_logged_in(),
+        'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
+        'favoriteNonce' => wp_create_nonce( 'my_cabinet_favorite_nonce' ),
+    ) );
+
     
     // Подключаем скрипт Splide для галереи на странице недвижимости
     if (is_singular('property')) {

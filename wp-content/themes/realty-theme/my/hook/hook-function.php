@@ -1598,6 +1598,101 @@ function my_cabinet_ajax_delete_booking() {
 add_action( 'wp_ajax_my_cabinet_delete_booking', 'my_cabinet_ajax_delete_booking' );
 
 // ============================================================
+// AJAX: Избранное (Favorites)
+// ============================================================
+
+/**
+ * AJAX: Toggle избранного (добавить/удалить)
+ */
+function my_cabinet_ajax_toggle_favorite() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_favorite_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array(
+            'message'    => 'Необходимо авторизоваться.',
+            'need_login' => true,
+        ) );
+    }
+
+    $property_id = isset( $_POST['property_id'] ) ? absint( $_POST['property_id'] ) : 0;
+
+    if ( ! $property_id ) {
+        wp_send_json_error( array( 'message' => 'Не указан объект недвижимости.' ) );
+    }
+
+    // Проверяем существование property
+    $property = get_post( $property_id );
+    if ( ! $property || $property->post_type !== 'property' ) {
+        wp_send_json_error( array( 'message' => 'Объект не найден.' ) );
+    }
+
+    $user_id     = get_current_user_id();
+    $meta_key    = '_real_property_favorites';
+    $favorites   = get_user_meta( $user_id, $meta_key, true );
+    $favorites   = is_array( $favorites ) ? $favorites : array();
+
+    // Toggle логики
+    if ( in_array( $property_id, $favorites, true ) ) {
+        // Удаляем
+        $favorites = array_values( array_filter( $favorites, function( $id ) use ( $property_id ) {
+            return $id !== $property_id;
+        } ) );
+        $is_favorite = false;
+    } else {
+        // Добавляем
+        $favorites[] = $property_id;
+        $is_favorite = true;
+    }
+
+    // Сохраняем
+    update_user_meta( $user_id, $meta_key, $favorites );
+
+    wp_send_json_success( array(
+        'is_favorite'    => $is_favorite,
+        'favorites_count' => count( $favorites ),
+        'message'        => $is_favorite ? 'Добавлено в избранное' : 'Удалено из избранного',
+    ) );
+}
+add_action( 'wp_ajax_toggle_favorite', 'my_cabinet_ajax_toggle_favorite' );
+
+/**
+ * AJAX: Получение статуса избранного для нескольких объектов
+ */
+function my_cabinet_ajax_get_favorite_status() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_favorite_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $property_ids = isset( $_POST['property_ids'] ) ? array_map( 'absint', (array) $_POST['property_ids'] ) : array();
+
+    if ( empty( $property_ids ) ) {
+        wp_send_json_error( array( 'message' => 'Не указаны объекты.' ) );
+    }
+
+    $user_id   = get_current_user_id();
+    $favorites = get_user_meta( $user_id, '_real_property_favorites', true );
+    $favorites = is_array( $favorites ) ? $favorites : array();
+
+    $status_map = array();
+    foreach ( $property_ids as $id ) {
+        $status_map[ $id ] = in_array( $id, $favorites, true );
+    }
+
+    wp_send_json_success( array( 'status_map' => $status_map ) );
+}
+add_action( 'wp_ajax_get_favorite_status', 'my_cabinet_ajax_get_favorite_status' );
+
+// ============================================================
 // AJAX: Вход
 // ============================================================
 

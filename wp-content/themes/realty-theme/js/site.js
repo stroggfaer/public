@@ -22,6 +22,101 @@ jQuery(document).ready(function($) {
         e.preventDefault(); // Останавливаем действия по умолчанию
         $('.my-message-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+
+    // ============================================================
+    // Избранное (Favorites)
+    // ============================================================
+
+    /**
+     * Обработчик клика на кнопку избранного
+     */
+    function handleFavoriteClick(e) {
+        e.preventDefault();
+
+        const btn = e.target.closest('.js-favorite');
+        if (!btn) return;
+
+        const propertyId = btn.dataset.propertyId;
+        const isLoggedIn = window.RealtyData?.isLoggedIn || false;
+        const ajaxUrl = window.RealtyData?.ajaxUrl || '/wp-admin/admin-ajax.php';
+        const nonce = window.RealtyData?.favoriteNonce || '';
+
+        // Если не авторизован — показать dialog
+        if (!isLoggedIn) {
+            if (typeof ElementPlus !== 'undefined' && ElementPlus.ElMessageBox) {
+                ElementPlus.ElMessageBox.confirm(
+                    'Для добавления в избранное необходимо войти',
+                    'Авторизация',
+                    {
+                        confirmButtonText: 'Войти',
+                        cancelButtonText: 'Отмена',
+                        type: 'warning'
+                    }
+                ).then(() => {
+                    window.location.href = '/my-auth/?redirect_to=' + encodeURIComponent(window.location.href);
+                }).catch(() => {
+                    // Пользователь отменил
+                });
+            } else {
+                // Fallback без Element Plus
+                if (confirm('Для добавления в избранное необходимо войти. Перейти на страницу входа?')) {
+                    window.location.href = '/my-auth/?redirect_to=' + encodeURIComponent(window.location.href);
+                }
+            }
+            return;
+        }
+
+        // Блокируем кнопку на время запроса
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+
+        // AJAX toggle запрос
+        const formData = new FormData();
+        formData.append('action', 'toggle_favorite');
+        formData.append('property_id', propertyId);
+        formData.append('nonce', nonce);
+
+        fetch(ajaxUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Если на странице /my/favorites/ — reload
+                if (window.location.pathname.includes('/my/favorites/')) {
+                    window.location.reload();
+                } else {
+                    // На других страницах — обновляем иконку
+                    const iconSpan = btn.querySelector('.material-symbols-outlined');
+                    if (data.data.is_favorite) {
+                        btn.classList.add('active');
+                        if (iconSpan) iconSpan.textContent = 'favorite';
+                    } else {
+                        btn.classList.remove('active');
+                        if (iconSpan) iconSpan.textContent = 'favorite_border';
+                    }
+                }
+            } else {
+                console.error('Favorite toggle error:', data.data?.message);
+            }
+        })
+        .catch(error => {
+            console.error('Favorite toggle error:', error);
+        })
+        .finally(() => {
+            // Разблокируем кнопку
+            btn.disabled = false;
+            btn.style.opacity = '';
+        });
+    }
+
+    // Инициализация обработчиков для существующих кнопок
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.js-favorite')) {
+            handleFavoriteClick(e);
+        }
+    });
 });
 
 
