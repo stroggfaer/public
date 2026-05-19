@@ -106,7 +106,8 @@ if ( $property_id > 0 ) {
         // Кнопка "Написать хосту" - скролл к форме сообщения
         const writeBtn = document.querySelector('.my-btn-write-host');
         if (writeBtn) {
-            writeBtn.addEventListener('click', function() {
+            writeBtn.addEventListener('click', function(e) {
+
                 const messageForm = document.querySelector('.my-message-section');
                 if (messageForm) {
                     messageForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
