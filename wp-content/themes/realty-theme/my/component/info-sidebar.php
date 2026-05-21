@@ -89,7 +89,7 @@ if ( $property_id > 0 ) {
     <div class="my-info-notice">
         <span class="material-symbols-outlined my-notice-icon">info</span>
         <p class="my-notice-text">
-            <?php 
+            <?php
             if ( $booking_status === 'new' || $booking_status === 'pending' ) :
                 echo esc_html( realty_get_booking_notice_new_pending() );
             else :
@@ -101,18 +101,3 @@ if ( $property_id > 0 ) {
     <?php endif; ?>
 </div>
 
-<script type="module">
-    (function() {
-        // Кнопка "Написать хосту" - скролл к форме сообщения
-        const writeBtn = document.querySelector('.my-btn-write-host');
-        if (writeBtn) {
-            writeBtn.addEventListener('click', function(e) {
-
-                const messageForm = document.querySelector('.my-message-section');
-                if (messageForm) {
-                    messageForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        }
-    })();
-</script>

@@ -1852,3 +1852,136 @@ function my_cabinet_ajax_get_host_profile() {
 }
 add_action( 'wp_ajax_nopriv_my_cabinet_get_host_profile', 'my_cabinet_ajax_get_host_profile' );
 add_action( 'wp_ajax_my_cabinet_get_host_profile',        'my_cabinet_ajax_get_host_profile' );
+
+// ============================================================
+// AJAX: Получение профиля пользователя (для страницы настроек)
+// ============================================================
+
+/**
+ * AJAX: Получение данных профиля текущего пользователя
+ * 
+ * Возвращает: first_name, last_name, email
+ */
+function my_cabinet_ajax_get_profile() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_profile_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $user_id = get_current_user_id();
+    $user = get_userdata( $user_id );
+
+    if ( ! $user ) {
+        wp_send_json_error( array( 'message' => 'Пользователь не найден.' ) );
+    }
+
+    wp_send_json_success( array(
+        'first_name' => $user->first_name,
+        'last_name'  => $user->last_name,
+        'email'      => $user->user_email,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_get_profile', 'my_cabinet_ajax_get_profile' );
+
+// ============================================================
+// AJAX: Обновление профиля пользователя
+// ============================================================
+
+/**
+ * AJAX: Обновление имени и фамилии пользователя
+ * 
+ * Принимает: first_name, last_name
+ */
+function my_cabinet_ajax_update_profile() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_update_profile_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $user_id = get_current_user_id();
+    $first_name = isset( $_POST['first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_name'] ) ) : '';
+    $last_name = isset( $_POST['last_name'] ) ? sanitize_text_field( wp_unslash( $_POST['last_name'] ) ) : '';
+
+    // Валидация
+    if ( empty( $first_name ) || empty( $last_name ) ) {
+        wp_send_json_error( array( 'message' => 'Заполните все поля.' ) );
+    }
+
+    // Обновляем данные пользователя
+    $user_data = array(
+        'ID'         => $user_id,
+        'first_name' => $first_name,
+        'last_name'  => $last_name,
+    );
+
+    $result = wp_update_user( $user_data );
+
+    if ( is_wp_error( $result ) ) {
+        wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+    }
+
+    wp_send_json_success( array(
+        'message'    => 'Профиль успешно обновлен',
+        'first_name' => $first_name,
+        'last_name'  => $last_name,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_update_profile', 'my_cabinet_ajax_update_profile' );
+
+// ============================================================
+// AJAX: Смена пароля пользователя
+// ============================================================
+
+/**
+ * AJAX: Изменение пароля текущего пользователя
+ * 
+ * Принимает: current_password, new_password
+ */
+function my_cabinet_ajax_change_password() {
+    // Проверка nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'my_cabinet_change_password_nonce' ) ) {
+        wp_send_json_error( array( 'message' => 'Ошибка безопасности. Обновите страницу.' ) );
+    }
+
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    $user_id = get_current_user_id();
+    $current_password = isset( $_POST['current_password'] ) ? sanitize_text_field( wp_unslash( $_POST['current_password'] ) ) : '';
+    $new_password = isset( $_POST['new_password'] ) ? sanitize_text_field( wp_unslash( $_POST['new_password'] ) ) : '';
+
+    // Валидация
+    if ( empty( $current_password ) || empty( $new_password ) ) {
+        wp_send_json_error( array( 'message' => 'Заполните все поля.' ) );
+    }
+
+    if ( strlen( $new_password ) < 6 ) {
+        wp_send_json_error( array( 'message' => 'Новый пароль должен содержать минимум 6 символов.' ) );
+    }
+
+    // Проверяем текущий пароль
+    $user = get_userdata( $user_id );
+    if ( ! wp_check_password( $current_password, $user->user_pass, $user_id ) ) {
+        wp_send_json_error( array( 'message' => 'Неверный текущий пароль.' ) );
+    }
+
+    // Устанавливаем новый пароль
+    wp_set_password( $new_password, $user_id );
+
+    wp_send_json_success( array(
+        'message' => 'Пароль успешно изменен',
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_change_password', 'my_cabinet_ajax_change_password' );

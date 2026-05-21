@@ -10,6 +10,7 @@ import AuthRegistration from './src/components/my/AuthRegistration.js';
 import AuthForgot from './src/components/my/AuthForgot.js';
 import MessageToHost from './src/components/my/MessageToHost.js';
 import HostProfileModal from './src/components/my/HostProfileModal.js';
+import Settings from './src/components/my/Settings.js';
 
 
 import useProperty from './src/hooks/useProperty.js';
@@ -71,6 +72,7 @@ export {
   AuthForgot,
   MessageToHost,
   HostProfileModal,
+  Settings,
   GoogleMap,
   ElButton,
   ElDialog,
