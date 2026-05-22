@@ -42,12 +42,34 @@ if ( $property_id > 0 ) {
         }
     }
 }
+
+// Если нет property_id — показываем fallback режим
+if ( $property_id === 0 ) :
+    ?>
+    <!-- РЕЖИМ 2: Fallback без $property_id -->
+    <div class="my-actions-panel">
+        <!-- Fallback режим: нет привязки к объекту -->
+        <div class="my-info-notice my-info-notice--fallback">
+            <span class="material-symbols-outlined my-notice-icon">info</span>
+            <p class="my-notice-text">
+                <?php esc_html_e( 'Для просмотра деталей перейдите к конкретному объекту из списка диалогов', 'realty-theme' ); ?>
+            </p>
+        </div>
+
+        <a href="/property/" class="my-action-btn my-action-btn--primary">
+            <span class="material-symbols-outlined">search</span>
+            <span><?php esc_html_e( 'Перейти к поиску объектов', 'realty-theme' ); ?></span>
+        </a>
+    </div>
+    <?php
+    return;
+endif;
 ?>
 
 <div class="my-actions-panel">
     <!-- Информация об объекте -->
 <!--    <div class="my-widget-property">-->
-<!--        <h3 class="my-widget-property-title">--><?php //echo esc_html( $property_title ); ?><!--</h3>-->
+<!--        <h3 class="my-widget-property-title"><?php //echo esc_html( $property_title ); ?></h3>-->
 <!--    </div>-->
 
     <!-- Информация о хосте -->
@@ -100,4 +122,3 @@ if ( $property_id > 0 ) {
     </div>
     <?php endif; ?>
 </div>
-

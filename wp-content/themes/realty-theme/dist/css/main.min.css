@@ -4497,6 +4497,7 @@ body:has(.my-dashboard-layout) {
   transition: background 0.18s, -webkit-box-shadow 0.18s, -webkit-transform 0.1s;
   transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
   transition: background 0.18s, box-shadow 0.18s, transform 0.1s, -webkit-box-shadow 0.18s, -webkit-transform 0.1s;
+  position: relative;
 }
 .my-dashboard-layout .my-action-btn .material-symbols-outlined {
   font-size: 20px;
@@ -4521,6 +4522,45 @@ body:has(.my-dashboard-layout) {
 }
 .my-dashboard-layout .my-action-btn.my-action-btn--secondary:hover {
   background: var(--color-primary-light);
+}
+.my-dashboard-layout .my-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--color-red-btn);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 10px;
+  -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.my-dashboard-layout .my-info-link {
+  margin-top: 8px;
+  text-align: center;
+}
+.my-dashboard-layout .my-info-link a {
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-accent);
+  text-decoration: none;
+  -webkit-transition: color 0.2s ease;
+  transition: color 0.2s ease;
+}
+.my-dashboard-layout .my-info-link a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 .my-dashboard-layout .my-host-info {
   display: -webkit-box;
