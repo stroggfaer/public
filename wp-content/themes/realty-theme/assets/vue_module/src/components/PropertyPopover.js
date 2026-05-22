@@ -38,7 +38,7 @@ export default {
         </button>
         
         <!-- Счетчик -->
-        <div v-if="images.length > 1" class="slider-counter">{{ currentSlide }} / {{ images.length }}</div>
+        <div v-if="images.length > 1" class="slider-counter">{{ currentSlide + 1 }} / {{ images.length }}</div>
       </div>
 
       <!-- Информация об объекте -->

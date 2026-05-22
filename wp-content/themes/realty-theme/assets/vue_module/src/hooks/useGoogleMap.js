@@ -335,7 +335,13 @@ export function useGoogleMap(options = {}) {
             }
         });
         markers.value = [];
-        infoWindows.value.forEach(iw => iw.close());
+        
+        // Закрываем InfoWindow с проверкой
+        infoWindows.value.forEach(iw => {
+            if (iw && typeof iw.close === 'function') {
+                iw.close();
+            }
+        });
         infoWindows.value = [];
         markerMap.value = {};
         
@@ -365,11 +371,22 @@ export function useGoogleMap(options = {}) {
         map.value.setZoom(14);
 
         if (markerMap.value[propertyId]) {
-            infoWindows.value.forEach(iw => iw.close());
-            markerMap.value[propertyId].infoWindow.open(
-                map.value,
-                markerMap.value[propertyId].marker
-            );
+            // Закрываем все InfoWindow (если они есть)
+            infoWindows.value.forEach(iw => {
+                if (iw && typeof iw.close === 'function') {
+                    iw.close();
+                }
+            });
+            
+            // Открываем InfoWindow только если он существует
+            // (для кастомных маркеров используем popover, а не InfoWindow)
+            const markerData = markerMap.value[propertyId];
+            if (markerData.infoWindow && typeof markerData.infoWindow.open === 'function') {
+                markerData.infoWindow.open(
+                    map.value,
+                    markerData.marker
+                );
+            }
         }
     }
 
@@ -382,6 +399,8 @@ export function useGoogleMap(options = {}) {
             return;
         }
 
+        // addMarkers() сам вызывает clearMarkers()
+        // coordinates.value уже содержит все координаты (включая пагинацию)
         addMarkers(newCoordinates);
     }
 

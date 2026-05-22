@@ -84,7 +84,7 @@ get_header();
 <script type="module">
 (function() {
     const { createAppModule, GoogleMap, useGoogleMap } = window.VueAppModule;
-    const { ref, onMounted, onUnmounted, watch } = Vue;
+    const { ref, onMounted, onUnmounted, watch, computed } = Vue;
 
     // Создаем Vue приложение
     const AppPropertyMap = createAppModule({
@@ -92,8 +92,10 @@ get_header();
             GoogleMap
         },
         setup() {
-            // Получаем координаты напрямую с сервера (все 11 полей!)
-            const mapCoordinates = ref(<?=$map_coordinates_json?>);
+            const store = Vuex.useStore();
+            
+            // Получаем координаты из Vuex store (usePropertyFilters уже управляет ими!)
+            const mapCoordinates = computed(() => store.getters['propertyFilters/getCoordinates']);
 
             // Используем хук useGoogleMap для управления картой
             const {
@@ -113,37 +115,20 @@ get_header();
 
             onMounted(() => {
                 console.log('[Vue GoogleMap] Component mounted');
-                console.log('[Vue GoogleMap] Server coordinates:', mapCoordinates.value);
+                console.log('[Vue GoogleMap] Initial coordinates from server:', <?=$map_coordinates_json?>);
 
                 // Инициализируем карту с координатами с сервера
-                if (mapCoordinates.value.length > 0) {
-                    initMap(mapCoordinates.value);
+                const initialCoords = <?=$map_coordinates_json?>;
+                if (initialCoords.length > 0) {
+                    initMap(initialCoords);
+                    // Сохраняем в store для синхронизации
+                    store.commit('propertyFilters/SET_COORDINATES', initialCoords);
                 } else {
                     initMap([]);
                 }
 
                 // Инициализируем обработчики событий
                 initEventListeners();
-
-                // Слушаем AJAX события для обновления координат после фильтрации
-                jQuery(document).on('ajaxComplete', function(event, xhr, settings) {
-                    if (settings.data && settings.data.indexOf('action=filter_properties_custom') !== -1) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.success && response.data && response.data.coordinates) {
-                                // Обновляем координаты из AJAX ответа (все 11 полей!)
-                                mapCoordinates.value = response.data.coordinates;
-                                console.log('[Vue GoogleMap] Updated coordinates after filter:', mapCoordinates.value);
-                                
-                                if (isMapReady.value) {
-                                    updateCoordinates(mapCoordinates.value);
-                                }
-                            }
-                        } catch (e) {
-                            console.error('[Vue GoogleMap] Error parsing AJAX response:', e);
-                        }
-                    }
-                });
             });
 
             onUnmounted(() => {
@@ -151,10 +136,11 @@ get_header();
                 cleanupEventListeners();
             });
 
-            // Watch за изменениями координат
+            // Watch за изменениями координат в Vuex store (фильтрация + пагинация)
             watch(mapCoordinates, (newCoords) => {
-                console.log('[Vue GoogleMap] Coordinates changed:', newCoords);
-                if (isMapReady.value && newCoords.length > 0) {
+                console.log('[Vue GoogleMap] Coordinates from store changed:', newCoords?.length || 0, 'coords');
+                if (isMapReady.value && newCoords && newCoords.length > 0) {
+                    console.log('[Vue GoogleMap] Updating map with', newCoords.length, 'coordinates');
                     updateCoordinates(newCoords);
                 }
             }, { deep: true });
