@@ -220,16 +220,20 @@ class PropertyFeature {
             $lat = get_post_meta($post->ID, 'latitude', true);
             $lng = get_post_meta($post->ID, 'longitude', true);
             if ($lat && $lng) {
-                // Получаем галерею изображений
-                $gallery_raw = get_post_meta($post->ID, 'gallery', true);
-                $gallery = [];
-                if (!empty($gallery_raw) && is_array($gallery_raw)) {
-                    // Ограничиваем до 5 изображений
-                    $gallery = array_slice($gallery_raw, 0, 5);
-                }
+                // Получаем изображения из Pods (используем существующую функцию)
+                $gallery_data = function_exists('pod_get_gallery_data') 
+                    ? pod_get_gallery_data($post->ID, 'medium', false) 
+                    : [];
                 
-                // Получаем главное изображение
+                // Берем первое изображение как thumbnail
+                $first_image = !empty($gallery_data) ? ($gallery_data[0]['src'] ?? '') : '';
+                
+                // Ограничиваем галерею до 5 изображений для popover
+                $images = array_slice($gallery_data, 0, 5);
+                
+                // Получаем стандартный thumbnail (fallback)
                 $thumbnail = get_the_post_thumbnail_url($post->ID, 'medium');
+                
                 $coordinates[] = [
                     'id' => $post->ID,
                     'lat' => $lat,
@@ -237,8 +241,12 @@ class PropertyFeature {
                     'title' => $post->post_title,
                     'price' => number_format((float) get_post_meta($post->ID, 'price', true), 0, '.', ' '),
                     'price_period' => get_post_meta($post->ID, 'hours_limit', true) ?: 'сутки',
-                    'thumbnail' => $thumbnail ?: '',
-                    'gallery' => $gallery,
+                    // Thumbnail: сначала images[0], потом стандартный thumbnail, потом пустая строка
+                    'thumbnail' => $first_image ?: ($thumbnail ?: ''),
+                    // Массив изображений для слайдера (максимум 5)
+                    'images' => array_map(function($img) {
+                        return $img['src'] ?? '';
+                    }, $images),
                     'rating' => 4.1, // временно статика
                     'is_favorite' => false, // временно статика
                     'permalink' => get_permalink($post->ID),

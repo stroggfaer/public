@@ -88,12 +88,14 @@ export default {
     let animationFrameId = null; // ID для requestAnimationFrame
 
     // Подготавливаем массив изображений
+    // Используем новое поле images (массив URL строк)
     const images = [];
-    if (props.propertyData.thumbnail) {
+    if (props.propertyData.images && Array.isArray(props.propertyData.images)) {
+      // Новое поле: images = ['url1', 'url2', ...]
+      images.push(...props.propertyData.images.filter(url => url));
+    } else if (props.propertyData.thumbnail) {
+      // Fallback: только thumbnail
       images.push(props.propertyData.thumbnail);
-    }
-    if (props.propertyData.gallery && Array.isArray(props.propertyData.gallery)) {
-      images.push(...props.propertyData.gallery);
     }
 
     const hasImages = images.length > 0;
