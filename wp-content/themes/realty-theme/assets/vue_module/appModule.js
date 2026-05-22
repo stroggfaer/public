@@ -40,6 +40,8 @@ import {
   ElAutocomplete,
   ElMessage,
   ElPopover,
+  ElCarousel,
+  ElCarouselItem,
   ElAlert,
   ElNotification,
 } from 'element-plus';

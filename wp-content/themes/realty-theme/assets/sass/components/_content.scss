@@ -555,3 +555,239 @@ article.post .the-content {
   }
 
 }
+
+// ============================================================================
+// Кастомные маркеры на карте с ценой
+// ============================================================================
+
+.map-marker-price {
+  background: #fff;
+  border-radius: 4px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  position: absolute;
+  pointer-events: auto;
+  z-index: 10;
+  // Оптимизация для GPU-accelerated трансформаций
+  will-change: transform, z-index;
+  // Важно: transform-origin для правильного позиционирования
+  transform-origin: center bottom;
+
+  .price-text {
+    color: #000;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+
+  &:hover,
+  &.hover {
+    background: $color_green;
+    box-shadow: 0 4px 12px rgba(48, 120, 117, 0.4);
+    transform: translate(-50%, -100%) scale(1.05);
+
+    .price-text {
+      color: #fff;
+    }
+  }
+  
+  // Активный маркер (когда popover открыт)
+  &.active {
+    background: $color_green;
+    box-shadow: 0 4px 16px rgba(48, 120, 117, 0.5);
+    transform: translate(-50%, -100%) scale(1.08);
+    z-index: 100;
+    
+    .price-text {
+      color: #fff;
+    }
+  }
+}
+
+// ============================================================================
+// Popover недвижимости на карте (кастомный, без Element Plus)
+// ============================================================================
+
+.map-marker-popover-container {
+  // FIXED positioning - контейнер НЕ влияет на popover
+  // Popover сам использует position: fixed
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.custom-popover {
+  width: 320px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0;
+  transform: translate(-50%, -100%) scale(0.9);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
+  // FIXED positioning - жесткая привязка к viewport
+  position: fixed;
+  
+  &.custom-popover--visible {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+  
+  &:hover {
+    opacity: 0.95;
+  }
+}
+
+.custom-popover__arrow {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #fff;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.custom-popover__slider {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  
+  .slider-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.3s ease;
+  }
+  
+  .slider-slide {
+    min-width: 100%;
+    height: 100%;
+    
+    .slider-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+  
+  .slider-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    
+    &.slider-nav--prev {
+      left: 8px;
+    }
+    
+    &.slider-nav--next {
+      right: 8px;
+    }
+  }
+  
+  .slider-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+  }
+}
+
+.custom-popover__info {
+  padding: 12px;
+  background: #fff;
+  
+  .popover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .rating-badge {
+    background: $color_green;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  
+  .favorite-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s ease, transform 0.2s ease;
+    
+    &:hover {
+      color: #F56C6C;
+      transform: scale(1.1);
+    }
+    
+    &.favorite-btn--active {
+      color: #F56C6C;
+    }
+  }
+  
+  .property-title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #333;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .property-price-block {
+    .price {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+    
+    .period {
+      font-size: 12px;
+      color: #999;
+      margin-left: 2px;
+    }
+  }
+}

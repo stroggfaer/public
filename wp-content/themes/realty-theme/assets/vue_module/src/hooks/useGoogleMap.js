@@ -1,10 +1,127 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { createApp } from 'vue';
+import PropertyPopover from '../components/PropertyPopover.js';
+
+/**
+ * Создает класс CustomPriceMarker только когда Google Maps загружен
+ * Lazy initialization чтобы избежать ошибки "google is not defined"
+ */
+function createCustomPriceMarkerClass() {
+  if (typeof google === 'undefined' || !google.maps) {
+    console.warn('[CustomPriceMarker] Google Maps API not loaded yet');
+    return null;
+  }
+  
+  return class CustomPriceMarker extends google.maps.OverlayView {
+  constructor(position, propertyData, onClick) {
+    super();
+    this.position = position;
+    this.propertyData = propertyData;
+    this.onClick = onClick;
+    this.div = null;
+    this.lastLeft = null;
+    this.lastTop = null;
+  }
+
+  onAdd() {
+    this.div = document.createElement('div');
+    this.div.className = 'map-marker-price';
+    this.div.setAttribute('role', 'button');
+    this.div.setAttribute('aria-label', `Объект: ${this.propertyData.title}, цена: ${this.propertyData.price}`);
+    this.div.innerHTML = `<span class="price-text">${this.propertyData.price}</span>`;
+    
+    // Hover эффекты - поднимаем z-index и выделяем
+    this.div.addEventListener('mouseenter', () => {
+      this.div.classList.add('hover');
+      // Поднимаем z-index при наведении
+      this.div.style.zIndex = '100';
+    });
+    this.div.addEventListener('mouseleave', () => {
+      this.div.classList.remove('hover');
+      // Возвращаем обычный z-index
+      this.div.style.zIndex = '10';
+    });
+    
+    // Click handler
+    this.div.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.onClick(this.propertyData, this.div);
+    });
+    
+    const panes = this.getPanes();
+    panes.overlayMouseTarget.appendChild(this.div);
+  }
+
+  draw() {
+    const projection = this.getProjection();
+    if (!projection || !this.div) return;
+    
+    const pos = projection.fromLatLngToDivPixel(this.position);
+    
+    // Округляем значения для избежания sub-pixel дрожания
+    const left = Math.round(pos.x);
+    const top = Math.round(pos.y);
+    
+    // Обновляем только если позиция изменилась (избегаем лишних reflow)
+    if (this.lastLeft !== left || this.lastTop !== top) {
+      this.div.style.left = left + 'px';
+      this.div.style.top = top + 'px';
+      this.div.style.transform = 'translate(-50%, -100%)';
+      
+      this.lastLeft = left;
+      this.lastTop = top;
+    }
+  }
+
+  onRemove() {
+    if (this.div && this.div.parentNode) {
+      this.div.parentNode.removeChild(this.div);
+      this.div = null;
+    }
+  }
+  
+  // Метод для совместимости с google.maps.Marker API
+  getPosition() {
+    return this.position;
+  }
+  
+  setMap(map) {
+    if (map) {
+      super.setMap(map);
+    } else {
+      this.onRemove();
+      super.setMap(null);
+    }
+  }
+};
+}
 
 /**
  * Хук для работы с Google Maps
  * Содержит бизнес-логику: инициализация, маркеры, события
  */
 export function useGoogleMap(options = {}) {
+    // Проверяем что Google Maps API загружен
+    if (typeof google === 'undefined' || !google.maps) {
+        console.warn('[useGoogleMap] Google Maps API not loaded - returning stub');
+        // Возвращаем stub чтобы компонент мог импортироваться без ошибок
+        return {
+            map: ref(null),
+            markers: ref([]),
+            infoWindows: ref([]),
+            isLoading: ref(false),
+            isMapReady: ref(false),
+            coordinates: ref([]),
+            initMap: () => { console.warn('[useGoogleMap] initMap called but Google Maps not loaded'); },
+            updateCoordinates: () => { console.warn('[useGoogleMap] updateCoordinates called but Google Maps not loaded'); },
+            initEventListeners: () => {},
+            cleanupEventListeners: () => {}
+        };
+    }
+    
+    // Создаем класс маркера только теперь когда google доступен
+    const CustomPriceMarker = createCustomPriceMarkerClass();
+    
     const {
         mapId = 'property-map',
         defaultZoom = 6,
@@ -21,6 +138,9 @@ export function useGoogleMap(options = {}) {
     const isLoading = ref(true);
     const isMapReady = ref(false);
     const coordinates = ref([]);
+    
+    // Управление popover
+    let activePopovers = [];
 
     // Проверка загрузки Google Maps API
     function isGoogleMapsLoaded() {
@@ -67,6 +187,18 @@ export function useGoogleMap(options = {}) {
 
         map.value = new google.maps.Map(mapContainer, mapOptions);
 
+        // Обновляем позицию popover при изменении viewport карты (НЕ закрываем!)
+        map.value.addListener('center_changed', () => {
+            updatePopoverPositions();
+        });
+        map.value.addListener('zoom_changed', () => {
+            updatePopoverPositions();
+        });
+        map.value.addListener('drag', () => {
+            // При перетаскивании только обновляем позицию, НЕ закрываем
+            updatePopoverPositions();
+        });
+
         // Добавляем маркеры
         if (singleProperty && lat && lng) {
             addSingleMarker(lat, lng);
@@ -105,43 +237,13 @@ export function useGoogleMap(options = {}) {
                 lng: parseFloat(coord.lng)
             };
 
-            const marker = new google.maps.Marker({
-                position: position,
-                map: map.value,
-                title: coord.title || 'Объект недвижимости',
-                optimized: true
-            });
-
-            // Информационное окно
-            const infoWindow = new google.maps.InfoWindow({
-                content: `
-                    <div class="property-info-window">
-                        <h3>${coord.title || ''}</h3>
-                        ${coord.price ? `<p class="price">${coord.price}</p>` : ''}
-                        ${coord.address ? `<p class="address">${coord.address}</p>` : ''}
-                        <p class="id">ID: ${coord.id}</p>
-                    </div>
-                `
-            });
-
+            // Используем кастомный маркер с ценой
+            const marker = new CustomPriceMarker(position, coord, handleMarkerClick);
+            marker.setMap(map.value);
             markers.value.push(marker);
-            infoWindows.value.push(infoWindow);
             markerMap.value[coord.id] = {
-                marker: marker,
-                infoWindow: infoWindow
+                marker: marker
             };
-
-            // Обработчик клика на маркер
-            marker.addListener('click', () => {
-                infoWindows.value.forEach(iw => iw.close());
-                infoWindow.open(map.value, marker);
-                
-                if (onMarkerClick) {
-                    onMarkerClick(coord.id);
-                }
-                
-                highlightPropertyCard(coord.id);
-            });
         });
 
         // Автоматическое масштабирование
@@ -153,14 +255,93 @@ export function useGoogleMap(options = {}) {
             map.value.setCenter(markers.value[0].getPosition());
         }
     }
+    
+    // Обработчик клика на маркер
+    function handleMarkerClick(propertyData, markerElement) {
+        // Закрыть все открытые popover
+        closeAllPopovers();
+        
+        // Убираем active класс у всех маркеров
+        document.querySelectorAll('.map-marker-price').forEach(marker => {
+            marker.classList.remove('active');
+            marker.style.zIndex = '10';
+        });
+        
+        // Добавляем active класс к текущему маркеру
+        if (markerElement) {
+            markerElement.classList.add('active');
+            markerElement.style.zIndex = '100';
+        }
+        
+        // Создать и показать новый popover
+        showPropertyPopover(propertyData, markerElement);
+        
+        // Убрали подсветку карточки и скролл - только открываем popover
+        // highlightPropertyCard(propertyData.id); // отключено
+    }
+    
+    // Показать popover с информацией об объекте
+    function showPropertyPopover(propertyData, anchorElement) {
+        const container = document.createElement('div');
+        container.className = 'map-marker-popover-container';
+        document.body.appendChild(container);
+        console.log('showPropertyPopover',propertyData);
+        const app = createApp(PropertyPopover, {
+            propertyData,
+            anchorElement,
+            onClose: () => {
+                app.unmount();
+                container.remove();
+                activePopovers = activePopovers.filter(p => p !== app);
+            }
+        });
+        
+        app.mount(container);
+        activePopovers.push(app);
+    }
+    
+    // Закрыть все popover
+    function closeAllPopovers() {
+        activePopovers.forEach(app => {
+            try {
+                app.unmount();
+            } catch (e) {
+                console.warn('Ошибка при закрытии popover:', e);
+            }
+        });
+        activePopovers = [];
+        document.querySelectorAll('.map-marker-popover-container').forEach(el => el.remove());
+        
+        // Убираем active класс у всех маркеров
+        document.querySelectorAll('.map-marker-price.active').forEach(marker => {
+            marker.classList.remove('active');
+            marker.style.zIndex = '10';
+        });
+    }
+    
+    // Обновить позиции всех активных popover
+    function updatePopoverPositions() {
+        // При drag/zoom карты вызываем событие resize для обновления позиции popover
+        // Popover слушает resize и пересчитывает getBoundingClientRect()
+        window.dispatchEvent(new Event('resize'));
+    }
 
     // Очистка маркеров
     function clearMarkers() {
-        markers.value.forEach(marker => marker.setMap(null));
+        markers.value.forEach(marker => {
+            if (marker && typeof marker.setMap === 'function') {
+                marker.setMap(null);
+            } else if (marker && typeof marker.onRemove === 'function') {
+                marker.onRemove();
+            }
+        });
         markers.value = [];
         infoWindows.value.forEach(iw => iw.close());
         infoWindows.value = [];
         markerMap.value = {};
+        
+        // Закрыть все popover
+        closeAllPopovers();
     }
 
     // Выделение карточки в списке

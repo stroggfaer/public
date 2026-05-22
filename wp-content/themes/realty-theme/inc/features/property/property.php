@@ -215,15 +215,33 @@ class PropertyFeature {
 
         // Подготавливаем координаты для карты
         $coordinates = [];
+
         foreach ($filtered_posts as $post) {
             $lat = get_post_meta($post->ID, 'latitude', true);
             $lng = get_post_meta($post->ID, 'longitude', true);
             if ($lat && $lng) {
+                // Получаем галерею изображений
+                $gallery_raw = get_post_meta($post->ID, 'gallery', true);
+                $gallery = [];
+                if (!empty($gallery_raw) && is_array($gallery_raw)) {
+                    // Ограничиваем до 5 изображений
+                    $gallery = array_slice($gallery_raw, 0, 5);
+                }
+                
+                // Получаем главное изображение
+                $thumbnail = get_the_post_thumbnail_url($post->ID, 'medium');
                 $coordinates[] = [
                     'id' => $post->ID,
                     'lat' => $lat,
                     'lng' => $lng,
                     'title' => $post->post_title,
+                    'price' => number_format((float) get_post_meta($post->ID, 'price', true), 0, '.', ' '),
+                    'price_period' => get_post_meta($post->ID, 'hours_limit', true) ?: 'сутки',
+                    'thumbnail' => $thumbnail ?: '',
+                    'gallery' => $gallery,
+                    'rating' => 4.1, // временно статика
+                    'is_favorite' => false, // временно статика
+                    'permalink' => get_permalink($post->ID),
                 ];
             }
         }

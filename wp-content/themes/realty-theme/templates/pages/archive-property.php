@@ -9,6 +9,29 @@
 $map_zoom = get_option('realty_map_zoom', 6);
 $map_center_lat = get_option('realty_default_lat', 55.7558);
 $map_center_lng = get_option('realty_default_lng', 37.6173);
+
+/**
+ * Получаем координаты для карты напрямую из backend
+ * 
+ * Используем PropertyFeature::getListFromGet() чтобы получить ВСЕ 11 полей:
+ * - id, lat, lng, title
+ * - price, price_period
+ * - thumbnail, gallery (до 5 фото)
+ * - rating, is_favorite, permalink
+ * 
+ * Это современное решение:
+ * ✅ Не читает из DOM (никаких data-атрибутов)
+ * ✅ Все данные приходят с сервера сразу
+ * ✅ Работает при initial load И после AJAX фильтрации
+ * ✅ Масштабируется - просто добавляем поля в property.php
+ */
+$propertyFeature = PropertyFeature::getInstance();
+$initial_data = $propertyFeature->getListFromGet();
+$map_coordinates_json = wp_json_encode(
+    $initial_data['coordinates'] ?? [],
+    JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+);
+
 // Меняем слот ставка
 add_filter('realty_header_slot', function ($content) {
     return '<div class="main-search-form-container">'.property_filter_render_home_form().'</div>';
@@ -63,35 +86,14 @@ get_header();
     const { createAppModule, GoogleMap, useGoogleMap } = window.VueAppModule;
     const { ref, onMounted, onUnmounted, watch } = Vue;
 
-    // Функция для извлечения координат из DOM
-    function getPropertyCoordinates() {
-        const coordinates = [];
-        jQuery('.property-card[data-lat][data-lng]').each(function() {
-            const $card = jQuery(this);
-            const lat = parseFloat($card.data('lat'));
-            const lng = parseFloat($card.data('lng'));
-            
-            if (!isNaN(lat) && !isNaN(lng)) {
-                coordinates.push({
-                    id: $card.data('id'),
-                    lat: lat,
-                    lng: lng,
-                    title: $card.find('.entry-title a').text().trim() || 'Объект недвижимости',
-                    price: $card.find('.property-price').text().trim() || '',
-                    address: $card.find('.property-address').text().trim() || ''
-                });
-            }
-        });
-        return coordinates;
-    }
-
     // Создаем Vue приложение
     const AppPropertyMap = createAppModule({
         components: {
             GoogleMap
         },
         setup() {
-            const mapCoordinates = ref([]);
+            // Получаем координаты напрямую с сервера (все 11 полей!)
+            const mapCoordinates = ref(<?=$map_coordinates_json?>);
 
             // Используем хук useGoogleMap для управления картой
             const {
@@ -111,12 +113,9 @@ get_header();
 
             onMounted(() => {
                 console.log('[Vue GoogleMap] Component mounted');
-                
-                // Получаем координаты из DOM
-                mapCoordinates.value = getPropertyCoordinates();
-                console.log('[Vue GoogleMap] Initial coordinates:', mapCoordinates.value);
+                console.log('[Vue GoogleMap] Server coordinates:', mapCoordinates.value);
 
-                // Инициализируем карту с координатами
+                // Инициализируем карту с координатами с сервера
                 if (mapCoordinates.value.length > 0) {
                     initMap(mapCoordinates.value);
                 } else {
@@ -131,14 +130,13 @@ get_header();
                     if (settings.data && settings.data.indexOf('action=filter_properties_custom') !== -1) {
                         try {
                             const response = JSON.parse(xhr.responseText);
-                            if (response.success && response.data) {
-                                // Обновляем координаты из ответа или из DOM
-                                const newCoordinates = response.data.coordinates || getPropertyCoordinates();
-                                mapCoordinates.value = newCoordinates;
-                                console.log('[Vue GoogleMap] Updated coordinates after filter:', newCoordinates);
+                            if (response.success && response.data && response.data.coordinates) {
+                                // Обновляем координаты из AJAX ответа (все 11 полей!)
+                                mapCoordinates.value = response.data.coordinates;
+                                console.log('[Vue GoogleMap] Updated coordinates after filter:', mapCoordinates.value);
                                 
                                 if (isMapReady.value) {
-                                    updateCoordinates(newCoordinates);
+                                    updateCoordinates(mapCoordinates.value);
                                 }
                             }
                         } catch (e) {
