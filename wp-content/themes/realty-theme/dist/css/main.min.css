@@ -2575,11 +2575,10 @@ article.post .the-content {
   transition: color 0.2s ease, transform 0.2s ease, -webkit-transform 0.2s ease;
 }
 .custom-popover__info .favorite-btn:hover {
-  color: #F56C6C;
   -webkit-transform: scale(1.1);
           transform: scale(1.1);
 }
-.custom-popover__info .favorite-btn.favorite-btn--active {
+.custom-popover__info .favorite-btn.active {
   color: #F56C6C;
 }
 .custom-popover__info .property-title {
@@ -3699,6 +3698,10 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 }
 .property-detail .entry-header .action .material-symbols-outlined:hover {
   opacity: 0.8;
+}
+.property-detail .entry-header .action .favorite.active span {
+  color: #307875;
+  font-variation-settings: "FILL" 1;
 }
 .property-detail .location {
   display: -webkit-box;

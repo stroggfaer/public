@@ -4,6 +4,7 @@
         margin-bottom: 24px;
         margin-top: 0px;
     }
+
     .property-columns {
         display: grid;
         grid-template-columns: 1fr 400px;
@@ -244,6 +245,12 @@
                 opacity: 1;
                 &:hover {
                     opacity: 0.8;
+                }
+            }
+            .favorite {
+                &.active span {
+                    color: $color-green;
+                    font-variation-settings: "FILL" 1;
                 }
             }
         }

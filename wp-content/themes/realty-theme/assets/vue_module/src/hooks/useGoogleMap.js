@@ -288,7 +288,6 @@ export function useGoogleMap(options = {}) {
         const container = document.createElement('div');
         container.className = 'map-marker-popover-container';
         document.body.appendChild(container);
-        console.log('showPropertyPopover',propertyData);
         const app = createApp(PropertyPopover, {
             propertyData,
             anchorElement,

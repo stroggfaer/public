@@ -7,6 +7,14 @@
  */
 get_header();
 
+// Проверяем статус избранного для текущего объекта
+$property_id = get_the_ID();
+$is_favorite = false;
+if (is_user_logged_in()) {
+    $favorites = get_user_meta(get_current_user_id(), '_real_property_favorites', true);
+    $favorites = is_array($favorites) ? $favorites : array();
+    $is_favorite = in_array($property_id, $favorites, true);
+}
 ?>
 
 <div class="col-full">
@@ -40,7 +48,7 @@ get_header();
                             <h1><?php the_title(); ?></h1>
                             <div class="action">
                                 <div class="share js-share"><span class="material-symbols-outlined">share</span></div>
-                                <div class="favorite js-favorite"><span class="material-symbols-outlined">favorite</span></div>
+                                <div class="favorite js-favorite <?php echo $is_favorite ? 'active' : ''; ?>" data-property-id="<?php echo esc_attr($property_id); ?>" data-is-favorite="<?php echo $is_favorite ? '1' : '0'; ?>"><span class="material-symbols-outlined"><?php echo $is_favorite ? 'favorite' : 'favorite_border'; ?></span></div>
                             </div>
                         </div>
                         <div class="location">

@@ -12,13 +12,13 @@ export default {
       class="custom-popover"
       :class="{ 'custom-popover--visible': visible }"
       :style="popoverStyle"
-      @click="navigateToProperty"
+    
     >
       <!-- Стрелка popover -->
       <div class="custom-popover__arrow"></div>
       
       <!-- Слайдер фотографий -->
-      <div class="custom-popover__slider" v-if="hasImages">
+      <div class="custom-popover__slider" v-if="hasImages"   @click="navigateToProperty">
         <div class="slider-track" :style="sliderTrackStyle">
           <div class="slider-slide" v-for="(image, index) in images" :key="index">
             <img :src="image" class="slider-image" :alt="'Фото ' + (index + 1)">
@@ -45,10 +45,11 @@ export default {
       <div class="custom-popover__info">
         <div class="popover-header">
           <span class="rating-badge">{{ propertyData.rating }}</span>
-          <button 
-            class="favorite-btn"
-            :class="{ 'favorite-btn--active': propertyData.is_favorite }"
-            @click.stop="toggleFavorite"
+          <button
+            class="favorite-btn js-favorite"
+            :data-property-id="propertyData.id"
+            :data-is-favorite="Number(propertyData.is_favorite)"
+            :class="{'active': propertyData.is_favorite}"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -227,6 +228,9 @@ export default {
         window.addEventListener('scroll', handleScroll, true);
         window.addEventListener('resize', updatePosition);
       }, 100);
+
+      document.addEventListener('click', handleClickOutside);
+
     });
         
     onBeforeUnmount(() => {

@@ -756,11 +756,10 @@ article.post .the-content {
     transition: color 0.2s ease, transform 0.2s ease;
     
     &:hover {
-      color: #F56C6C;
       transform: scale(1.1);
     }
     
-    &.favorite-btn--active {
+    &.active {
       color: #F56C6C;
     }
   }

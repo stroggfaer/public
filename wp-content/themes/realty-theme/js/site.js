@@ -67,7 +67,12 @@ jQuery(document).ready(function($) {
         }
 
         // Блокируем кнопку на время запроса
-        btn.disabled = true;
+        if (btn.tagName.toLowerCase() === 'button') {
+            btn.disabled = true;
+        } else {
+            // Для div и других элементов используем класс loading
+            btn.classList.add('loading');
+        }
         btn.style.opacity = '0.5';
 
         // AJAX toggle запрос
@@ -106,7 +111,12 @@ jQuery(document).ready(function($) {
         })
         .finally(() => {
             // Разблокируем кнопку
-            btn.disabled = false;
+            if (btn.tagName.toLowerCase() === 'button') {
+                btn.disabled = false;
+            } else {
+                // Для div и других элементов убираем класс loading
+                btn.classList.remove('loading');
+            }
             btn.style.opacity = '';
         });
     }

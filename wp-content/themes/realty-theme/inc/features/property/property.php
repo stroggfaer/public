@@ -233,7 +233,14 @@ class PropertyFeature {
                 
                 // Получаем стандартный thumbnail (fallback)
                 $thumbnail = get_the_post_thumbnail_url($post->ID, 'medium');
-                
+
+                $is_favorite = false;
+                if (is_user_logged_in()) {
+                    $favorites = get_user_meta(get_current_user_id(), '_real_property_favorites', true);
+                    $favorites = is_array($favorites) ? $favorites : array();
+                    $is_favorite = in_array($post->ID, $favorites, true);
+                }
+
                 $coordinates[] = [
                     'id' => $post->ID,
                     'lat' => $lat,
@@ -248,7 +255,7 @@ class PropertyFeature {
                         return $img['src'] ?? '';
                     }, $images),
                     'rating' => 4.1, // временно статика
-                    'is_favorite' => false, // временно статика
+                    'is_favorite' => $is_favorite, // временно статика
                     'permalink' => get_permalink($post->ID),
                 ];
             }
