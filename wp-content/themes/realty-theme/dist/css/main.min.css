@@ -1389,6 +1389,8 @@ a.border:hover {
   padding: 15px 0px;
   background-color: #fff;
   border-bottom: 1px solid rgb(226, 232, 240);
+  position: relative;
+  z-index: 400;
 }
 .site-header .col-flex {
   display: -webkit-box;
@@ -2416,7 +2418,7 @@ article.post .the-content {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 200;
   pointer-events: none;
   width: 0;
   height: 0;
@@ -4075,6 +4077,8 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   height: 100%;
   position: relative;
   overflow: hidden;
+  z-index: 300;
+  background-color: #fff;
 }
 .site-main-map .property-list {
   padding: 0px;

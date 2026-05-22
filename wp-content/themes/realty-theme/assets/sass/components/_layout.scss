@@ -168,6 +168,8 @@ a {
   padding: 15px 0px;
   background-color: $color-white;
   border-bottom: 1px solid $color-medium-grey-2;
+  position: relative;
+  z-index: 400;
   .col-flex {
     display: flex;
     align-items: center;

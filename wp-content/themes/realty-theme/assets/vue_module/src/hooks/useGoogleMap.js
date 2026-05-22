@@ -187,17 +187,9 @@ export function useGoogleMap(options = {}) {
 
         map.value = new google.maps.Map(mapContainer, mapOptions);
 
-        // Обновляем позицию popover при изменении viewport карты (НЕ закрываем!)
-        map.value.addListener('center_changed', () => {
-            updatePopoverPositions();
-        });
-        map.value.addListener('zoom_changed', () => {
-            updatePopoverPositions();
-        });
-        map.value.addListener('drag', () => {
-            // При перетаскивании только обновляем позицию, НЕ закрываем
-            updatePopoverPositions();
-        });
+        // Убрали слушатели center_changed, zoom_changed, drag
+        // Теперь popover использует requestAnimationFrame для постоянного трекинга позиции
+        // Это решает проблему инерции карты и работает намного плавнее
 
         // Добавляем маркеры
         if (singleProperty && lat && lng) {
@@ -320,12 +312,6 @@ export function useGoogleMap(options = {}) {
     }
     
     // Обновить позиции всех активных popover
-    function updatePopoverPositions() {
-        // При drag/zoom карты вызываем событие resize для обновления позиции popover
-        // Popover слушает resize и пересчитывает getBoundingClientRect()
-        window.dispatchEvent(new Event('resize'));
-    }
-
     // Очистка маркеров
     function clearMarkers() {
         markers.value.forEach(marker => {

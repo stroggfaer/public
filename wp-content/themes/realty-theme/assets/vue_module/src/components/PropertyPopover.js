@@ -85,6 +85,7 @@ export default {
     const visible = ref(false);
     const currentSlide = ref(0);
     const popoverPosition = ref({ top: 0, left: 0 });
+    let animationFrameId = null; // ID для requestAnimationFrame
 
     // Подготавливаем массив изображений
     const images = [];
@@ -124,6 +125,27 @@ export default {
         left: rect.left + rect.width / 2
       };
     }
+    
+    // Постоянное отслеживание позиции через requestAnimationFrame
+    // Это решает проблему инерции карты (когда отпускаешь и карта еще двигается)
+    function startTrackingPosition() {
+      function track() {
+        updatePosition();
+        // Продолжаем отслеживать пока popover виден
+        if (visible.value) {
+          animationFrameId = requestAnimationFrame(track);
+        }
+      }
+      // Запускаем цикл отслеживания
+      animationFrameId = requestAnimationFrame(track);
+    }
+    
+    function stopTrackingPosition() {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
 
     function nextSlide() {
       if (currentSlide.value < images.length - 1) {
@@ -156,6 +178,13 @@ export default {
       const popover = document.querySelector('.custom-popover--visible');
       const marker = props.anchorElement;
       
+      // Игнорируем клики на саму карту и её элементы (drag не должен закрывать)
+      if (event.target.closest('.property-map') || 
+          event.target.closest('.gm-style') ||
+          event.target.closest('.map-marker-price')) {
+        return; // НЕ закрываем при взаимодействии с картой
+      }
+      
       // Проверяем, что клик был НЕ по popover и НЕ по маркеру
       if (popover && !popover.contains(event.target) && 
           marker && !marker.contains(event.target)) {
@@ -180,23 +209,28 @@ export default {
     onMounted(() => {
       // Обновляем позицию
       updatePosition();
-      
+          
       // Показываем popover с небольшой задержкой
       setTimeout(() => {
         visible.value = true;
+        // Запускаем постоянное отслеживание позиции (решает проблему инерции)
+        startTrackingPosition();
       }, 50);
-
+          
       // Добавляем обработчики
       setTimeout(() => {
         document.addEventListener('click', handleClickOutside);
         document.addEventListener('keydown', handleKeyDown);
-        // При скролле обновляем позицию - popover FIXED и следует за маркером
+        // При скролле страницы обновляем позицию
         window.addEventListener('scroll', handleScroll, true);
         window.addEventListener('resize', updatePosition);
       }, 100);
     });
-
+        
     onBeforeUnmount(() => {
+      // Останавливаем трекинг позиции
+      stopTrackingPosition();
+          
       document.removeEventListener('click', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('scroll', handleScroll, true);
