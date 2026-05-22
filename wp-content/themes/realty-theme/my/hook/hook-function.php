@@ -1400,6 +1400,12 @@ function my_cabinet_ajax_update_booking_details() {
         wp_send_json_error( array( 'message' => 'Бронирование не найдено.' ) );
     }
 
+    // Проверяем текущий статус — финальные статусы нельзя редактировать
+    $current_status = get_post_meta( $booking_id, '_status', true );
+    if ( in_array( $current_status, array( 'completed', 'cancelled' ), true ) ) {
+        wp_send_json_error( array( 'message' => 'Редактирование завершённых или отменённых бронирований запрещено.' ) );
+    }
+
     // Обновляем мета-поля booking_request
     update_post_meta( $booking_id, '_checkin_date', $checkin_date );
     update_post_meta( $booking_id, '_checkout_date', $checkout_date );

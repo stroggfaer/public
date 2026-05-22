@@ -512,10 +512,10 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                     
                     <?php if ( $checkin_date || $checkout_date || $has_guests ) : ?>
                         <?php
-                        // Получаем статус бронирования
-                        $booking_status = get_post_meta( $first_message->ID, '_booking_status', true );
-                        if ( empty( $booking_status ) ) {
-                            $booking_status = 'new';
+                        // Получаем статус бронирования из booking_request (не из сообщения!)
+                        $booking_status = 'new';
+                        if ( $booking_id > 0 ) {
+                            $booking_status = get_post_meta( $booking_id, '_status', true ) ?: 'new';
                         }
                         
                         // Используем хелпер для статусов
@@ -574,11 +574,17 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                                     </span>
                                 </div>
                                 
+                                <?php if ( ! in_array( $booking_status, array( 'completed', 'cancelled' ), true ) ) : ?>
                                 <div class="booking-edit-actions">
                                     <button type="button" id="booking-edit-btn" class="button">
                                         <span class="dashicons dashicons-edit"></span> Редактировать
                                     </button>
                                 </div>
+                                <?php else : ?>
+                                <div class="booking-edit-actions">
+                                    <span class="booking-final-notice">Редактирование недоступно для завершённых или отменённых бронирований</span>
+                                </div>
+                                <?php endif; ?>
                             </div>
                             
                             <!-- Режим редактирования (скрыт по умолчанию) -->
@@ -609,6 +615,7 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                                     <label for="edit-booking-status">Статус:</label>
                                     <select id="edit-booking-status" name="booking_status">
                                         <?php foreach ( $booking_statuses as $status_key => $status_data ) : ?>
+                                            <?php if ( in_array( $status_key, array( 'pending', 'new' ), true ) ) continue; ?>
                                             <option value="<?php echo esc_attr( $status_key ); ?>" <?php selected( $booking_status, $status_key ); ?>>
                                                 <?php echo esc_html( $status_data['label'] ); ?>
                                             </option>
