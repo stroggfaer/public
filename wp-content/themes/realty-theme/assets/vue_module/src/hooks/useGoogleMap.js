@@ -141,6 +141,7 @@ export function useGoogleMap(options = {}) {
     
     // Управление popover
     let activePopovers = [];
+    let activeMarkerElement = null; // Ссылка на текущий активный маркер (для toggle)
 
     // Проверка загрузки Google Maps API
     function isGoogleMapsLoaded() {
@@ -248,8 +249,17 @@ export function useGoogleMap(options = {}) {
         }
     }
     
-    // Обработчик клика на маркер
+    // Обработчик клика на маркер (работает как toggle)
     function handleMarkerClick(propertyData, markerElement) {
+        // Проверяем, это тот же самый маркер? (toggle)
+        if (activeMarkerElement === markerElement && activePopovers.length > 0) {
+            // Повторный клик на тот же маркер - закрываем
+            closeAllPopovers();
+            activeMarkerElement = null;
+            return;
+        }
+        
+        // Клик на другой маркер или первый клик - открываем
         // Закрыть все открытые popover
         closeAllPopovers();
         
@@ -263,6 +273,7 @@ export function useGoogleMap(options = {}) {
         if (markerElement) {
             markerElement.classList.add('active');
             markerElement.style.zIndex = '100';
+            activeMarkerElement = markerElement; // Запоминаем активный маркер
         }
         
         // Создать и показать новый popover
@@ -285,6 +296,7 @@ export function useGoogleMap(options = {}) {
                 app.unmount();
                 container.remove();
                 activePopovers = activePopovers.filter(p => p !== app);
+                activeMarkerElement = null; // Сбрасываем активный маркер
             }
         });
         
@@ -302,6 +314,7 @@ export function useGoogleMap(options = {}) {
             }
         });
         activePopovers = [];
+        activeMarkerElement = null; // Сбрасываем активный маркер
         document.querySelectorAll('.map-marker-popover-container').forEach(el => el.remove());
         
         // Убираем active класс у всех маркеров
