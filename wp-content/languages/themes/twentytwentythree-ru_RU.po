@@ -23,55 +23,45 @@ msgstr "Тема Twenty Twenty-Three разработана для исполь�
 msgid "Twenty Twenty-Three"
 msgstr "Twenty Twenty-Three"
 
-#: patterns/hidden-heading.php:9
-msgctxt "Main heading for homepage"
-msgid "Mindblown: a blog about philosophy."
-msgstr "Mindblown: блог о философии."
-
 #: patterns/hidden-heading.php
 msgctxt "Pattern title"
 msgid "Hidden Heading for Homepage"
 msgstr "Скрытый заголовок для главной страницы"
 
-#: patterns/post-meta.php
-msgctxt "Pattern description"
-msgid "Post meta information with separator on the top."
-msgstr "Мета информация о записи с разделителем сверху."
-
-#: patterns/footer-default.php
-msgctxt "Pattern description"
-msgid "Footer with site title and powered by WordPress."
-msgstr "Подвал с названием сайта и надписью \"работает на WordPress\"."
+#: patterns/hidden-heading.php:9
+msgctxt "Main heading for homepage"
+msgid "Mindblown: a blog about philosophy."
+msgstr "Mindblown: блог о философии."
 
 #: patterns/call-to-action.php
 msgctxt "Pattern description"
 msgid "Left-aligned text with a CTA button and a separator."
 msgstr "Текст, выровненный по левому краю, с кнопкой призыва к действию и разделителем."
 
+#: patterns/footer-default.php
+msgctxt "Pattern description"
+msgid "Footer with site title and powered by WordPress."
+msgstr "Подвал с названием сайта и надписью \"работает на WordPress\"."
+
+#: patterns/post-meta.php
+msgctxt "Pattern description"
+msgid "Post meta information with separator on the top."
+msgstr "Мета информация о записи с разделителем сверху."
+
 #: theme.json
 msgctxt "Template part name"
 msgid "Comments Template Part"
 msgstr "Часть шаблона для комментариев"
 
-#: theme.json
-msgctxt "Template part name"
-msgid "Post Meta"
-msgstr "Метаданные записи"
+#. Translators: WordPress link.
+#: patterns/footer-default.php:20
+msgid "Proudly powered by %s"
+msgstr "Работает на %s"
 
-#: theme.json
-msgctxt "Template part name"
-msgid "Footer"
-msgstr "Подвал"
-
-#: theme.json
-msgctxt "Template part name"
-msgid "Header"
-msgstr "Заголовок"
-
-#: theme.json
-msgctxt "Font family name"
-msgid "Source Serif Pro"
-msgstr "Source Serif Pro"
+#: patterns/hidden-404.php:13
+msgctxt "Error code for a webpage that is not found."
+msgid "404"
+msgstr "404"
 
 #: theme.json
 msgctxt "Font family name"
@@ -80,220 +70,8 @@ msgstr "Системный шрифт"
 
 #: theme.json
 msgctxt "Font family name"
-msgid "Inter"
-msgstr "Inter"
-
-#: theme.json
-msgctxt "Font family name"
-msgid "IBM Plex Mono"
-msgstr "IBM Plex Mono"
-
-#: theme.json
-msgctxt "Font family name"
-msgid "DM Sans"
-msgstr "DM Sans"
-
-#: theme.json
-msgctxt "Custom template name"
-msgid "404"
-msgstr "404"
-
-#: theme.json
-msgctxt "Custom template name"
-msgid "Blog (Alternative)"
-msgstr "Блог (альтернатива)"
-
-#: theme.json
-msgctxt "Custom template name"
-msgid "Blank"
-msgstr "Пустой"
-
-#: styles/whisper.json
-msgctxt "Style variation name"
-msgid "Whisper"
-msgstr "Шепот"
-
-#: styles/sherbet.json
-msgctxt "Gradient name"
-msgid "Tertiary to Secondary to Primary Fixed"
-msgstr "От третичного к вторичному до фиксированного первичного"
-
-#: styles/sherbet.json
-msgctxt "Gradient name"
-msgid "Primary to Secondary to Tertiary Fixed"
-msgstr "От первичного к вторичному до фиксированного третичного"
-
-#: styles/sherbet.json
-msgctxt "Gradient name"
-msgid "Primary to Secondary to Tertiary"
-msgstr "От первичного к вторичному до третичного"
-
-#: styles/sherbet.json
-msgctxt "Style variation name"
-msgid "Sherbet"
-msgstr "Щербет"
-
-#: styles/pitch.json
-msgctxt "Font size name"
-msgid "2X Large"
-msgstr "Двойной крупный"
-
-#: styles/pitch.json
-msgctxt "Font size name"
-msgid "Extra Large"
-msgstr "Очень крупный"
-
-#: styles/pitch.json
-msgctxt "Font size name"
-msgid "Large"
-msgstr "Крупный"
-
-#: styles/pitch.json
-msgctxt "Font size name"
-msgid "Medium"
-msgstr "Средний"
-
-#: styles/pitch.json
-msgctxt "Font size name"
-msgid "small"
-msgstr "маленький"
-
-#: styles/pitch.json
-msgctxt "Space size name"
-msgid "7"
-msgstr "7"
-
-#: styles/pitch.json
-msgctxt "Style variation name"
-msgid "Pitch"
-msgstr "Подача"
-
-#: styles/pilgrimage.json
-msgctxt "Gradient name"
-msgid "Dots"
-msgstr "Точки"
-
-#: styles/pilgrimage.json
-msgctxt "Gradient name"
-msgid "Base to Primary"
-msgstr "От основного к первичному"
-
-#: styles/pilgrimage.json
-msgctxt "Gradient name"
-msgid "Tertiary to Secondary"
-msgstr "От третичного к вторичному"
-
-#: styles/pilgrimage.json
-msgctxt "Gradient name"
-msgid "Secondary to Primary"
-msgstr "От вторичного к первичному"
-
-#: styles/pilgrimage.json
-msgctxt "Gradient name"
-msgid "Primary to Secondary"
-msgstr "От первичного к вторичному"
-
-#: styles/pilgrimage.json
-msgctxt "Style variation name"
-msgid "Pilgrimage"
-msgstr "Паломничество"
-
-#: styles/marigold.json
-msgctxt "Font size name"
-msgid "Gigantic"
-msgstr "Гигантский"
-
-#: styles/marigold.json
-msgctxt "Font size name"
-msgid "Huge"
-msgstr "Большой"
-
-#: styles/marigold.json
-msgctxt "Font size name"
-msgid "Normal"
-msgstr "Обычный"
-
-#: styles/marigold.json
-msgctxt "Font size name"
-msgid "Tiny"
-msgstr "Маленький"
-
-#: styles/marigold.json styles/pitch.json theme.json
-msgctxt "Space size name"
-msgid "6"
-msgstr "6"
-
-#: styles/marigold.json styles/pitch.json theme.json
-msgctxt "Space size name"
-msgid "5"
-msgstr "5"
-
-#: styles/marigold.json styles/pitch.json theme.json
-msgctxt "Space size name"
-msgid "4"
-msgstr "4"
-
-#: styles/marigold.json styles/pitch.json theme.json
-msgctxt "Space size name"
-msgid "3"
-msgstr "3"
-
-#: styles/marigold.json styles/pitch.json theme.json
-msgctxt "Space size name"
-msgid "2"
-msgstr "2"
-
-#: styles/marigold.json styles/pitch.json theme.json
-msgctxt "Space size name"
-msgid "1"
-msgstr "1"
-
-#: styles/marigold.json
-msgctxt "Style variation name"
-msgid "Marigold"
-msgstr "Бархатцы"
-
-#: styles/grapes.json
-msgctxt "Style variation name"
-msgid "Grapes"
-msgstr "Виноград"
-
-#: styles/electric.json
-msgctxt "Style variation name"
-msgid "Electric"
-msgstr "Электрик"
-
-#: styles/canary.json
-msgctxt "Style variation name"
-msgid "Canary"
-msgstr "Канарейка"
-
-#: styles/block-out.json styles/canary.json styles/pilgrimage.json
-#: styles/sherbet.json
-msgctxt "Duotone name"
-msgid "Default filter"
-msgstr "Фильтр по умолчанию"
-
-#: styles/block-out.json
-msgctxt "Style variation name"
-msgid "Block out"
-msgstr "Блокировка"
-
-#: styles/aubergine.json styles/block-out.json styles/canary.json
-#: styles/electric.json styles/grapes.json styles/marigold.json
-#: styles/pilgrimage.json styles/pitch.json styles/sherbet.json
-#: styles/whisper.json theme.json
-msgctxt "Color name"
-msgid "Tertiary"
-msgstr "Третичный"
-
-#: styles/aubergine.json styles/block-out.json styles/canary.json
-#: styles/electric.json styles/grapes.json styles/marigold.json
-#: styles/pilgrimage.json styles/pitch.json styles/sherbet.json
-#: styles/whisper.json theme.json
-msgctxt "Color name"
-msgid "Secondary"
-msgstr "Вторичный"
+msgid "Source Serif Pro"
+msgstr "Source Serif Pro"
 
 #: styles/aubergine.json styles/block-out.json styles/canary.json
 #: styles/electric.json styles/grapes.json styles/marigold.json
@@ -308,8 +86,121 @@ msgstr "Основной"
 #: styles/pilgrimage.json styles/pitch.json styles/sherbet.json
 #: styles/whisper.json theme.json
 msgctxt "Color name"
-msgid "Contrast"
-msgstr "Контраст"
+msgid "Secondary"
+msgstr "Вторичный"
+
+#: styles/aubergine.json styles/block-out.json styles/canary.json
+#: styles/electric.json styles/grapes.json styles/marigold.json
+#: styles/pilgrimage.json styles/pitch.json styles/sherbet.json
+#: styles/whisper.json theme.json
+msgctxt "Color name"
+msgid "Tertiary"
+msgstr "Третичный"
+
+#: theme.json
+msgctxt "Custom template name"
+msgid "Blank"
+msgstr "Пустой"
+
+#: theme.json
+msgctxt "Template part name"
+msgid "Header"
+msgstr "Заголовок"
+
+#: theme.json
+msgctxt "Template part name"
+msgid "Footer"
+msgstr "Подвал"
+
+#: patterns/hidden-404.php:22 patterns/hidden-no-results.php:14
+msgctxt "label"
+msgid "Search"
+msgstr "Поиск"
+
+#: patterns/hidden-404.php:22 patterns/hidden-no-results.php:14
+msgid "Search"
+msgstr "Поиск"
+
+#: theme.json
+msgctxt "Font family name"
+msgid "DM Sans"
+msgstr "DM Sans"
+
+#: theme.json
+msgctxt "Font family name"
+msgid "IBM Plex Mono"
+msgstr "IBM Plex Mono"
+
+#: theme.json
+msgctxt "Font family name"
+msgid "Inter"
+msgstr "Inter"
+
+#: styles/block-out.json styles/canary.json styles/pilgrimage.json
+#: styles/sherbet.json
+msgctxt "Duotone name"
+msgid "Default filter"
+msgstr "Фильтр по умолчанию"
+
+#: patterns/call-to-action.php
+msgctxt "Pattern title"
+msgid "Call to action"
+msgstr "Призыв к действию"
+
+#: patterns/call-to-action.php:25
+msgctxt "sample content for call to action button"
+msgid "Get In Touch"
+msgstr "Свяжитесь с нами"
+
+#: patterns/footer-default.php
+msgctxt "Pattern title"
+msgid "Default Footer"
+msgstr "Подвал по умолчанию"
+
+#: patterns/hidden-404.php:22 patterns/hidden-no-results.php:14
+msgctxt "placeholder for search field"
+msgid "Search..."
+msgstr "Поиск …"
+
+#: patterns/hidden-comments.php:13
+msgctxt "Title of comments section"
+msgid "Comments"
+msgstr "Комментарии"
+
+#: patterns/hidden-no-results.php:10
+msgctxt "Message explaining that there are no results returned from a search"
+msgid "Sorry, but nothing matched your search terms. Please try again with some different keywords."
+msgstr "Извините, по вашему запросу ничего не найдено. Попробуйте другие ключевые слова."
+
+#: patterns/post-meta.php
+msgctxt "Pattern title"
+msgid "Post Meta"
+msgstr "Метаданные записи"
+
+#: patterns/post-meta.php:29
+msgctxt "Verb to explain the publication status of a post"
+msgid "Posted"
+msgstr "Опубликовано"
+
+#: patterns/post-meta.php:37
+msgctxt "Preposition to show the relationship between the post and its categories"
+msgid "in"
+msgstr "в"
+
+#: patterns/post-meta.php:49
+msgctxt "Preposition to show the relationship between the post and its author"
+msgid "by"
+msgstr "от"
+
+#: patterns/post-meta.php:65
+msgctxt "Label for a list of post tags"
+msgid "Tags:"
+msgstr "Метки:"
+
+#: styles/aubergine.json
+msgctxt "Style variation name"
+msgid "Aubergine"
+msgstr "Баклажан"
 
 #: styles/aubergine.json styles/block-out.json styles/canary.json
 #: styles/electric.json styles/grapes.json styles/marigold.json
@@ -319,10 +210,223 @@ msgctxt "Color name"
 msgid "Base"
 msgstr "Основа"
 
+#: styles/aubergine.json styles/block-out.json styles/canary.json
+#: styles/electric.json styles/grapes.json styles/marigold.json
+#: styles/pilgrimage.json styles/pitch.json styles/sherbet.json
+#: styles/whisper.json theme.json
+msgctxt "Color name"
+msgid "Contrast"
+msgstr "Контраст"
+
+#: styles/canary.json
+msgctxt "Style variation name"
+msgid "Canary"
+msgstr "Канарейка"
+
+#: styles/electric.json
+msgctxt "Style variation name"
+msgid "Electric"
+msgstr "Электрик"
+
+#: styles/grapes.json
+msgctxt "Style variation name"
+msgid "Grapes"
+msgstr "Виноград"
+
+#: styles/marigold.json
+msgctxt "Style variation name"
+msgid "Marigold"
+msgstr "Бархатцы"
+
+#: styles/marigold.json styles/pitch.json theme.json
+msgctxt "Space size name"
+msgid "1"
+msgstr "1"
+
+#: styles/marigold.json styles/pitch.json theme.json
+msgctxt "Space size name"
+msgid "2"
+msgstr "2"
+
+#: styles/marigold.json styles/pitch.json theme.json
+msgctxt "Space size name"
+msgid "3"
+msgstr "3"
+
+#: styles/marigold.json styles/pitch.json theme.json
+msgctxt "Space size name"
+msgid "4"
+msgstr "4"
+
+#: styles/marigold.json styles/pitch.json theme.json
+msgctxt "Space size name"
+msgid "5"
+msgstr "5"
+
+#: styles/marigold.json styles/pitch.json theme.json
+msgctxt "Space size name"
+msgid "6"
+msgstr "6"
+
+#: styles/marigold.json
+msgctxt "Font size name"
+msgid "Tiny"
+msgstr "Маленький"
+
+#: styles/marigold.json
+msgctxt "Font size name"
+msgid "Normal"
+msgstr "Обычный"
+
+#: styles/marigold.json
+msgctxt "Font size name"
+msgid "Huge"
+msgstr "Большой"
+
+#: styles/marigold.json
+msgctxt "Font size name"
+msgid "Gigantic"
+msgstr "Гигантский"
+
+#: styles/pilgrimage.json
+msgctxt "Style variation name"
+msgid "Pilgrimage"
+msgstr "Паломничество"
+
+#: styles/pilgrimage.json
+msgctxt "Gradient name"
+msgid "Dots"
+msgstr "Точки"
+
+#: styles/pitch.json
+msgctxt "Space size name"
+msgid "7"
+msgstr "7"
+
+#: styles/pitch.json
+msgctxt "Font size name"
+msgid "small"
+msgstr "маленький"
+
+#: styles/pitch.json
+msgctxt "Font size name"
+msgid "Medium"
+msgstr "Средний"
+
+#: styles/pitch.json
+msgctxt "Font size name"
+msgid "Large"
+msgstr "Крупный"
+
+#: styles/pitch.json
+msgctxt "Font size name"
+msgid "Extra Large"
+msgstr "Очень крупный"
+
+#: styles/pitch.json
+msgctxt "Font size name"
+msgid "2X Large"
+msgstr "Двойной крупный"
+
+#: styles/sherbet.json
+msgctxt "Style variation name"
+msgid "Sherbet"
+msgstr "Щербет"
+
+#: styles/whisper.json
+msgctxt "Style variation name"
+msgid "Whisper"
+msgstr "Шепот"
+
+#: theme.json
+msgctxt "Custom template name"
+msgid "404"
+msgstr "404"
+
+#: theme.json
+msgctxt "Template part name"
+msgid "Post Meta"
+msgstr "Метаданные записи"
+
+#: patterns/call-to-action.php:16
+msgctxt "sample content for call to action"
+msgid "Got any book recommendations?"
+msgstr "Хотите порекомендовать какие-либо книги?"
+
+#: patterns/hidden-404.php
+msgctxt "Pattern title"
+msgid "Hidden 404"
+msgstr "Скрытая 404"
+
+#: patterns/hidden-404.php:19
+msgctxt "Message to convey that a webpage could not be found"
+msgid "This page could not be found."
+msgstr "Эта страница не может быть найдена."
+
+#: patterns/hidden-comments.php
+msgctxt "Pattern title"
+msgid "Hidden Comments"
+msgstr "Скрытые комментарии"
+
+#: patterns/hidden-no-results.php
+msgctxt "Pattern title"
+msgid "Hidden No Results Content"
+msgstr "Скрытое содержимое без результатов"
+
+#: styles/block-out.json
+msgctxt "Style variation name"
+msgid "Block out"
+msgstr "Блокировка"
+
+#: styles/pitch.json
+msgctxt "Style variation name"
+msgid "Pitch"
+msgstr "Подача"
+
+#: theme.json
+msgctxt "Custom template name"
+msgid "Blog (Alternative)"
+msgstr "Блог (альтернатива)"
+
+#: styles/pilgrimage.json
+msgctxt "Gradient name"
+msgid "Base to Primary"
+msgstr "От основного к первичному"
+
 #: styles/aubergine.json
 msgctxt "Gradient name"
-msgid "Primary to Tertiary"
-msgstr "От первичного к третичному"
+msgid "Base to Secondary to Base"
+msgstr "От основного к вторичному до основного"
+
+#: styles/sherbet.json
+msgctxt "Gradient name"
+msgid "Primary to Secondary to Tertiary"
+msgstr "От первичного к вторичному до третичного"
+
+#: styles/sherbet.json
+msgctxt "Gradient name"
+msgid "Primary to Secondary to Tertiary Fixed"
+msgstr "От первичного к вторичному до фиксированного третичного"
+
+#: styles/sherbet.json
+msgctxt "Gradient name"
+msgid "Tertiary to Secondary to Primary Fixed"
+msgstr "От третичного к вторичному до фиксированного первичного"
+
+#: styles/pilgrimage.json
+msgctxt "Gradient name"
+msgid "Primary to Secondary"
+msgstr "От первичного к вторичному"
+
+#: styles/pilgrimage.json
+msgctxt "Gradient name"
+msgid "Secondary to Primary"
+msgstr "От вторичного к первичному"
+
+#: styles/aubergine.json
+msgctxt "Gradient name"
+msgid "Secondary to Base"
+msgstr "От вторичного к основному"
 
 #: styles/aubergine.json styles/pilgrimage.json
 msgctxt "Gradient name"
@@ -331,129 +435,25 @@ msgstr "От третичного к первичному"
 
 #: styles/aubergine.json
 msgctxt "Gradient name"
-msgid "Base to Secondary to Base"
-msgstr "От основного к вторичному до основного"
+msgid "Primary to Tertiary"
+msgstr "От первичного к третичному"
 
-#: styles/aubergine.json
+#: styles/pilgrimage.json
 msgctxt "Gradient name"
-msgid "Secondary to Base"
-msgstr "От вторичного к основному"
-
-#: styles/aubergine.json
-msgctxt "Style variation name"
-msgid "Aubergine"
-msgstr "Баклажан"
-
-#: patterns/post-meta.php:65
-msgctxt "Label for a list of post tags"
-msgid "Tags:"
-msgstr "Метки:"
-
-#: patterns/post-meta.php:49
-msgctxt "Preposition to show the relationship between the post and its author"
-msgid "by"
-msgstr "от"
-
-#: patterns/post-meta.php:37
-msgctxt "Preposition to show the relationship between the post and its categories"
-msgid "in"
-msgstr "в"
-
-#: patterns/post-meta.php:29
-msgctxt "Verb to explain the publication status of a post"
-msgid "Posted"
-msgstr "Опубликовано"
-
-#: patterns/post-meta.php
-msgctxt "Pattern title"
-msgid "Post Meta"
-msgstr "Метаданные записи"
-
-#: patterns/hidden-no-results.php:10
-msgctxt "Message explaining that there are no results returned from a search"
-msgid "Sorry, but nothing matched your search terms. Please try again with some different keywords."
-msgstr "Извините, по вашему запросу ничего не найдено. Попробуйте другие ключевые слова."
-
-#: patterns/hidden-no-results.php
-msgctxt "Pattern title"
-msgid "Hidden No Results Content"
-msgstr "Скрытое содержимое без результатов"
-
-#: patterns/hidden-comments.php:13
-msgctxt "Title of comments section"
-msgid "Comments"
-msgstr "Комментарии"
-
-#: patterns/hidden-comments.php
-msgctxt "Pattern title"
-msgid "Hidden Comments"
-msgstr "Скрытые комментарии"
-
-#: patterns/hidden-404.php:22 patterns/hidden-no-results.php:14
-msgid "Search"
-msgstr "Поиск"
-
-#: patterns/hidden-404.php:22 patterns/hidden-no-results.php:14
-msgctxt "placeholder for search field"
-msgid "Search..."
-msgstr "Поиск …"
-
-#: patterns/hidden-404.php:22 patterns/hidden-no-results.php:14
-msgctxt "label"
-msgid "Search"
-msgstr "Поиск"
-
-#: patterns/hidden-404.php:19
-msgctxt "Message to convey that a webpage could not be found"
-msgid "This page could not be found."
-msgstr "Эта страница не может быть найдена."
-
-#: patterns/hidden-404.php:13
-msgctxt "Error code for a webpage that is not found."
-msgid "404"
-msgstr "404"
-
-#: patterns/hidden-404.php
-msgctxt "Pattern title"
-msgid "Hidden 404"
-msgstr "Скрытая 404"
-
-#. Translators: WordPress link.
-#: patterns/footer-default.php:20
-msgid "Proudly powered by %s"
-msgstr "Работает на %s"
-
-#: patterns/footer-default.php
-msgctxt "Pattern title"
-msgid "Default Footer"
-msgstr "Подвал по умолчанию"
-
-#: patterns/call-to-action.php:25
-msgctxt "sample content for call to action button"
-msgid "Get In Touch"
-msgstr "Свяжитесь с нами"
-
-#: patterns/call-to-action.php:16
-msgctxt "sample content for call to action"
-msgid "Got any book recommendations?"
-msgstr "Хотите порекомендовать какие-либо книги?"
-
-#: patterns/call-to-action.php
-msgctxt "Pattern title"
-msgid "Call to action"
-msgstr "Призыв к действию"
-
-#. Author URI of the theme
-#: style.css patterns/footer-default.php:21
-#, gp-priority: low
-msgid "https://wordpress.org"
-msgstr "https://ru.wordpress.org"
+msgid "Tertiary to Secondary"
+msgstr "От третичного к вторичному"
 
 #. Author of the theme
 #: style.css
 #, gp-priority: low
 msgid "the WordPress team"
 msgstr "Команда WordPress"
+
+#. Author URI of the theme
+#: style.css patterns/footer-default.php:21
+#, gp-priority: low
+msgid "https://wordpress.org"
+msgstr "https://ru.wordpress.org"
 
 #. Theme URI of the theme
 #: style.css

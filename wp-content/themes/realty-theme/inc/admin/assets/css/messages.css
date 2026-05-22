@@ -104,26 +104,30 @@
     margin-right: 5px;
 }
 
-.btn-view {
-    background: #0073aa;
-    color: #fff;
-    border-color: #0073aa;
+/* Ссылки действий (Просмотр | Удалить) */
+.action-link {
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
-.btn-view:hover {
-    background: #005a87;
-    border-color: #005a87;
+.action-view {
+    color: #0073aa;
 }
 
-.btn-delete {
-    background: #dc3232;
-    color: #fff;
-    border-color: #dc3232;
+.action-view:hover {
+    color: #005a87;
+    text-decoration: underline;
 }
 
-.btn-delete:hover {
-    background: #a00;
-    border-color: #a00;
+.action-delete {
+    color: #dc3232;
+}
+
+.action-delete:hover {
+    color: #a00;
+    text-decoration: underline;
 }
 
 /* Фильтры */

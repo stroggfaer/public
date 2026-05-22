@@ -159,8 +159,8 @@
                 <td class="col-status"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                 <td class="col-date">${dialog.created_date}</td>
                 <td class="col-actions">
-                    <a href="${window.location.pathname}?page=booking-messages&view=dialog&thread_id=${dialog.thread_id}" class="button action-btn btn-view">Просмотр</a>
-                    <button type="button" class="button action-btn btn-delete" onclick="deleteBooking(${dialog.booking_id}, event)">Удалить</button>
+                    <a href="${window.location.pathname}?page=booking-messages&view=dialog&thread_id=${dialog.thread_id}" class="action-link action-view">Просмотр</a> | 
+                    <a href="#" class="action-link action-delete" onclick="deleteBooking(${dialog.booking_id}, event); return false;">Удалить</a>
                 </td>
             </tr>
             `;
