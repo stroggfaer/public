@@ -25,8 +25,13 @@ $property_id = isset( $_GET['property_id'] ) ? absint( $_GET['property_id'] ) : 
 $thread_id   = isset( $_GET['thread_id'] ) ? sanitize_text_field( wp_unslash( $_GET['thread_id'] ) ) : '';
 $owner_id    = isset( $_GET['owner_id'] ) ? absint( $_GET['owner_id'] ) : 0;
 
-// Показываем режим бронирования если есть property_id
-$has_booking_context = ( $property_id > 0 );
+// Хост/админ не видит booking context в ЛК — только в админке
+if ( is_user_logged_in() && current_user_can( 'manage_options' ) ) {
+    $has_booking_context = false;
+} else {
+    // Показываем режим бронирования если есть property_id
+    $has_booking_context = ( $property_id > 0 );
+}
 
 // Находим booking_request для передачи в компоненты
 $booking_id     = 0;

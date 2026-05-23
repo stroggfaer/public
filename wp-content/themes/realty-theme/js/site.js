@@ -274,6 +274,94 @@ document.addEventListener('DOMContentLoaded', function () {
     thumbnails.mount();
 });
 
+// ============================================================
+// Уведомления в шапке: обновление счетчика непрочитанных сообщений
+// ============================================================
+(function() {
+    'use strict';
+
+    // Проверяем, есть ли элемент уведомлений на странице
+    const notificationCounter = document.querySelector('[data-unread-count]');
+    if (!notificationCounter) {
+        return; // Элеента нет, выходим
+    }
+
+    // Получаем данные из RealtyData (должны быть локализованы в functions.php)
+    const ajaxUrl = window.RealtyData?.ajaxUrl || '/wp-admin/admin-ajax.php';
+    
+    /**
+     * Загружаем количество непрочитанных сообщений через AJAX
+     */
+    function loadUnreadCount() {
+        const formData = new FormData();
+        formData.append('action', 'my_cabinet_get_unread_count');
+
+        fetch(ajaxUrl, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && typeof data.data.unread_count !== 'undefined') {
+                updateCounter(data.data.unread_count);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки счетчика уведомлений:', error);
+        });
+    }
+
+    /**
+     * Обновляем счетчик на странице
+     * @param {number} count - количество непрочитанных сообщений
+     */
+    function updateCounter(count) {
+        const counter = document.querySelector('[data-unread-count]');
+        if (!counter) return;
+
+        const countNum = parseInt(count) || 0;
+        
+        // Обновляем текст
+        counter.textContent = countNum > 99 ? '99+' : countNum;
+        
+        // Управляем видимостью
+        if (countNum > 0) {
+            counter.style.display = 'block';
+            counter.setAttribute('data-count', countNum);
+            counter.setAttribute('data-count-active', '');
+        } else {
+            counter.style.display = 'none';
+            counter.removeAttribute('data-count');
+            counter.removeAttribute('data-count-active');
+        }
+    }
+
+    // Загружаем сразу при загрузке страницы
+    loadUnreadCount();
+
+    // Обновляем каждые 30 секунд
+    setInterval(loadUnreadCount, 30000);
+
+    // Также обновляем при возвращении на вкладку (visibility change)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            loadUnreadCount();
+        }
+    });
+
+    // Обновляем при возвращении фокуса на окно
+    window.addEventListener('focus', function() {
+        loadUnreadCount();
+    });
+
+    // Обновляем счетчик когда Vue компонент отмечает сообщения как прочитанные
+    window.addEventListener('messages-marked-read', function() {
+        // Небольшая задержка чтобы БД успела обновиться
+        setTimeout(loadUnreadCount, 500);
+    });
+})();
+
 
 
 /**

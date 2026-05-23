@@ -44,6 +44,15 @@ $slot_center = apply_filters('realty_header_slot', '');
                      $display_name = $current_user->display_name ?: $current_user->user_email;
                      $avatar = get_avatar( $current_user->ID, 40, '', '', array('class' => 'user-avatar') );
                      ?>
+                     <!-- Уведомления: колокольчик с счетчиком (только для клиентов) -->
+                     <?php if ( ! current_user_can( 'manage_options' ) ) : ?>
+                     <div class="header-notifications">
+                         <a href="<?php echo esc_url( home_url( '/my/dashboard/' ) ); ?>" class="header-notifications__link" title="Уведомления от хоста">
+                             <span class="material-symbols-outlined header-notifications__icon">notifications</span>
+                             <span class="header-notifications__counter" data-unread-count style="display: none;">0</span>
+                         </a>
+                     </div>
+                     <?php endif; ?>
                      <div class="user-menu">
                          <a href="<?php echo esc_url( home_url( '/my/dashboard/' ) ); ?>" class="user-menu__link">
                              <div class="user-menu__avatar">

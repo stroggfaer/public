@@ -226,27 +226,25 @@ add_action( 'template_redirect', 'my_cabinet_protect_cabinet_page', 5 );
 
 
 // ============================================================
-// Скрытие WordPress Admin Bar для подписчиков
+// Скрытие WordPress Admin Bar для обычных пользователей
 // ============================================================
 
 /**
- * Отключение WordPress Admin Bar для пользователей с ролью Subscriber
- * Admin Bar показывается только для администраторов, редакторов и авторов
+ * Отключение WordPress Admin Bar для обычных пользователей (клиентов)
+ * Admin Bar показывается только для администраторов/хостов (manage_options)
  */
-function my_cabinet_disable_admin_bar_for_subscribers() {
+function my_cabinet_disable_admin_bar_for_clients() {
     // Если пользователь не авторизован - admin bar и так скрыт
     if ( ! is_user_logged_in() ) {
         return;
     }
     
-    $user = wp_get_current_user();
-    
-    // Скрываем admin bar для подписчиков
-    if ( in_array( 'subscriber', (array) $user->roles, true ) ) {
+    // Скрываем admin bar для всех кроме администраторов/хостов
+    if ( ! current_user_can( 'manage_options' ) ) {
         show_admin_bar( false );
     }
 }
-add_action( 'after_setup_theme', 'my_cabinet_disable_admin_bar_for_subscribers' );
+add_action( 'after_setup_theme', 'my_cabinet_disable_admin_bar_for_clients' );
 
 // ============================================================
 // AJAX: Создание SESSION для бронирования
@@ -809,6 +807,14 @@ function my_cabinet_ajax_get_user_threads() {
         wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
     }
 
+    // Хост/админ не должен видеть чаты в ЛК — только в админке
+    if ( current_user_can( 'manage_options' ) ) {
+        wp_send_json_success( array(
+            'threads' => array(),
+            'total'   => 0,
+        ) );
+    }
+
     $current_user_id = get_current_user_id();
 
     // Получаем все сообщения пользователя
@@ -1284,7 +1290,7 @@ function my_cabinet_ajax_send_reply() {
     update_post_meta( $message_id, '_receiver_id', $receiver_id );
     update_post_meta( $message_id, '_sender_id', $host_id );
     update_post_meta( $message_id, '_property_id', $first_message_property_id );
-    update_post_meta( $message_id, '_is_read', true ); // Хост сам отправил, значит прочитано
+    update_post_meta( $message_id, '_is_read', false ); // Клиент еще не читал, поэтому false
     update_post_meta( $message_id, '_status', 'sent' );
     update_post_meta( $message_id, '_thread_id', $thread_id );
     // Сохраняем роль отправителя (хост отвечает из админки)
@@ -1990,3 +1996,151 @@ function my_cabinet_ajax_change_password() {
     ) );
 }
 add_action( 'wp_ajax_my_cabinet_change_password', 'my_cabinet_ajax_change_password' );
+
+// ============================================================
+// AJAX: Получение количества непрочитанных сообщений для клиента
+// ============================================================
+
+/**
+ * Подсчет непрочитанных сообщений для клиента (пользователя)
+ * Сообщения от хоста, где клиент - получатель и еще не прочитал
+ */
+function my_cabinet_get_client_unread_messages_count() {
+    $client_id = get_current_user_id();
+    
+    if ( ! $client_id ) {
+        return 0;
+    }
+    
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'meta_query'     => array(
+            // Только сообщения, где клиент - получатель
+            array(
+                'key'     => '_receiver_id',
+                'value'   => $client_id,
+                'compare' => '=',
+            ),
+            // Только сообщения от хоста (sender != receiver)
+            array(
+                'key'     => '_sender_id',
+                'value'   => $client_id,
+                'compare' => '!=',
+            ),
+            // Только непрочитанные (ищем '0' или false)
+            array(
+                'key'     => '_is_read',
+                'value'   => '1',
+                'compare' => '!=',
+            ),
+        ),
+    );
+
+    $query = new WP_Query( $args );
+    $unread_count = $query->found_posts;
+    
+    return $unread_count;
+}
+
+/**
+ * AJAX обработчик для получения количества непрочитанных сообщений
+ */
+function my_cabinet_ajax_get_unread_count() {
+    // Проверка авторизации
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    // Хост/админ не нуждается в счетчике уведомлений в ЛК
+    if ( current_user_can( 'manage_options' ) ) {
+        wp_send_json_success( array(
+            'unread_count' => 0,
+        ) );
+    }
+
+    $unread_count = my_cabinet_get_client_unread_messages_count();
+    
+    wp_send_json_success( array(
+        'unread_count' => $unread_count,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_get_unread_count', 'my_cabinet_ajax_get_unread_count' );
+
+// ============================================================
+// AJAX: Отметка сообщений как прочитанных
+// ============================================================
+
+/**
+ * AJAX обработчик для отметки всех сообщений в потоке как прочитанных
+ * Вызывается когда клиент открывает чат
+ */
+function my_cabinet_ajax_mark_messages_read() {
+    if ( ! is_user_logged_in() ) {
+        wp_send_json_error( array( 'message' => 'Необходимо авторизоваться.' ) );
+    }
+
+    // Хост/админ не нуждается в этой функции
+    if ( current_user_can( 'manage_options' ) ) {
+        wp_send_json_success( array( 'marked' => 0 ) );
+    }
+
+    $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
+    
+    if ( empty( $thread_id ) ) {
+        wp_send_json_error( array( 'message' => 'Не указан thread_id.' ) );
+    }
+
+    $client_id = get_current_user_id();
+
+    // Находим все сообщения в потоке где:
+    // - thread_id совпадает
+    // - получатель = текущий клиент
+    // - отправитель != текущий клиент (сообщения от хоста)
+    // - _is_read != 1 (непрочитанные)
+    $args = array(
+        'post_type'      => 'message',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids', // Только ID для производительности
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+            array(
+                'key'     => '_receiver_id',
+                'value'   => $client_id,
+                'compare' => '=',
+            ),
+            array(
+                'key'     => '_sender_id',
+                'value'   => $client_id,
+                'compare' => '!=',
+            ),
+            array(
+                'key'     => '_is_read',
+                'value'   => '1',
+                'compare' => '!=',
+            ),
+        ),
+    );
+
+    $query = new WP_Query( $args );
+    $marked_count = 0;
+
+    if ( $query->have_posts() ) {
+        foreach ( $query->posts as $message_id ) {
+            update_post_meta( $message_id, '_is_read', true );
+            $marked_count++;
+        }
+        wp_reset_postdata();
+    }
+
+    wp_send_json_success( array(
+        'marked' => $marked_count,
+    ) );
+}
+add_action( 'wp_ajax_my_cabinet_mark_messages_read', 'my_cabinet_ajax_mark_messages_read' );

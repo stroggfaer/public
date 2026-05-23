@@ -186,3 +186,107 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Notification Bell in Header ──────────────────────────── */
+.header-notifications {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+  position: relative;
+}
+
+.header-notifications__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    background-color: rgba(48, 120, 117, 0.08);
+  }
+}
+
+.header-notifications__icon {
+  font-size: 28px;
+  color: #4CAF50; // Зеленый цвет
+  font-variation-settings: 'FILL' 0;
+  transition: all 0.2s ease;
+
+  // Анимация при наличии новых уведомлений
+  .header-notifications__counter:not([style*="display: none"]) + &,
+  .header-notifications__counter[data-count-active] + & {
+    font-variation-settings: 'FILL' 1;
+    animation: bellRing 0.5s ease-in-out;
+  }
+}
+
+.header-notifications__counter {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #4CAF50; // Зеленый цвет
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  // Скрываем если 0
+  &[data-count="0"] {
+    display: none !important;
+  }
+}
+
+// Анимация колокольчика
+@keyframes bellRing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(15deg);
+  }
+  40% {
+    transform: rotate(-15deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  80% {
+    transform: rotate(-8deg);
+  }
+}
+
+// Адаптивность для мобильных устройств
+@media screen and (max-width: $media-sm) {
+  .header-notifications {
+    margin-right: 8px;
+  }
+
+  .header-notifications__icon {
+    font-size: 24px;
+  }
+
+  .header-notifications__counter {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    line-height: 16px;
+    top: 0px;
+    right: 0px;
+  }
+
+  .user-menu__name {
+    display: none; // Скрываем имя на мобильных
+  }
+}

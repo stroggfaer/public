@@ -165,6 +165,10 @@ export default {
       }
 
       try {
+        // Сначала отмечаем сообщения как прочитанные
+        await markMessagesAsRead();
+
+        // Затем загружаем сообщения
         const body = new URLSearchParams();
         body.append('action', 'my_cabinet_get_messages');
         body.append('nonce', props.appData.getMessagesNonce);
@@ -183,6 +187,33 @@ export default {
         }
       } catch (error) {
         console.error('Ошибка загрузки сообщений:', error);
+      }
+    };
+
+    const markMessagesAsRead = async () => {
+      if (!props.appData.threadId) {
+        return;
+      }
+
+      try {
+        const body = new URLSearchParams();
+        body.append('action', 'my_cabinet_mark_messages_read');
+        body.append('thread_id', props.appData.threadId);
+
+        const response = await fetch(props.appData.ajaxUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+
+        const result = await response.json();
+        if (result.success && result.data.marked > 0) {
+          console.log(`Отмечено ${result.data.marked} сообщений как прочитанных`);
+          // Обновляем счетчик в шапке после отметки
+          window.dispatchEvent(new CustomEvent('messages-marked-read'));
+        }
+      } catch (error) {
+        console.error('Ошибка отметки сообщений:', error);
       }
     };
 
