@@ -262,7 +262,7 @@ if ( $property_id > 0 ) {
         
         $property_data = array(
             'title'    => $property->post_title,
-            'image'    => get_the_post_thumbnail_url($property_id, 'medium'),
+            'image'    => get_the_post_thumbnail_url($property_id, 'property-teaser'),
             'author_id' => $author_id,
             'owner_name' => $owner_name
         );

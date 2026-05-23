@@ -717,36 +717,35 @@ function my_cabinet_ajax_get_messages() {
     $limit = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 20;
     $offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
     $thread_id = isset( $_POST['thread_id'] ) ? sanitize_text_field( wp_unslash( $_POST['thread_id'] ) ) : '';
-
-    // Запрос сообщений, где пользователь - отправитель
+    
+    // ВАЖНО: thread_id обязателен для безопасности (чтобы не показать чужие сообщения)
+    if ( empty( $thread_id ) ) {
+        wp_send_json_error( array( 'message' => 'Не указан thread_id.' ) );
+    }
+    
+    // Запрос сообщений по thread_id (строго один поток = один чат)
+    // Возвращаем ВСЕ сообщения потока (и от клиента, и от хоста)
     $args = array(
         'post_type'      => 'message',
         'post_status'    => 'publish',
-        'author'         => $current_user_id,
         'posts_per_page' => $limit,
         'offset'         => $offset,
         'orderby'        => 'date',
         'order'          => 'DESC',
-    );
-
-    // Фильтрация по thread_id (строго один поток = один чат)
-    if ( ! empty( $thread_id ) ) {
-        $args['meta_query'] = array(
+        'meta_query'     => array(
             array(
                 'key'     => '_thread_id',
                 'value'   => $thread_id,
                 'compare' => '=',
             ),
-        );
-    }
+        ),
+    );
 
     $query = new WP_Query( $args );
     $messages = array();
 
     // DEBUG: Log the query
-    if ( ! empty( $thread_id ) ) {
-        error_log( 'my_cabinet_ajax_get_messages: Filtering by thread_id=' . $thread_id . ', found=' . $query->found_posts );
-    }
+    error_log( 'my_cabinet_ajax_get_messages: thread_id=' . $thread_id . ', user=' . $current_user_id . ', found=' . $query->found_posts );
 
     if ( $query->have_posts() ) {
         while ( $query->have_posts() ) {

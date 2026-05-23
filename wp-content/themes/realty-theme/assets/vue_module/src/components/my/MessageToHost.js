@@ -159,16 +159,17 @@ export default {
     };
 
     const loadMessages = async () => {
+      // Не загружаем сообщения без thread_id (это нормально для первого сообщения)
+      if (!props.appData.threadId) {
+        return;
+      }
+
       try {
         const body = new URLSearchParams();
         body.append('action', 'my_cabinet_get_messages');
         body.append('nonce', props.appData.getMessagesNonce);
         body.append('limit', '20');
-        
-        // Передаем thread_id для фильтрации сообщений (строго один поток = один чат)
-        if (props.appData.threadId) {
-          body.append('thread_id', props.appData.threadId);
-        }
+        body.append('thread_id', props.appData.threadId);
 
         const response = await fetch(props.appData.ajaxUrl, {
           method: 'POST',

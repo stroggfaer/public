@@ -25,6 +25,12 @@ add_theme_support( 'automatic-feed-links' );
 add_theme_support( 'post-thumbnails' );
 
 /*-----------------------------------------------------------------------------------*/
+	/* Custom image sizes for property teasers
+	/*-----------------------------------------------------------------------------------*/
+// Property card teaser: 400x300 (aspect ratio 4:3, high quality)
+add_image_size( 'property-teaser', 400, 300, true ); // true = hard crop
+
+/*-----------------------------------------------------------------------------------*/
 	/* Register main menu for Wordpress use
 	/*-----------------------------------------------------------------------------------*/
 register_nav_menus(

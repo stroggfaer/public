@@ -30,8 +30,8 @@ $max_adults = get_post_meta($property_id, '_max_adults', true);
 $max_children = get_post_meta($property_id, '_max_children', true);
 
 // Получаем изображение
-$thumbnail_url = get_the_post_thumbnail_url($property_id, 'medium');
-$gallery_data = pod_get_gallery_data($pod, 'medium', true);
+$thumbnail_url = get_the_post_thumbnail_url($property_id, 'property-teaser');
+$gallery_data = pod_get_gallery_data($pod, 'property-teaser', true);
 
 if (!$thumbnail_url) {
     $thumbnail_url = $gallery_data['src'];

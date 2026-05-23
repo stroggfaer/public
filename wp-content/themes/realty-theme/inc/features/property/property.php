@@ -222,7 +222,7 @@ class PropertyFeature {
             if ($lat && $lng) {
                 // Получаем изображения из Pods (используем существующую функцию)
                 $gallery_data = function_exists('pod_get_gallery_data') 
-                    ? pod_get_gallery_data($post->ID, 'medium', false) 
+                    ? pod_get_gallery_data($post->ID, 'property-teaser', false) 
                     : [];
                 
                 // Берем первое изображение как thumbnail
@@ -232,7 +232,7 @@ class PropertyFeature {
                 $images = array_slice($gallery_data, 0, 5);
                 
                 // Получаем стандартный thumbnail (fallback)
-                $thumbnail = get_the_post_thumbnail_url($post->ID, 'medium');
+                $thumbnail = get_the_post_thumbnail_url($post->ID, 'property-teaser');
 
                 $is_favorite = false;
                 if (is_user_logged_in()) {
