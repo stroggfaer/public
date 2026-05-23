@@ -75,8 +75,11 @@ endif;
     <!-- Информация о хосте -->
     <div class="my-host-info">
         <div class="my-host-avatar">
-            <?php if ( $owner_avatar ) : ?>
-                <img src="<?php echo esc_url( $owner_avatar ); ?>" alt="<?php echo esc_attr( $owner_name ); ?>" />
+            <?php if ($owner_avatar ) : ?>
+
+                <div class="avatar-placeholder">
+                    <img src="<?php echo esc_url( $owner_avatar ); ?>" alt="<?php echo esc_attr( $owner_name ); ?>" />
+                </div>
             <?php else : ?>
                 <div class="avatar-placeholder">
                     <span class="material-symbols-outlined">person</span>
