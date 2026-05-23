@@ -3799,6 +3799,24 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   margin-bottom: 8px;
 }
 
+.splide.thumb-slider-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.property-gallery .splide__arrow {
+  background: rgb(19, 22, 22) !important;
+  display: none;
+}
+.property-gallery .splide__arrow svg {
+  fill: #fff;
+}
+.property-gallery:hover .splide__arrow {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
 /**
  * Стили компонента фильтра недвижимости
  */

@@ -313,3 +313,22 @@
       margin-bottom: 8px;
   }
 }
+.splide.thumb-slider-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+}
+//
+.property-gallery {
+    .splide__arrow {
+        background: $color-black !important;
+        display: none;
+        svg {
+            fill: #fff;
+        }
+    }
+    &:hover {
+        .splide__arrow {
+            display: flex;
+        }
+    }
+}
