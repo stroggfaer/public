@@ -812,6 +812,7 @@ body, html {
 .property-card .entry-header .rating .material-symbols-outlined {
   color: #F78522;
   font-size: 18px;
+  font-variation-settings: "FILL" 1;
 }
 .property-card .property-meta {
   padding: 0px;
@@ -3509,7 +3510,7 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
 }
 .property-detail .property-gallery-container .thumb-slider-wrapper .splide__slide.is-active {
   opacity: 1;
-  border: 2px solid #1890FF;
+  border: 2px solid #307875;
 }
 .property-detail .property-gallery-container {
   /* Одиночное изображение */

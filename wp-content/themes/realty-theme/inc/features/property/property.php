@@ -749,7 +749,7 @@ class PropertyFeature {
             foreach ($result['posts'] as $post) {
                 setup_postdata($post);
                 $pod = pods('property', $post->ID);
-                get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+                get_template_part('template-parts/component/property-card', null, ['pod' => $pod, 'show_map_location' => true]);
             }
             $html = ob_get_clean();
         } else {
@@ -1011,7 +1011,7 @@ class PropertyFeature {
             while (have_posts()) {
                 the_post();
                 $pod = pods('property', get_the_ID());
-                get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+                get_template_part('template-parts/component/property-card', null, ['pod' => $pod, 'show_map_location' => true]);
             }
             echo '</div>';
 
@@ -1100,7 +1100,7 @@ class PropertyFeature {
             foreach ($result['posts'] as $post) {
                 setup_postdata($post);
                 $pod = pods('property', $post->ID);
-                get_template_part('template-parts/component/property-card', null, ['pod' => $pod]);
+                get_template_part('template-parts/component/property-card', null, ['pod' => $pod, 'show_map_location' => true]);
             }
             $html = ob_get_clean();
         } else {

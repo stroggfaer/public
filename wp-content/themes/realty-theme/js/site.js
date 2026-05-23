@@ -127,6 +127,111 @@ jQuery(document).ready(function($) {
             handleFavoriteClick(e);
         }
     });
+
+    // ============================================================
+    // Поделиться (Share)
+    // ============================================================
+
+    /**
+     * Обработчик клика на кнопку "Поделиться"
+     */
+    function handleShareClick(e) {
+        e.preventDefault();
+
+        const btn = e.target.closest('.js-share');
+        if (!btn) return;
+
+        const shareData = {
+            title: document.title,
+            url: window.location.href
+        };
+
+        // Проверяем поддержку Web Share API
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => {
+                    console.log('Успешно поделились');
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') {
+                        console.error('Ошибка при попытке поделиться:', error);
+                        // Fallback: копируем URL в буфер обмена
+                        copyToClipboard(window.location.href);
+                    }
+                });
+        } else {
+            // Fallback для браузеров без поддержки Web Share API
+            copyToClipboard(window.location.href);
+        }
+    }
+
+    /**
+     * Копирует текст в буфер обмена и показывает уведомление
+     */
+    function copyToClipboard(text) {
+        // Проверяем поддержку Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    // Показываем уведомление о успешном копировании
+                    showShareNotification('Ссылка скопирована в буфер обмена');
+                })
+                .catch(err => {
+                    console.error('Не удалось скопировать:', err);
+                    // Fallback для старых браузеров
+                    fallbackCopyToClipboard(text);
+                });
+        } else {
+            // Clipboard API не поддерживается, используем fallback
+            fallbackCopyToClipboard(text);
+        }
+    }
+
+    /**
+     * Fallback метод копирования для старых браузеров
+     */
+    function fallbackCopyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            showShareNotification('Ссылка скопирована в буфер обмена');
+        } catch (err) {
+            console.error('Не удалось скопировать:', err);
+            showShareNotification('Не удалось скопировать ссылку', 'error');
+        }
+        
+        document.body.removeChild(textArea);
+    }
+
+    /**
+     * Показывает уведомление о результате операции "Поделиться"
+     */
+    function showShareNotification(message, type = 'success') {
+        // Проверяем наличие ElementPlus
+        if (typeof ElementPlus !== 'undefined' && ElementPlus.ElMessage) {
+            ElementPlus.ElMessage({
+                message: message,
+                type: type === 'error' ? 'error' : 'success',
+                duration: 2000
+            });
+        } else {
+            // Fallback: простое alert
+            alert(message);
+        }
+    }
+
+    // Инициализация обработчиков для кнопки "Поделиться"
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.js-share')) {
+            handleShareClick(e);
+        }
+    });
 });
 
 

@@ -44,15 +44,20 @@ if (is_user_logged_in()) {
     $favorites = is_array($favorites) ? $favorites : array();
     $is_favorite = in_array($property_id, $favorites, true);
 }
+
+// Проверяем показ кнопки карты (по умолчанию false)
+$show_map_location = $args['show_map_location'] ?? false;
 ?>
 <div class="property-card" data-id="<?php echo esc_attr($property_id); ?>"
     data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
     <div class="property-thumbnail">
         <img src="<?php echo esc_url($thumbnail_url); ?>" alt="<?php echo esc_attr($property_title); ?>">
         <div class="property-actions">
+            <?php if ($show_map_location && $property_lat && $property_lng) : ?>
             <button type="button" class="map-location js-map-location" title="Показать на карте" data-id="<?php echo esc_attr($property_id); ?>" data-lat="<?php echo esc_attr($property_lat); ?>" data-lng="<?php echo esc_attr($property_lng); ?>">
                 <span class="material-symbols-outlined">location_on</span>
             </button>
+            <?php endif; ?>
             <button type="button" class="favorite js-favorite <?php echo $is_favorite ? 'active' : ''; ?>" title="Добавить в избранное" data-property-id="<?php echo esc_attr($property_id); ?>" data-is-favorite="<?php echo $is_favorite ? '1' : '0'; ?>">
                 <span class="material-symbols-outlined"><?php echo $is_favorite ? 'favorite' : 'favorite_border'; ?></span>
             </button>
