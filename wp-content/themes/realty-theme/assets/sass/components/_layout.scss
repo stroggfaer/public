@@ -6,33 +6,6 @@
   box-sizing: content-box;
   padding: 0px 15px;
 }
-.socials {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  .social {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: $color-white;
-    border-radius: 100px;
-    opacity: 1;
-    @include ease();
-    &:hover {
-      opacity: .6;
-    }
-  }
-  @media screen and (max-width: $media-md) {
-    flex-direction: column;
-    margin: 0 auto;
-    .social {
-      margin-left: 5px;
-    }
-  }
-}
-
 .img {
   width: 100%;
   height: 100%;
@@ -65,8 +38,7 @@
   flex: 1;
 }
 .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
-  0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 .el-card__body, .el-main {
   @media screen and (max-width: $media-md) {
@@ -108,40 +80,6 @@ a {
 .icons__com {
   margin-right: 10px;
 }
-
-.icon_map {
-  background: url("~@assets/images/icons/geo-map.svg") no-repeat ;
-  width: 16px;
-  height: 16px;
-}
-
-.icon_email {
-  background: url("~@assets/images/icons/email.svg") no-repeat ;
-  width: 16px;
-  height: 16px;
-}
-
-.icon_time {
-  background: url("~@assets/images/icons/time.svg") no-repeat ;
-  width: 16px;
-  height: 16px;
-}
-.icon_phone {
-  background: url("~@assets/images/icons/phone.svg") no-repeat ;
-  width: 16px;
-  height: 16px;
-}
-.icon_user {
-  background: url("~@assets/images/icons/user.svg") no-repeat ;
-  width: 40px;
-  height: 40px;
-}
-.icon-arrow {
-  display: inline-block;
-  background: url("~@assets/images/icons/arrow-right.svg") no-repeat ;
-  width: 24px;
-  height: 24px;
-}
 .icon_wa {
   background: url("~@assets/images/icons/whapp.svg") no-repeat ;
   width: 40px;
@@ -151,11 +89,6 @@ a {
   background: url("~@assets/images/icons/tele.svg") no-repeat ;
   width: 40px;
   height: 40px;
-}
-.icon_arrow_right {
-  background: url("~@assets/images/icons/arrow-right.svg") no-repeat ;
-  width: 24px;
-  height: 24px;
 }
 .icon_message {
   background: url("~@assets/images/icons/message-square.svg") no-repeat ;
@@ -181,11 +114,7 @@ a {
   .actions {
     display: flex;
   }
-  @media only screen and (max-width: $media_md) {
-    .site-branding {
-      width: auto;
-    }
-  }
+  @media only screen and (max-width: $media_md) {}
   @media only screen and (max-width: $media-xs) {}
   @media only screen and (max-width: $media-sm) {}
 }
@@ -364,38 +293,6 @@ h2.section-title {
       }
     }
   }
-}
-.search-form__header {
-  max-width: 600px;
-  position: relative;
-  width: 100%;
-}
-.search-form__header .search-field {
-  border-radius: 25px;
-  height: 23px;
-  width: 100%;
-  font-size: 14px;
-  line-height: 100%;
-  padding: 10px 40px 10px 15px;
-  margin: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  outline: none;
-}
-.search-form__header .search-field:focus {
-  border: 1px solid #bdbbbb;
-}
-.search-form__header button {
-   background: unset;
-   border: none;
-   position: absolute;
-   right: 5px;
-   padding: 10px;
-   display: flex;
-}
-.search-form__header label {
-  display: flex;
-  align-items: center;
 }
 //
 /* Стили пунктов меню */
