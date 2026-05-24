@@ -156,11 +156,6 @@
   border-radius: var(--ui-border-radius);
 }
 
-.user-menu__link:hover {
-  opacity: 0.8;
-  background-color: rgba(48, 120, 117, 0.05);
-}
-
 .user-menu__avatar {
   width: 40px;
   height: 40px;
@@ -191,7 +186,6 @@
 .header-notifications {
   display: flex;
   align-items: center;
-  margin-right: 12px;
   position: relative;
 }
 
@@ -205,9 +199,10 @@
   transition: background-color 0.2s ease;
   text-decoration: none;
   color: inherit;
-
+  background-color: rgba(48, 120, 117, 0.08);
+  opacity: 1;
   &:hover {
-    background-color: rgba(48, 120, 117, 0.08);
+    opacity: 0.8;
   }
 }
 

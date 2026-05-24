@@ -178,6 +178,9 @@ a {
       margin: 0 auto;
     }
   }
+  .actions {
+    display: flex;
+  }
   @media only screen and (max-width: $media_md) {
     .site-branding {
       width: auto;
