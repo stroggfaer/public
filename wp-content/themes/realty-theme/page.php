@@ -18,10 +18,7 @@ get_header(); ?>
 							<h1 class="title"><?php the_title(); ?></h1>
 							<div class="page-meta">
 								<span class="meta-item">
-									<i class="far fa-calendar-alt"></i> <?php echo get_the_date(); ?>
-								</span>
-								<span class="meta-item">
-									<i class="far fa-user"></i> <?php the_author(); ?>
+									<span class="material-symbols-outlined">calendar_today</span> <?php echo get_the_date(); ?>
 								</span>
 							</div>
 						</header>

@@ -33,6 +33,13 @@ article.post {
     color: $color-dark-grey;
     padding: 15px 0px 10px;
   }
+  .meta-item {
+    font-size: 16px;
+    line-height: 18px;
+    .material-symbols-outlined {
+      font-size: 18px;
+    }
+  }
   h2 {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -47,6 +54,9 @@ article.post {
   }
   .wp-block-list li {
      margin-bottom: 5px;
+  }
+  .the-content {
+    margin-bottom: 30px;
   }
 }
 .font-bold {
@@ -314,13 +324,6 @@ article.post {
 .home-banner-widget {
   margin-top: 35px;
   margin-bottom: 35px;
-}
-article.post {
-  border-bottom: 2px solid $color-site;
-  margin-bottom: 30px;
-}
-article.post .the-content {
-  margin-bottom: 30px;
 }
 .post-article {
   height: auto;
