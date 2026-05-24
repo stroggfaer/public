@@ -1,5 +1,6 @@
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import { ApiFetchService } from '../../services/api-fetch';
 
 export default {
   props: {
@@ -223,13 +224,7 @@ export default {
         body.append('action', 'my_cabinet_get_profile');
         body.append('nonce', props.appData.profileNonce);
 
-        const response = await fetch(props.appData.ajaxUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString(),
-        });
-
-        const result = await response.json();
+        const result = await ApiFetchService.post(props.appData.ajaxUrl, body);
 
         if (result.success) {
           profileForm.last_name = result.data.last_name || '';
@@ -261,13 +256,7 @@ export default {
           body.append('last_name', profileForm.last_name);
           body.append('first_name', profileForm.first_name);
 
-          const response = await fetch(props.appData.ajaxUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: body.toString(),
-          });
-
-          const result = await response.json();
+          const result = await ApiFetchService.post(props.appData.ajaxUrl, body);
 
           if (result.success) {
             ElMessage({
@@ -311,13 +300,7 @@ export default {
           body.append('current_password', passwordForm.current_password);
           body.append('new_password', passwordForm.new_password);
 
-          const response = await fetch(props.appData.ajaxUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: body.toString(),
-          });
-
-          const result = await response.json();
+          const result = await ApiFetchService.post(props.appData.ajaxUrl, body);
 
           if (result.success) {
             ElMessage({

@@ -1,4 +1,5 @@
 import { ref, reactive } from 'vue';
+import { ApiFetchService } from '../../services/api-fetch';
 
 export default {
   props: {
@@ -141,13 +142,7 @@ export default {
       body.append('nonce', props.appData.registerNonce);
       Object.keys(data).forEach((key) => body.append(key, data[key]));
 
-      const response = await fetch(props.appData.ajaxUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      });
-
-      return response.json();
+      return ApiFetchService.post(props.appData.ajaxUrl, body);
     };
 
     const submitRegister = () => {

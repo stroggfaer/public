@@ -1,5 +1,6 @@
 import { ref, reactive, onMounted } from 'vue';
 import {ElNotification} from "element-plus";
+import { ApiFetchService } from '../../services/api-fetch';
 
 export default {
   props: {
@@ -141,13 +142,7 @@ export default {
       body.append('nonce', props.appData.messageNonce);
       Object.keys(data).forEach((key) => body.append(key, data[key]));
 
-      const response = await fetch(props.appData.ajaxUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      });
-
-      return response.json();
+      return ApiFetchService.post(props.appData.ajaxUrl, body);
     };
 
     const applyTemplate = (templateText) => {
@@ -175,13 +170,7 @@ export default {
         body.append('limit', '20');
         body.append('thread_id', props.appData.threadId);
 
-        const response = await fetch(props.appData.ajaxUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString(),
-        });
-
-        const result = await response.json();
+        const result = await ApiFetchService.post(props.appData.ajaxUrl, body);
         if (result.success) {
           messages.value = result.data.messages;
         }
@@ -200,13 +189,7 @@ export default {
         body.append('action', 'my_cabinet_mark_messages_read');
         body.append('thread_id', props.appData.threadId);
 
-        const response = await fetch(props.appData.ajaxUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString(),
-        });
-
-        const result = await response.json();
+        const result = await ApiFetchService.post(props.appData.ajaxUrl, body);
         if (result.success && result.data.marked > 0) {
           console.log(`Отмечено ${result.data.marked} сообщений как прочитанных`);
           // Обновляем счетчик в шапке после отметки

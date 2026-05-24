@@ -8,6 +8,7 @@
  */
 
 const { ref, onMounted } = Vue;
+import { ApiFetchService } from '../../services/api-fetch';
 
 export default {
   name: 'HostProfileModal',
@@ -114,15 +115,8 @@ export default {
         formData.append('action', 'my_cabinet_get_host_profile');
         formData.append('owner_id', ownerId);
 
-        const response = await fetch(window.MyCabinetData?.ajaxUrl || '/wp-admin/admin-ajax.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData.toString(),
-        });
-
-        const result = await response.json();
+        const ajaxUrl = window.MyCabinetData?.ajaxUrl || '/wp-admin/admin-ajax.php';
+        const result = await ApiFetchService.post(ajaxUrl, formData);
 
         if (result.success && result.data) {
           hostData.value = result.data;

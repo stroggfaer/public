@@ -28,7 +28,7 @@ function createCustomPriceMarkerClass() {
     this.div.className = 'map-marker-price';
     this.div.setAttribute('role', 'button');
     this.div.setAttribute('aria-label', `Объект: ${this.propertyData.title}, цена: ${this.propertyData.price}`);
-    this.div.innerHTML = `<span class="price-text">${this.propertyData.price}</span>`;
+    this.div.innerHTML = `<span class="price-text">${this.propertyData.price} ₽</span>`;
     
     // Hover эффекты - поднимаем z-index и выделяем
     this.div.addEventListener('mouseenter', () => {
