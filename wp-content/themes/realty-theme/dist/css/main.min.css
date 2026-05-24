@@ -4360,6 +4360,9 @@ body:has(.my-dashboard-layout) {
           flex: 1;
   padding: 15px;
 }
+.my-dashboard-layout .my-main-content .properties-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .my-dashboard-layout .my-page-title {
   font-size: 26px;
   font-weight: 700;

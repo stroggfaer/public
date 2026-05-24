@@ -29,7 +29,7 @@ get_header();
     <?php get_template_part('my/component/my-sidebar'); ?>
 
     <!-- Основной контент -->
-    <main class="my-main-content">
+    <main class="my-main-content favorites">
         <div class="my-content-wrapper">
             <h1 class="my-page-title"><?php esc_html_e( 'Избранное', 'realty-theme' ); ?></h1>
             <div class="my-content-grid">

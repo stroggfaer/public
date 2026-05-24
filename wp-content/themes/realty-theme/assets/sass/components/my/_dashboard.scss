@@ -37,6 +37,9 @@ body:has(.my-dashboard-layout) {
   .my-main-content {
     flex: 1;
     padding: 15px;
+    .properties-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   .my-page-title {
