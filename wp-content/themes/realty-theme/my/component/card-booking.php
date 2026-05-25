@@ -310,7 +310,7 @@ if ( $checkout_date ) {
             <h2 class="my-booking-title">
                 <?php echo $property_data ? esc_html($property_data['title']) : 'Объект недвижимости'; ?>
             </h2>
-            <div class="my-booking-status my-booking-status--<?php echo esc_attr( $current_status['class'] ); ?>">
+            <div class="my-booking-status status-badge status-<?php echo esc_attr( $current_status['class'] ); ?>">
                 <?php echo esc_html( strtoupper( $current_status['label'] ) ); ?>
             </div>
         </div>

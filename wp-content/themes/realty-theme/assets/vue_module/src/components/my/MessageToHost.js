@@ -108,7 +108,7 @@ export default {
 
   setup(props) {
     const messageForm = reactive({
-      title: '',
+      title: 'Бронирование объекта',
       content: '',
     });
     const messageLoading = ref(false);
@@ -127,12 +127,12 @@ export default {
 
     const messageRules = {
       title: [
-        { required: true, message: 'Введите тему сообщения', trigger: 'blur' },
-        { min: 3, message: 'Минимум 3 символа', trigger: 'blur' },
+        { required: true, message: 'Введите тему сообщения', trigger: ['submit'] },
+        { min: 3, message: 'Минимум 3 символа', trigger: ['blur'] },
       ],
       content: [
-        { required: true, message: 'Введите текст сообщения', trigger: 'blur' },
-        { min: 10, message: 'Минимум 10 символов', trigger: 'blur' },
+        { required: true, message: 'Введите текст сообщения', trigger: ['submit'] },
+        { min: 10, message: 'Минимум 10 символов', trigger: ['blur'] },
       ],
     };
 
@@ -156,7 +156,7 @@ export default {
     const loadMessages = async () => {
       // Не загружаем сообщения без thread_id (это нормально для первого сообщения)
       if (!props.appData.threadId) {
-        return;
+        return Promise.resolve();
       }
 
       try {
@@ -177,6 +177,8 @@ export default {
       } catch (error) {
         console.error('Ошибка загрузки сообщений:', error);
       }
+      
+      return Promise.resolve();
     };
 
     const markMessagesAsRead = async () => {
@@ -240,14 +242,12 @@ export default {
             owner_id: props.appData.ownerId || 0,
             thread_id: props.appData.threadId || '',
             checkin_date: props.appData.checkinDate || '',
-            checkout_date: props.appData.checkoutDate || '',
-            adults: bookingContext.value?.adults || 0,
-            children: bookingContext.value?.children || 0,
+            checkout_date: props.appData.checkoutDate || ''
           });
 
           if (result.success) {
             messageSuccess.value = result.data?.message || 'Сообщение успешно отправлено!';
-            messageForm.title = '';
+            // messageForm.title = '';
             messageForm.content = '';
             messageFormRef.value.resetFields();
             ElNotification({
@@ -297,48 +297,20 @@ export default {
       if (props.appData.context === 'booking_inquiry') {
         const checkinDate = props.appData.checkinDate;
         const checkoutDate = props.appData.checkoutDate;
-        
-        // Получаем параметры гостей из URL
-        const params = new URLSearchParams(window.location.search);
-        const adults = parseInt(params.get('adults')) || 0;
-        const children = parseInt(params.get('children')) || 0;
-
-        // Формируем текст гостей
-        let guestsText = '';
-        if (adults > 0 || children > 0) {
-          const guestsParts = [];
-          if (adults > 0) {
-            // Склонение для взрослых
-            const cases = [2, 0, 1, 1, 1, 2];
-            const mod = adults % 100;
-            const caseIdx = (mod > 4 && mod < 20) ? 2 : cases[Math.min(mod % 10, 5)];
-            const adultsForms = ['взрослый', 'взрослых', 'взрослых'];
-            guestsParts.push(`${adults} ${adultsForms[caseIdx]}`);
-          }
-          if (children > 0) {
-            // Склонение для детей
-            const cases = [2, 0, 1, 1, 1, 2];
-            const mod = children % 100;
-            const caseIdx = (mod > 4 && mod < 20) ? 2 : cases[Math.min(mod % 10, 5)];
-            const childrenForms = ['ребенок', 'ребенка', 'детей'];
-            guestsParts.push(`${children} ${childrenForms[caseIdx]}`);
-          }
-          guestsText = guestsParts.join(', ');
-        }
+        const guestsText = props.appData.guestsText || '';
         
         bookingContext.value = {
           checkinDate: checkinDate,
           checkoutDate: checkoutDate,
           checkinDateFormatted: formatDateRu(checkinDate),
           checkoutDateFormatted: formatDateRu(checkoutDate),
-          adults: adults,
-          children: children,
           guestsText: guestsText
         };
         
-        // Предзаполняем тему и текст сообщения
-        messageForm.title = 'Бронирование объекта';
-        messageForm.content = `Здравствуйте!
+        // Заполняем шаблон только если это ПЕРВОЕ сообщение (нет истории)
+       // messageForm.title = 'Бронирование объекта';
+        if (messages.value.length === 0) {
+          messageForm.content = `Здравствуйте!
 Интересует ваш объект недвижимости.
 Даты проживания:
 - Заезд: ${bookingContext.value.checkinDateFormatted}
@@ -347,6 +319,7 @@ export default {
 ${bookingContext.value.guestsText ? '- ' + bookingContext.value.guestsText : ''}
 Прошу подтвердить доступность и сообщить детали бронирования.
 Спасибо!`;
+        }
       }
     }
 
@@ -370,10 +343,10 @@ ${bookingContext.value.guestsText ? '- ' + bookingContext.value.guestsText : ''}
   },
 
   mounted() {
-    // Загружаем историю сообщений при монтировании компонента
-    this.loadMessages();
-    
-    // Инициализируем booking context если есть
-    this.initBookingContext();
+    // Сначала загружаем историю сообщений
+    this.loadMessages().then(() => {
+      // Потом инициализируем booking context (с учетом наличия сообщений)
+      this.initBookingContext();
+    });
   }
 };

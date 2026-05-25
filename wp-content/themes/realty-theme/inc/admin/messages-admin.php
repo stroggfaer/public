@@ -436,19 +436,11 @@ function my_cabinet_dialog_view_page( $thread_id ) {
 
                 <div class="dialog-reply-box">
                     <h3>Ответить</h3>
-                    <?php if ( $booking_status === 'pending' ) : ?>
-                        <textarea id="dialog-reply-textarea" rows="5" placeholder="Отправка сообщений доступна после подтверждения бронирования" disabled></textarea>
-                        <button type="button" id="dialog-send-btn" class="button button-primary button-hero" disabled>
-                            Отправить сообщение
-                        </button>
-                        <span class="pending-notice">Хост не может отправлять сообщения до подтверждения бронирования</span>
-                    <?php else : ?>
-                        <textarea id="dialog-reply-textarea" rows="5" placeholder="Введите ваше сообщение..."></textarea>
-                        <button type="button" id="dialog-send-btn" class="button button-primary button-hero">
-                            Отправить сообщение
-                        </button>
-                        <span id="dialog-send-status" class="send-status"></span>
-                    <?php endif; ?>
+                    <textarea id="dialog-reply-textarea" rows="5" placeholder="Введите ваше сообщение..."></textarea>
+                    <button type="button" id="dialog-send-btn" class="button button-primary button-hero">
+                        Отправить сообщение
+                    </button>
+                    <span id="dialog-send-status" class="send-status"></span>
                 </div>
             </div>
 

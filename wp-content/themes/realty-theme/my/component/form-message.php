@@ -19,6 +19,9 @@ $booking_id    = $args['booking_id'] ?? 0;
 $booking_status = $args['booking_status'] ?? 'new';
 $thread_id     = $args['thread_id'] ?? '';
 $context       = $args['context'] ?? 'general';
+$checkin_date  = $args['checkin_date'] ?? '';
+$checkout_date = $args['checkout_date'] ?? '';
+$guests_text   = $args['guests_text'] ?? '';
 
 $app_data = array(
     'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
@@ -29,7 +32,10 @@ $app_data = array(
     'bookingId'          => $booking_id,
     'bookingStatus'      => $booking_status,
     'threadId'           => $thread_id,
-    'context'            => $context
+    'context'            => $context,
+    'checkinDate'        => $checkin_date,
+    'checkoutDate'       => $checkout_date,
+    'guestsText'         => $guests_text
 );
 
 $app_data_json = wp_json_encode( $app_data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG );

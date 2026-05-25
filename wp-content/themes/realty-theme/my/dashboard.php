@@ -103,6 +103,26 @@ if ( $has_booking_context && is_user_logged_in() ) {
     // Получаем даты бронирования для info-sidebar
     $checkin_date = get_post_meta( $booking_id, '_checkin_date', true ) ?: '';
     $checkout_date = get_post_meta( $booking_id, '_checkout_date', true ) ?: '';
+    
+    // Получаем гостей из booking_request
+    $guests_text = '';
+    $guests_count_raw = get_post_meta( $booking_id, '_guests_count', true );
+    if ( ! empty( $guests_count_raw ) ) {
+        $guests_count = json_decode( $guests_count_raw, true );
+        if ( is_array( $guests_count ) ) {
+            $guest_types_config = function_exists( 'realty_get_guest_types_config' ) ? realty_get_guest_types_config() : array();
+            $guests_parts = array();
+            foreach ( $guest_types_config as $guest_type ) {
+                if ( empty( $guest_type['enabled'] ) ) continue;
+                $guest_name = $guest_type['name'];
+                $guest_value = $guests_count[ $guest_name ] ?? 0;
+                if ( $guest_value > 0 ) {
+                    $guests_parts[] = $guest_value . ' ' . $guest_type['label'];
+                }
+            }
+            $guests_text = implode( ', ', $guests_parts );
+        }
+    }
 }
 
 
@@ -149,7 +169,10 @@ if ( $has_booking_context && is_user_logged_in() ) {
                             'booking_id'    => $booking_id,
                             'booking_status' => $booking_status,
                             'thread_id'     => $thread_id,
-                            'context'       => 'booking_inquiry'
+                            'context'       => 'booking_inquiry',
+                            'checkin_date'  => $checkin_date ?? '',
+                            'checkout_date' => $checkout_date ?? '',
+                            'guests_text'   => $guests_text ?? ''
                         )); 
                         ?>
                     </div>
@@ -173,14 +196,10 @@ if ( $has_booking_context && is_user_logged_in() ) {
         } else {
             // РЕЖИМ БЕЗ PROPERTY_ID: показываем таблицу диалогов по объектам
             ?>
-            <div class="my-content-grid">
+            <div class="my-content">
                 <!-- Левая колонка: Таблица диалогов -->
                 <div class="my-content-main">
                     <?php get_template_part('my/component/my-table-messages'); ?>
-                </div>
-                <!-- Правая колонка: Боковая панель действий -->
-                <div class="my-content-sidebar">
-                    <?php get_template_part('my/component/info-sidebar'); ?>
                 </div>
             </div>
             <?php
