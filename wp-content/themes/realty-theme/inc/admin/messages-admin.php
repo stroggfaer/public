@@ -436,11 +436,19 @@ function my_cabinet_dialog_view_page( $thread_id ) {
 
                 <div class="dialog-reply-box">
                     <h3>Ответить</h3>
-                    <textarea id="dialog-reply-textarea" rows="5" placeholder="Введите ваше сообщение..."></textarea>
-                    <button type="button" id="dialog-send-btn" class="button button-primary button-hero">
-                        Отправить сообщение
-                    </button>
-                    <span id="dialog-send-status" class="send-status"></span>
+                    <?php if ( $booking_status === 'pending' ) : ?>
+                        <textarea id="dialog-reply-textarea" rows="5" placeholder="Отправка сообщений доступна после подтверждения бронирования" disabled></textarea>
+                        <button type="button" id="dialog-send-btn" class="button button-primary button-hero" disabled>
+                            Отправить сообщение
+                        </button>
+                        <span class="pending-notice">Хост не может отправлять сообщения до подтверждения бронирования</span>
+                    <?php else : ?>
+                        <textarea id="dialog-reply-textarea" rows="5" placeholder="Введите ваше сообщение..."></textarea>
+                        <button type="button" id="dialog-send-btn" class="button button-primary button-hero">
+                            Отправить сообщение
+                        </button>
+                        <span id="dialog-send-status" class="send-status"></span>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -575,7 +583,7 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                                     </span>
                                 </div>
                                 
-                                <?php if ( ! in_array( $booking_status, array( 'completed', 'cancelled' ), true ) ) : ?>
+                                <?php if ( ! in_array( $booking_status, array( 'pending', 'completed', 'cancelled' ), true ) ) : ?>
                                 <div class="booking-edit-actions">
                                     <button type="button" id="booking-edit-btn" class="button">
                                         <span class="dashicons dashicons-edit"></span> Редактировать
@@ -583,7 +591,11 @@ function my_cabinet_dialog_view_page( $thread_id ) {
                                 </div>
                                 <?php else : ?>
                                 <div class="booking-edit-actions">
-                                    <span class="booking-final-notice">Редактирование недоступно для завершённых или отменённых бронирований</span>
+                                    <?php if ( $booking_status === 'pending' ) : ?>
+                                        <span class="booking-final-notice">Редактирование недоступно до подтверждения бронирования</span>
+                                    <?php else : ?>
+                                        <span class="booking-final-notice">Редактирование недоступно для завершённых или отменённых бронирований</span>
+                                    <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
                             </div>

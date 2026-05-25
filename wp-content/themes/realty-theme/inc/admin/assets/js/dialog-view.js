@@ -82,7 +82,14 @@
     async function sendReply() {
         const textarea = document.getElementById('dialog-reply-textarea');
         const statusSpan = document.getElementById('dialog-send-status');
+        const sendBtn = document.getElementById('dialog-send-btn');
         const content = textarea.value.trim();
+
+        // Проверяем, не заблокирована ли форма
+        if (textarea.disabled || sendBtn.disabled) {
+            alert('Отправка сообщений недоступна до подтверждения бронирования');
+            return;
+        }
 
         if (!content) {
             alert('Введите сообщение');

@@ -876,12 +876,13 @@ function realty_get_property_long_stay_text( $property_id = 0 ) {
  */
 function realty_get_booking_statuses() {
     return array(
-        'pending'   => array( 'label' => 'Ожидание', 'class' => 'pending' ),
-        'new'       => array( 'label' => 'Новая заявка', 'class' => 'pending' ),
-        'confirmed' => array( 'label' => 'Подтверждено', 'class' => 'confirmed' ),
-        'checkin'   => array( 'label' => 'Заселение', 'class' => 'checkin' ),
-        'completed' => array( 'label' => 'Завершено', 'class' => 'completed' ),
-        'cancelled' => array( 'label' => 'Отменено', 'class' => 'cancelled' ),
+        'pending'     => array( 'label' => 'Ожидание', 'class' => 'pending' ),
+        'new'         => array( 'label' => 'Новая заявка', 'class' => 'new' ),
+        'in_progress' => array( 'label' => 'В процессе', 'class' => 'in_progress' ),
+        'confirmed'   => array( 'label' => 'Подтверждено', 'class' => 'confirmed' ),
+        'checkin'     => array( 'label' => 'Заселение', 'class' => 'checkin' ),
+        'completed'   => array( 'label' => 'Завершено', 'class' => 'completed' ),
+        'cancelled'   => array( 'label' => 'Отменено', 'class' => 'cancelled' ),
     );
 }
 

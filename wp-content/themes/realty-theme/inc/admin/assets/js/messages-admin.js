@@ -144,7 +144,7 @@
             const statusClass = 'status-' + dialog.status;
             const hasUnread = dialog.unread_count > 0;
             const rowClass = hasUnread ? 'unread-row' : '';
-            const newMessageBadge = hasUnread ? `<span class="new-message-badge">🔴 Новое</span>` : '';
+            const newMessageBadge = hasUnread ? `<span class="new-message-badge">!Новое</span>` : '';
             
             return `
             <tr data-thread-id="${dialog.thread_id}" class="${rowClass}">

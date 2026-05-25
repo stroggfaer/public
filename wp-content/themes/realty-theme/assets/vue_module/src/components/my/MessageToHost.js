@@ -302,12 +302,11 @@ export default {
         const params = new URLSearchParams(window.location.search);
         const adults = parseInt(params.get('adults')) || 0;
         const children = parseInt(params.get('children')) || 0;
-        
+
         // Формируем текст гостей
         let guestsText = '';
         if (adults > 0 || children > 0) {
           const guestsParts = [];
-          
           if (adults > 0) {
             // Склонение для взрослых
             const cases = [2, 0, 1, 1, 1, 2];
@@ -316,7 +315,6 @@ export default {
             const adultsForms = ['взрослый', 'взрослых', 'взрослых'];
             guestsParts.push(`${adults} ${adultsForms[caseIdx]}`);
           }
-          
           if (children > 0) {
             // Склонение для детей
             const cases = [2, 0, 1, 1, 1, 2];
@@ -325,7 +323,6 @@ export default {
             const childrenForms = ['ребенок', 'ребенка', 'детей'];
             guestsParts.push(`${children} ${childrenForms[caseIdx]}`);
           }
-          
           guestsText = guestsParts.join(', ');
         }
         
@@ -342,23 +339,16 @@ export default {
         // Предзаполняем тему и текст сообщения
         messageForm.title = 'Бронирование объекта';
         messageForm.content = `Здравствуйте!
-
 Интересует ваш объект недвижимости.
-
 Даты проживания:
 - Заезд: ${bookingContext.value.checkinDateFormatted}
 - Выезд: ${bookingContext.value.checkoutDateFormatted}
-
 Количество гостей:
 ${bookingContext.value.guestsText ? '- ' + bookingContext.value.guestsText : ''}
-
 Прошу подтвердить доступность и сообщить детали бронирования.
-
 Спасибо!`;
       }
     }
-
-
 
     return {
       messageForm,

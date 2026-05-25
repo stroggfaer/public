@@ -1250,6 +1250,31 @@ function my_cabinet_ajax_send_reply() {
         wp_send_json_error( array( 'message' => 'Сообщение слишком короткое.' ) );
     }
 
+    // Проверяем статус бронирования - нельзя отправлять сообщения при pending
+    $booking_query = new WP_Query( array(
+        'post_type'      => 'booking_request',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'meta_query'     => array(
+            array(
+                'key'     => '_thread_id',
+                'value'   => $thread_id,
+                'compare' => '=',
+            ),
+        ),
+    ) );
+
+    if ( $booking_query->have_posts() ) {
+        $booking_id = $booking_query->posts[0]->ID;
+        $booking_status = get_post_meta( $booking_id, '_status', true );
+        
+        if ( $booking_status === 'pending' ) {
+            wp_send_json_error( array( 'message' => 'Отправка сообщений недоступна до подтверждения бронирования.' ) );
+        }
+        
+        wp_reset_postdata();
+    }
+
     // Извлекаем ID пользователя из thread_id
     // Формат: thread_{property_id}_{client_id}_{owner_id} или thread_0_{min}_{max}
     $parts = explode( '_', $thread_id );
@@ -1420,7 +1445,7 @@ function my_cabinet_ajax_update_booking_details() {
     }
 
     // Валидация статуса
-    $valid_statuses = array( 'new', 'in_progress', 'confirmed', 'completed', 'cancelled' );
+    $valid_statuses = array( 'pending', 'new', 'in_progress', 'confirmed', 'completed', 'cancelled' );
     if ( ! in_array( $booking_status, $valid_statuses, true ) ) {
         wp_send_json_error( array( 'message' => 'Некорректный статус бронирования.' ) );
     }
@@ -1438,10 +1463,14 @@ function my_cabinet_ajax_update_booking_details() {
         wp_send_json_error( array( 'message' => 'Бронирование не найдено.' ) );
     }
 
-    // Проверяем текущий статус — финальные статусы нельзя редактировать
+    // Проверяем текущий статус — финальные статусы и pending нельзя редактировать
     $current_status = get_post_meta( $booking_id, '_status', true );
-    if ( in_array( $current_status, array( 'completed', 'cancelled' ), true ) ) {
-        wp_send_json_error( array( 'message' => 'Редактирование завершённых или отменённых бронирований запрещено.' ) );
+    if ( in_array( $current_status, array( 'pending', 'completed', 'cancelled' ), true ) ) {
+        if ( $current_status === 'pending' ) {
+            wp_send_json_error( array( 'message' => 'Редактирование недоступно до подтверждения бронирования.' ) );
+        } else {
+            wp_send_json_error( array( 'message' => 'Редактирование завершённых или отменённых бронирований запрещено.' ) );
+        }
     }
 
     // Обновляем мета-поля booking_request
