@@ -2833,9 +2833,9 @@ article.post .the-content {
   display: -ms-flexbox;
   display: flex;
   -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  -webkit-box-direction: reverse;
+      -ms-flex-direction: column-reverse;
+          flex-direction: column-reverse;
   gap: 16px;
   max-height: 500px;
   overflow-y: auto;
@@ -2871,6 +2871,16 @@ article.post .the-content {
 .messages-history .message-item.message-read {
   background: #fff;
   border-color: #d0d0d0;
+}
+.messages-history .message-item.message-from-host {
+  background: #f0f7f6;
+  border-color: #2c6e6a;
+  border-left: 3px solid #2c6e6a;
+}
+.messages-history .message-item.message-from-guest {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  border-left: 3px solid #999999;
 }
 .messages-history .message-item .message-header {
   display: -webkit-box;

@@ -256,7 +256,7 @@
     }
     .messages-list {
         display: flex;
-        flex-direction: column;
+        flex-direction: column-reverse;
         gap: 16px;
         max-height: 500px;
         overflow-y: auto;
@@ -295,6 +295,20 @@
         &.message-read {
             background: #fff;
             border-color: #d0d0d0;
+        }
+        
+        // Сообщение от хоста (владельца)
+        &.message-from-host {
+            background: #f0f7f6;
+            border-color: #2c6e6a;
+            border-left: 3px solid #2c6e6a;
+        }
+        
+        // Сообщение от гостя
+        &.message-from-guest {
+            background: #ffffff;
+            border-color: #e0e0e0;
+            border-left: 3px solid #999999;
         }
         
         .message-header {
