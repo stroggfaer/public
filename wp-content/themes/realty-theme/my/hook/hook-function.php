@@ -1031,6 +1031,30 @@ function my_cabinet_ajax_get_dialogs() {
             // Получаем название недвижимости
             $property_title = $property_id > 0 ? get_the_title( $property_id ) : '—';
             
+            // Подсчитываем непрочитанные сообщения в этом диалоге
+            $unread_count = 0;
+            if ( ! empty( $thread_id ) ) {
+                $message_query = new WP_Query( array(
+                    'post_type'      => 'message',
+                    'post_status'    => 'publish',
+                    'posts_per_page' => -1,
+                    'fields'         => 'ids',
+                    'meta_query'     => array(
+                        array(
+                            'key'     => '_thread_id',
+                            'value'   => $thread_id,
+                            'compare' => '=',
+                        ),
+                        array(
+                            'key'     => '_is_read',
+                            'value'   => '1',
+                            'compare' => '!=',
+                        ),
+                    ),
+                ) );
+                $unread_count = $message_query->found_posts;
+            }
+            
             $dialogs[ $thread_id ] = array(
                 'booking_id'    => $booking_id,
                 'thread_id'     => $thread_id,
@@ -1045,6 +1069,7 @@ function my_cabinet_ajax_get_dialogs() {
                 'status'        => $status,
                 'created_date'  => get_the_date( 'd.m.Y H:i' ),
                 'timestamp'     => get_the_date( 'U' ),
+                'unread_count'  => $unread_count,
             );
         }
         wp_reset_postdata();
@@ -1072,8 +1097,16 @@ function my_cabinet_ajax_get_dialogs() {
 
     // Фильтр по subject удален - теперь фильтр по status
 
-    // Сортируем по дате (новые первые)
+    // Сортируем: сначала непрочитанные (unread_count > 0), затем по дате (новые первые)
     usort( $dialogs, function( $a, $b ) {
+        // Если один из диалогов имеет непрочитанные сообщения, он идет первым
+        if ( $a['unread_count'] > 0 && $b['unread_count'] === 0 ) {
+            return -1;
+        }
+        if ( $a['unread_count'] === 0 && $b['unread_count'] > 0 ) {
+            return 1;
+        }
+        // Если оба имеют или не имеют непрочитанные, сортируем по дате
         return $b['timestamp'] - $a['timestamp'];
     } );
 

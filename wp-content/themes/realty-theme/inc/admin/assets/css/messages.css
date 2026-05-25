@@ -40,6 +40,16 @@
     background: #f5f5f5;
 }
 
+/* Строки с непрочитанными сообщениями */
+.messages-table .unread-row {
+    background: #e8e8e8 !important;
+    border-left: 3px solid #666 !important;
+}
+
+.messages-table .unread-row:hover {
+    background: #d8d8d8 !important;
+}
+
 /* Статусы бронирования */
 .status-badge {
     display: inline-block;
@@ -52,6 +62,11 @@
 
 .status-new {
     background: #0073aa;
+    color: #fff;
+}
+
+.status-pending {
+    background: #f0b849;
     color: #fff;
 }
 
@@ -97,6 +112,19 @@
     font-size: 12px;
     font-weight: 600;
     margin-left: 8px;
+}
+
+/* Лейбл новых сообщений в ячейке ID */
+.new-message-badge {
+    display: inline-block;
+    background: #dc3232;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 4px;
+    margin-left: 0;
 }
 
 /* Кнопки действий */
@@ -520,12 +548,11 @@
     gap: 8px;
     flex-wrap: wrap;
 }
-
 .booking-edit-actions .button .dashicons {
     font-size: 16px;
     width: 16px;
     height: 16px;
-    vertical-align: middle;
+    vertical-align: sub;
     margin-top: -2px;
 }
 

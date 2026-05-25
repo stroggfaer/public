@@ -217,6 +217,7 @@ function my_cabinet_messages_list_page() {
                 <div class="filter-row">
                     <select id="filter-status" class="regular-text">
                         <option value="">Все статусы</option>
+                        <option value="pending" <?php selected( $status_filter, 'pending' ); ?>>Ожидание</option>
                         <option value="new" <?php selected( $status_filter, 'new' ); ?>>Новая заявка</option>
                         <option value="in_progress" <?php selected( $status_filter, 'in_progress' ); ?>>В процессе</option>
                         <option value="confirmed" <?php selected( $status_filter, 'confirmed' ); ?>>Подтверждена</option>

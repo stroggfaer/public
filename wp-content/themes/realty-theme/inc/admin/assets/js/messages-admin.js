@@ -129,6 +129,7 @@
 
         // Статусы для отображения
         const statusLabels = {
+            'pending': 'Ожидание',
             'new': 'Новая заявка',
             'in_progress': 'В процессе',
             'confirmed': 'Подтверждена',
@@ -141,10 +142,16 @@
             
             const statusLabel = statusLabels[dialog.status] || dialog.status;
             const statusClass = 'status-' + dialog.status;
+            const hasUnread = dialog.unread_count > 0;
+            const rowClass = hasUnread ? 'unread-row' : '';
+            const newMessageBadge = hasUnread ? `<span class="new-message-badge">🔴 Новое</span>` : '';
             
             return `
-            <tr data-thread-id="${dialog.thread_id}">
-                <td class="col-id">${dialog.booking_id}</td>
+            <tr data-thread-id="${dialog.thread_id}" class="${rowClass}">
+                <td class="col-id">
+                    ${dialog.booking_id}
+                    ${newMessageBadge}
+                </td>
                 <td class="col-login">
                     <a href="${window.location.pathname}?page=booking-messages&view=dialog&thread_id=${dialog.thread_id}" class="login-link">
                         ${dialog.client_login}
