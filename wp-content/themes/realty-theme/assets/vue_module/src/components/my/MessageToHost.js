@@ -586,16 +586,12 @@ export default {
           messageForm.content =
               `Здравствуйте!
 Интересует ваш объект недвижимости.
-
 Даты проживания:
 - Заезд: ${bookingContext.value.checkinDateFormatted}
 - Выезд: ${bookingContext.value.checkoutDateFormatted}
-
 Количество гостей:
 ${bookingContext.value.guestsText ? '- ' + bookingContext.value.guestsText : ''}
-
 Прошу подтвердить доступность и сообщить детали бронирования.
-
 Спасибо!`;
         }
       }

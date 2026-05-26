@@ -59,6 +59,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
     <!--Дата заезда и контакт (Vue 3)-->
     <?php
     // Подготовка данных для Vue
+    $current_user_id = get_current_user_id();
     $booking_app_data = array(
         'ajaxUrl'       => admin_url('admin-ajax.php'),
         'nonce'         => wp_create_nonce('property_filter_nonce'),
@@ -66,6 +67,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
         'bookingThreadNonce' => wp_create_nonce('my_cabinet_create_thread_nonce'),
         'propertyId'    => $pod ? $pod->id() : 0,
         'ownerId'       => $author_id ?? 0,
+        'currentUserId' => $current_user_id,
         'config'        => array(
             'guests' => get_option('property_guest_types', array(
                 array('name' => 'adults', 'label' => 'Взрослые', 'desc' => 'от 13 лет', 'min' => 1, 'max' => 10),
@@ -84,6 +86,7 @@ if ($pod && $value = get_post_meta($pod->id(), 'hours_limit', true)) {
             :booking-thread-nonce="appData.bookingThreadNonce"
             :property-id="appData.propertyId"
             :owner-id="Number(appData.ownerId)"
+            :current-user-id="Number(appData.currentUserId)"
             :config="appData.config"
             :name-user="'<?php echo $owner_name ? esc_html( $owner_name ) : 'Хост'; ?>'"
             :long-stay-info-text="appData.longStayInfoText"

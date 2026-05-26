@@ -30,6 +30,10 @@ export default {
       type: Number,
       required: true
     },
+    currentUserId: {
+      type: Number,
+      default: 0
+    },
     config: {
       type: Object,
       default: () => ({})
@@ -219,6 +223,12 @@ export default {
 
     // Обработка кнопки "Написать хозяину"
     async function handleContactHost() {
+      // Проверка: хост не может написать сам себе
+      if (props.currentUserId && props.currentUserId === props.ownerId) {
+        window.location.href = '/my/dashboard/';
+        return;
+      }
+
       // Валидация дат
       if (!checkinDate.value || !checkoutDate.value) {
         alert('Пожалуйста, выберите даты заезда и выезда');
