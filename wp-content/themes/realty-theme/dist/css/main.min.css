@@ -2946,6 +2946,10 @@ article.post .the-content {
   background: #FFF3E0;
   color: #F57C00;
 }
+.messages-history .message-item .message-status .status-badge.status-in_progress {
+  background: #a4a5a6;
+  color: #fff;
+}
 .messages-history .message-item .message-status .notification-badge.notification-sent {
   background: #E8F5E9;
   color: #388E3C;
@@ -4924,7 +4928,7 @@ body:has(.my-dashboard-layout) {
   color: #5bc0de;
   border: 1px solid #5bc0de;
 }
-.my-dashboard-layout .status-badge.status-completed {
+.my-dashboard-layout .status-badge.status-completed, .my-dashboard-layout .status-badge.status-in_progress {
   background: #f5f5f5;
   color: #777777;
   border: 1px solid #999999;

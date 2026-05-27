@@ -20,7 +20,10 @@ jQuery(document).ready(function($) {
 
     $(document).on('click','.my-btn-write-host', function(e) {
         e.preventDefault(); // Останавливаем действия по умолчанию
-        $('.my-message-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const element = $('.my-message-section')[0];
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     });
 
     // ============================================================

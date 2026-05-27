@@ -371,6 +371,11 @@
                     background: #FFF3E0;
                     color: #F57C00;
                 }
+                &.status-in_progress {
+                    background: #a4a5a6;
+                    color: #fff;
+                }
+
             }
             
             .notification-badge {
