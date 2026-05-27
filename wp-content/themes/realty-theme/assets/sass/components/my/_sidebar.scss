@@ -5,14 +5,20 @@
 .my-sidebar {
   width: 240px;
   flex: 0 0 240px;
-  background: $color-white;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem 0;
-  box-shadow: var(--shadow-btn);
-  margin: 15px 0px;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
+  height: 100%;
+  box-sizing: border-box;
+  .wrap-sidebar {
+    background: $color-white;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 0;
+    box-shadow: var(--shadow-btn);
+    margin: 15px 0px;
+    border-radius: var(--radius-xl);
+    height: calc(100vh - 160px);
+    position: sticky;
+    top: 24px;
+  }
 }
 
 .my-sidebar-nav {

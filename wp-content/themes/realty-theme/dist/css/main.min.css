@@ -2,8 +2,13 @@
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[2].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[2].use[3]!./assets/sass/main.scss ***!
   \**********************************************************************************************************************************************************************************************************************************************/
 @charset "UTF-8";
-body, html {
+html, body {
   height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -739,10 +744,6 @@ body, html {
 .property-card .property-thumbnail .property-actions button .material-symbols-outlined {
   color: #fff;
   font-size: 30px;
-}
-.property-card .property-thumbnail .property-actions .map-location.active .material-symbols-outlined {
-  color: #1F1E81;
-  font-variation-settings: "FILL" 1;
 }
 .property-card .property-thumbnail .property-actions .favorite.active .material-symbols-outlined {
   color: #f8104b;
@@ -3921,6 +3922,7 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   border-top: 1px solid rgb(226, 232, 240);
   -ms-flex-negative: 0;
       flex-shrink: 0;
+  position: relative;
   margin-top: auto;
 }
 .footer .footer__bottom {
@@ -4240,6 +4242,11 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
   -webkit-box-flex: 0;
       -ms-flex: 0 0 240px;
           flex: 0 0 240px;
+  height: 100%;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.my-sidebar .wrap-sidebar {
   background: #fff;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -4253,7 +4260,9 @@ header.site-header .main-search-form-container .property-filter-form .el-input__
           box-shadow: var(--shadow-btn);
   margin: 15px 0px;
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  height: calc(100vh - 160px);
+  position: sticky;
+  top: 24px;
 }
 
 .my-sidebar-nav {
@@ -4363,12 +4372,18 @@ body:has(.my-dashboard-layout) {
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.5;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 .my-dashboard-layout .my-main-content {
   -webkit-box-flex: 1;
       -ms-flex: 1;
           flex: 1;
   padding: 15px;
+}
+.my-dashboard-layout .my-main-content.favorites .properties-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .my-dashboard-layout .my-page-title {
   font-size: 26px;
