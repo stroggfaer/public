@@ -174,6 +174,26 @@ export default {
       content: '',
     });
 
+    // =====================================================
+    // ФОКУС НА TEXTAREA
+    // =====================================================
+
+    const focusTextarea = async () => {
+      await nextTick();
+      
+      if (messageFormRef.value) {
+        const textarea = messageFormRef.value.$el?.querySelector('.message-textarea textarea');
+        if (textarea) {
+          textarea.focus();
+        }
+      }
+    };
+
+    // Делаем метод доступным извне
+    if (typeof window !== 'undefined') {
+      window.focusMessageTextarea = focusTextarea;
+    }
+
     const templates = [
       {
         id: 1,
@@ -614,6 +634,7 @@ ${bookingContext.value.guestsText ? '- ' + bookingContext.value.guestsText : ''}
       getNotificationText,
       sendMessage,
       initBookingContext,
+      focusTextarea,
     };
   },
 

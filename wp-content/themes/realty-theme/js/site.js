@@ -23,6 +23,13 @@ jQuery(document).ready(function($) {
         const element = $('.my-message-section')[0];
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Фокус на textarea после завершения скролла
+            setTimeout(() => {
+                if (typeof window.focusMessageTextarea === 'function') {
+                    window.focusMessageTextarea();
+                }
+            }, 500);
         }
     });
 
