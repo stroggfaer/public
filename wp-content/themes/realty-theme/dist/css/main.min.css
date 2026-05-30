@@ -547,6 +547,10 @@ body {
   --el-input-border-color: var(--ui-color-danger) !important;
 }
 
+.el-form-item__content .show-more-btn-wrap .el-button {
+  color: var(--el-color-primary);
+}
+
 .button__com {
   text-wrap-mode: nowrap;
   -webkit-box-sizing: border-box;
@@ -2250,6 +2254,10 @@ article.post .the-content {
           flex: 0 0 288px;
   padding: 20px;
   border-radius: 20px;
+}
+.property-filters-sidebar .property-archive-filters {
+  position: sticky;
+  top: 10px;
 }
 .property-filters-sidebar .price-range-wrapper .price-input .el-input__wrapper {
   width: 100%;

@@ -529,6 +529,10 @@ article.post {
   flex: 0 0 288px;
   padding: 20px;
   border-radius: 20px;
+  .property-archive-filters {
+     position: sticky;
+     top: 10px;
+  }
   //.price-range-wrapper .price-input {
   //  --el-input-border-color: #{$color-readonly-grey};
   //}
